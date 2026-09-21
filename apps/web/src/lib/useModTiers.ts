@@ -29,6 +29,7 @@ export function useModTiers(enabled: boolean): ModTiersState {
   useEffect(() => {
     if (!enabled) return
     let cancelled = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- kicking off a fetch against an external system
     setState({ status: 'loading' })
 
     fetch(DATA_URL)

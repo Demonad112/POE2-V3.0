@@ -62,6 +62,7 @@ export function Chat({ analysis, pob }: { analysis?: Analysis; pob?: PobAnalysis
     try {
       const storedKey = localStorage.getItem(KEY_STORAGE)
       const storedProvider = localStorage.getItem(PROVIDER_STORAGE) as ProviderId | null
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from localStorage, an external system, on mount
       if (storedKey) setApiKey(storedKey)
       if (storedProvider && storedProvider in PROVIDERS) setProvider(storedProvider)
     } catch {

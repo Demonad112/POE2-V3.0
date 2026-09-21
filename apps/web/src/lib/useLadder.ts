@@ -18,6 +18,7 @@ export function useLadder(league: string | null, ascendancy: string | null): Lad
 
   useEffect(() => {
     if (!league) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting state to sync with a changed external input (league)
       setSummary(null)
       return
     }

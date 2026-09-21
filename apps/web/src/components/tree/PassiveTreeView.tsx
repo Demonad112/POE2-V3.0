@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PassiveAllocation, PassiveTree, TreeNode } from '@poe2/core'
 import { resolveAllocation, suggestNodesForStat, supportedStats } from '@poe2/core'
 import { Tag } from '../ui'
-import { clampScale, extentOf, fitExtent, zoomAt, type Viewport } from './geometry'
+import { extentOf, fitExtent, zoomAt, type Viewport } from './geometry'
 import { hitTest, renderTree, type TreePalette } from './render'
 
 function readPalette(el: HTMLElement): TreePalette {
@@ -105,6 +105,7 @@ export function PassiveTreeView({ tree, allocation, weakStats = [], className = 
   }, [resolved.mainTree, size.width, size.height, tree])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- framing depends on size measured via ResizeObserver, an external system
     if (viewport === null) fitToAllocation()
   }, [viewport, fitToAllocation])
 
@@ -112,6 +113,7 @@ export function PassiveTreeView({ tree, allocation, weakStats = [], className = 
   useEffect(() => {
     if (!activeRoute || !size.width || !size.height) return
     const extent = extentOf(activeRoute.path, 1400)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- framing depends on size measured via ResizeObserver, an external system
     if (extent) setViewport(fitExtent(extent, size.width, size.height))
   }, [activeRoute, size.width, size.height])
 

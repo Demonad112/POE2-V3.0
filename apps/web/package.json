@@ -11,7 +11,7 @@
     "sync-data": "node scripts/sync-data.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "lint": "next lint"
+    "lint": "eslint"
   },
   "dependencies": {
     "@poe2/core": "*",
@@ -24,6 +24,8 @@
     "@types/node": "^22.20.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
     "typescript": "^5.7.3"
   }

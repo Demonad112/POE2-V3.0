@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { describePobConfig, type DpsSummary, type PobConfig, type SkillDamage } from '@poe2/core'
-import { Empty, Panel, Tag, fmt, fmtCompact } from './ui'
+import { Empty, Panel, Tag, fmtCompact } from './ui'
 
 const DMG_VAR: Record<string, string> = {
   physical: 'var(--dmg-physical)',

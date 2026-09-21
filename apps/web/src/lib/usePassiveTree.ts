@@ -63,6 +63,7 @@ export function usePassiveTree(enabled: boolean): PassiveTreeState {
   useEffect(() => {
     if (!enabled) return
     if (cached) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from the module-level cache, an external system
       setState({ status: 'ready', tree: cached })
       return
     }

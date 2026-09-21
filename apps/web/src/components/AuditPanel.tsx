@@ -17,7 +17,7 @@ import {
   type ItemAnalysis,
 } from '@poe2/core'
 import type { ModTiersState } from '@/lib/useModTiers'
-import { Empty, Panel, Tag, fmt } from './ui'
+import { Empty, Panel } from './ui'
 
 export function AuditPanel({
   model,

@@ -9,6 +9,7 @@ export function ThemeToggle() {
 
   useEffect(() => {
     const stored = localStorage.getItem('poe2-theme')
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from localStorage, an external system, on mount
     if (stored === 'light' || stored === 'dark') setMode(stored)
   }, [])
 
