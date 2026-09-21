@@ -61,6 +61,11 @@ for (const vp of VIEWPORTS) {
     // The character heading only appears once analysis has completed.
     await page.getByRole('heading', { name: 'Athrynas', level: 2 }).waitFor({ timeout: 20_000 })
 
+    // The detail panels default collapsed — accordion triage is the point —
+    // so the figures below only reach `innerText` once expanded, same as a
+    // reader clicking "Expand all".
+    await page.getByRole('button', { name: 'Expand all' }).click()
+
     await page.screenshot({ path: join(outDir, `${vp.name}-${theme}.png`), fullPage: true })
 
     // Assert the headline numbers actually reached the DOM.

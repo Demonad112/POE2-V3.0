@@ -51,7 +51,7 @@ function DeltaRow({ change }: { change: MetricDelta }) {
   )
 }
 
-export function Progress({ history }: { history: CharacterHistory }) {
+export function Progress({ history, bare = false }: { history: CharacterHistory; bare?: boolean }) {
   const { snapshots, diff } = history
 
   return (
@@ -63,6 +63,7 @@ export function Progress({ history }: { history: CharacterHistory }) {
           {snapshots.length} {snapshots.length === 1 ? 'snapshot' : 'snapshots'}
         </span>
       }
+      bare={bare}
     >
       {!diff ? (
         <p className="max-w-prose text-xs leading-relaxed text-ink-mute">

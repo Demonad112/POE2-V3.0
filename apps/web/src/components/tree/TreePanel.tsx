@@ -16,6 +16,7 @@ export function TreePanel({
   allocation,
   state,
   weakStats = [],
+  bare = false,
 }: {
   allocation: PassiveAllocation
   /** Loaded once at page level, so the drawing and the analysis agree. */
@@ -25,6 +26,7 @@ export function TreePanel({
    * route-suggestion picker — see PassiveTreeView.
    */
   weakStats?: Array<{ key: string; label: string; shortfall: string }>
+  bare?: boolean
 }) {
   const tree = state.status === 'ready' ? state.tree : null
   const error = state.status === 'error' ? state.message : null
@@ -33,6 +35,7 @@ export function TreePanel({
     <Panel
       title="Passive tree"
       subtitle="Allocated path highlit; the rest dimmed. Drag to pan, scroll or pinch to zoom, hover or tap a node for its stats."
+      bare={bare}
     >
       {error ? (
         <p className="py-8 text-center text-sm text-warn">

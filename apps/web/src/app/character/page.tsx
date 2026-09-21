@@ -1,7 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { analyzeCharacter, analyzeFromPob, type Analysis, type PobAnalysis } from '@poe2/core'
+import { Accordion } from '@/components/shared/Accordion'
+import { PanelControls } from '@/components/shared/PanelControls'
+import { NumberReadout, ResistancePips, StatusChip } from '@/components/shared/Instruments'
 import { Attribution } from '@/components/Attribution'
 import { BuildScore } from '@/components/BuildScore'
 import { DefensePanel } from '@/components/DefensePanel'
@@ -18,7 +21,7 @@ import { Reconciliation } from '@/components/Reconciliation'
 import { Recommendations } from '@/components/Recommendations'
 import { Skeleton } from '@/components/Skeleton'
 import { TreePanel } from '@/components/tree/TreePanel'
-import { Tag } from '@/components/ui'
+import { Tag, fmtCompact } from '@/components/ui'
 import { useCharacterHistory } from '@/lib/useCharacterHistory'
 import { useLadder } from '@/lib/useLadder'
 import { useModTiers } from '@/lib/useModTiers'
@@ -50,6 +53,15 @@ function weakStatsFrom(analysis: Analysis) {
     out.push({ key: 'life', label: 'Life', shortfall: `${lowest.type} is thinnest` })
   }
   return out
+}
+
+interface WorkspacePanel {
+  id: string
+  title: string
+  summary?: ReactNode
+  badge?: ReactNode
+  instrument?: ReactNode
+  content: ReactNode
 }
 
 export default function Home() {
@@ -133,6 +145,127 @@ export default function Home() {
     }
   }, [])
 
+  // Declared as data so the accordion list can be reordered or re-themed in
+  // one place, without touching how any individual panel is built. Each
+  // panel keeps its own component and its own logic — only the collapsed
+  // row's summary/badge/instrument is computed here, from the same
+  // `analysis` every open panel already reads.
+  const panelsFor = (a: Analysis): WorkspacePanel[] => {
+    const uncappedCount = a.defense.resistances.filter((r) => !r.capped).length
+    const primary = a.dps.primary
+    const overcapped = a.attribution.stats.filter((s) => s.overcap > 0)
+    const activeItems = a.items.filter((i) => i.active)
+
+    const panels: WorkspacePanel[] = [
+      {
+        id: 'defence',
+        title: 'Defence',
+        summary:
+          a.defense.lowestMaximumHit !== null
+            ? `A ${a.defense.lowestMaximumHitType} hit of ${a.defense.lowestMaximumHit.toLocaleString()} kills you`
+            : 'Max hit not available',
+        badge: uncappedCount > 0 ? <StatusChip tone="danger">{uncappedCount} uncapped</StatusChip> : undefined,
+        instrument: <ResistancePips resistances={a.defense.resistances} />,
+        content: <DefensePanel d={a.defense} bare />,
+      },
+      {
+        id: 'gear-tree',
+        title: 'Gear & tree',
+        summary: `${activeItems.length} item${activeItems.length === 1 ? '' : 's'} equipped · set ${a.passives.activeSet} live`,
+        content: <GearPanel items={a.items} passives={a.passives} bare />,
+      },
+      {
+        id: 'headroom',
+        title: 'Survivability by map tier',
+        summary:
+          a.defense.lowestMaximumHit !== null
+            ? `Against a ${a.defense.lowestMaximumHitType} hit of ${a.defense.lowestMaximumHit.toLocaleString()}`
+            : undefined,
+        content: <Headroom defense={a.defense} bare />,
+      },
+      {
+        id: 'damage',
+        title: 'Damage',
+        summary: a.dps.unresolved ?? (primary ? `${primary.name} · ${primary.totalDps.toLocaleString()} dps` : undefined),
+        instrument: primary ? <NumberReadout value={fmtCompact(primary.totalDps)} tone="accent" /> : undefined,
+        content: (
+          <DpsMatrix
+            dps={a.dps}
+            pobConfig={a.pobConfig}
+            configApplies={a.reconciliation?.checks.find((c) => c.stat.startsWith('dps:'))?.severity === 'match'}
+            bare
+          />
+        ),
+      },
+      {
+        id: 'progress',
+        title: 'Progress',
+        summary: history.diff
+          ? `${history.diff.changes.length} figure${history.diff.changes.length === 1 ? '' : 's'} moved since your last import`
+          : 'Import again after playing to see what moved',
+        instrument: history.diff?.newlyUncapped.length ? (
+          <StatusChip tone="danger">Dropped below cap</StatusChip>
+        ) : history.diff?.newlyCapped.length ? (
+          <StatusChip tone="good">Capped</StatusChip>
+        ) : (
+          <StatusChip>
+            {history.snapshots.length} snapshot{history.snapshots.length === 1 ? '' : 's'}
+          </StatusChip>
+        ),
+        content: <Progress history={history} bare />,
+      },
+      {
+        id: 'attribution',
+        title: 'What each item is holding up',
+        summary: `${a.attribution.items.length} item${a.attribution.items.length === 1 ? '' : 's'} attributed`,
+        badge:
+          overcapped.length > 0 ? (
+            <StatusChip tone="muted">
+              {overcapped.length} over cap
+            </StatusChip>
+          ) : undefined,
+        content: <Attribution report={a.attribution} bare />,
+      },
+      {
+        id: 'gear-modifiers',
+        title: 'Gear modifiers',
+        summary:
+          tiersState.status === 'ready'
+            ? 'Graded against the best tier each item level allows'
+            : tiersState.status === 'error'
+              ? 'Affix tier data unavailable'
+              : 'Loading affix tiers…',
+        content: <GearDetail items={a.items} defense={a.defense} state={tiersState} bare />,
+      },
+      {
+        id: 'passive-tree',
+        title: 'Passive tree',
+        summary: `${a.passives.counts.passives} points allocated`,
+        instrument: <NumberReadout value={String(a.passives.counts.passives)} />,
+        content: <TreePanel allocation={a.passives} state={treeState} weakStats={weakStatsFrom(a)} bare />,
+      },
+      {
+        id: 'detail-checks',
+        title: 'Detail checks',
+        summary: 'Sockets, gem quality, jewels and spare attributes',
+        content: <AuditPanel model={a.model} pobStats={a.pobStats} state={tiersState} bare />,
+      },
+    ]
+
+    if (a.reconciliation) {
+      const r = a.reconciliation
+      panels.push({
+        id: 'reconciliation',
+        title: 'Cross-validation',
+        summary: `${r.matches} agree${r.major ? ` · ${r.major} major` : ''}${r.minor ? ` · ${r.minor} minor` : ''}`,
+        badge: r.major > 0 ? <StatusChip tone="danger">{r.major} major</StatusChip> : undefined,
+        content: <Reconciliation report={r} bare />,
+      })
+    }
+
+    return panels
+  }
+
   return (
     <>
       <header className="mb-6">
@@ -193,31 +326,26 @@ export default function Home() {
 
             <Recommendations report={analysis.recommendations} />
 
-            <div className="grid gap-4 lg:grid-cols-2">
-              <DefensePanel d={analysis.defense} />
-              <GearPanel items={analysis.items} passives={analysis.passives} />
-              <Headroom defense={analysis.defense} />
+            <div>
+              <div className="mb-2 flex items-center">
+                <h2 className="text-sm font-semibold tracking-wide text-ink">Full analysis</h2>
+                <PanelControls targetId="full-analysis" />
+              </div>
+              <div id="full-analysis" className="flex flex-col gap-1.5">
+                {panelsFor(analysis).map((panel) => (
+                  <Accordion
+                    key={panel.id}
+                    id={panel.id}
+                    title={panel.title}
+                    summary={panel.summary}
+                    badge={panel.badge}
+                    instrument={panel.instrument}
+                  >
+                    {panel.content}
+                  </Accordion>
+                ))}
+              </div>
             </div>
-
-            <DpsMatrix
-              dps={analysis.dps}
-              pobConfig={analysis.pobConfig}
-              configApplies={
-                analysis.reconciliation?.checks.find((c) => c.stat.startsWith('dps:'))?.severity === 'match'
-              }
-            />
-
-            <Progress history={history} />
-
-            <Attribution report={analysis.attribution} />
-
-            <GearDetail items={analysis.items} defense={analysis.defense} state={tiersState} />
-
-            <TreePanel allocation={analysis.passives} state={treeState} weakStats={weakStatsFrom(analysis)} />
-
-            <AuditPanel model={analysis.model} pobStats={analysis.pobStats} state={tiersState} />
-
-            {analysis.reconciliation ? <Reconciliation report={analysis.reconciliation} /> : null}
 
             <Chat analysis={analysis} />
           </div>

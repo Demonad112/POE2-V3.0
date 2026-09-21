@@ -21,7 +21,7 @@ const COMFORT: Record<string, { bar: string; text: string; label: string }> = {
   dangerous: { bar: 'bg-danger/70', text: 'text-danger', label: 'dangerous' },
 }
 
-export function Headroom({ defense }: { defense: DefenseSummary }) {
+export function Headroom({ defense, bare = false }: { defense: DefenseSummary; bare?: boolean }) {
   const [data, setData] = useState<MonsterStatData | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -41,14 +41,14 @@ export function Headroom({ defense }: { defense: DefenseSummary }) {
 
   if (error) {
     return (
-      <Panel title="Survivability by map tier">
+      <Panel title="Survivability by map tier" bare={bare}>
         <Empty>Could not load the monster data ({error}).</Empty>
       </Panel>
     )
   }
   if (!data) {
     return (
-      <Panel title="Survivability by map tier">
+      <Panel title="Survivability by map tier" bare={bare}>
         <div className="h-20 animate-pulse rounded-lg bg-surface-sunken" />
       </Panel>
     )
@@ -60,6 +60,7 @@ export function Headroom({ defense }: { defense: DefenseSummary }) {
   return (
     <Panel
       title="Survivability by map tier"
+      bare={bare}
       subtitle={
         <>
           A {report.lowestMaximumHitType} hit of{' '}

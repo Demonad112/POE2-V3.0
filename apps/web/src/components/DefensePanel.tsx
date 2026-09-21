@@ -101,13 +101,14 @@ function Resistances({ d }: { d: DefenseSummary }) {
   )
 }
 
-export function DefensePanel({ d }: { d: DefenseSummary }) {
+export function DefensePanel({ d, bare = false }: { d: DefenseSummary; bare?: boolean }) {
   const overstates = d.ehpOverstatementRatio !== null && d.ehpOverstatementRatio > 1.5
 
   return (
     <Panel
       title="Defence"
       subtitle="Led by the smallest hit that kills — not by an averaged pool."
+      bare={bare}
     >
       <div className="space-y-5">
         <Hero

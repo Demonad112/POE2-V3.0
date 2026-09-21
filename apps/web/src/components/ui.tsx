@@ -6,13 +6,22 @@ export function Panel({
   action,
   children,
   className = '',
+  bare = false,
 }: {
   title: string
   subtitle?: ReactNode
   action?: ReactNode
   children: ReactNode
   className?: string
+  /**
+   * Skips the border, background and title/subtitle header. For a panel
+   * rendered inside an Accordion, whose own row already carries the title —
+   * doubling it up as an inner <h2> just competes with the accordion summary
+   * it sits directly under.
+   */
+  bare?: boolean
 }) {
+  if (bare) return <>{children}</>
   return (
     // min-w-0: a grid/flex child defaults to min-width:auto and refuses to
     // shrink below its content, which pushes the page into horizontal scroll on

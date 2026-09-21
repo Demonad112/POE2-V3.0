@@ -128,18 +128,20 @@ export function DpsMatrix({
   dps,
   pobConfig = null,
   configApplies = false,
+  bare = false,
 }: {
   dps: DpsSummary
   /** The configuration the attached Path of Building export was saved with. */
   pobConfig?: PobConfig | null
   /** Whether poe.ninja and PoB agree this is the same number. */
   configApplies?: boolean
+  bare?: boolean
 }) {
   const [showAll, setShowAll] = useState(false)
 
   if (dps.unresolved) {
     return (
-      <Panel title="Damage" subtitle="Read from poe.ninja’s computed per-skill data.">
+      <Panel title="Damage" subtitle="Read from poe.ninja’s computed per-skill data." bare={bare}>
         <Empty>{dps.unresolved}</Empty>
       </Panel>
     )
@@ -153,7 +155,13 @@ export function DpsMatrix({
       title="Damage"
       subtitle="Read verbatim from poe.ninja’s computed per-skill data — not recalculated."
       action={<Legend />}
+      bare={bare}
     >
+      {bare ? (
+        <div className="mb-3">
+          <Legend />
+        </div>
+      ) : null}
       <div className="-mx-4 overflow-x-auto px-4 sm:-mx-5 sm:px-5">
         <table className="w-full min-w-[46rem] border-collapse">
           <caption className="sr-only">

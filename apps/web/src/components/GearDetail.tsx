@@ -156,11 +156,13 @@ export function GearDetail({
   items,
   defense,
   state,
+  bare = false,
 }: {
   items: EquippedItem[]
   defense: DefenseSummary
   /** Loaded once at page level so this panel and the findings list agree. */
   state: ModTiersState
+  bare?: boolean
 }) {
   const result = useMemo(() => {
     if (state.status !== 'ready') return null
@@ -177,7 +179,7 @@ export function GearDetail({
 
   if (state.status === 'idle' || state.status === 'loading') {
     return (
-      <Panel title="Gear modifiers" subtitle="Loading the affix data…">
+      <Panel title="Gear modifiers" subtitle="Loading the affix data…" bare={bare}>
         <div className="h-24 animate-pulse rounded-lg bg-surface-sunken" />
       </Panel>
     )
@@ -185,7 +187,7 @@ export function GearDetail({
 
   if (state.status === 'error') {
     return (
-      <Panel title="Gear modifiers">
+      <Panel title="Gear modifiers" bare={bare}>
         <Empty>
           Could not load the affix data ({state.message}), so modifier tiers are unavailable. Everything else on this
           page is unaffected.
@@ -196,7 +198,7 @@ export function GearDetail({
 
   if (!result?.analysed.length) {
     return (
-      <Panel title="Gear modifiers">
+      <Panel title="Gear modifiers" bare={bare}>
         <Empty>No equipped items to analyse.</Empty>
       </Panel>
     )

@@ -17,16 +17,18 @@ import {
   type ItemAnalysis,
 } from '@poe2/core'
 import type { ModTiersState } from '@/lib/useModTiers'
-import { Empty, Panel } from './ui'
+import { Empty, Panel, fmt } from './ui'
 
 export function AuditPanel({
   model,
   pobStats,
   state,
+  bare = false,
 }: {
   model: CharModel
   pobStats: Record<string, number> | null
   state: ModTiersState
+  bare?: boolean
 }) {
   const report = useMemo(
     () => auditCharacter(model, state.status === 'ready' ? state.tiers : null, pobStats),
@@ -42,7 +44,7 @@ export function AuditPanel({
 
   if (nothingFound) {
     return (
-      <Panel title="Detail checks">
+      <Panel title="Detail checks" bare={bare}>
         <Empty>Nothing to report — no jewels, sockets, or gem data in this payload.</Empty>
       </Panel>
     )
@@ -52,6 +54,7 @@ export function AuditPanel({
     <Panel
       title="Detail checks"
       subtitle="Parts of the payload the panels above don't read. Nothing here is estimated."
+      bare={bare}
     >
       <div className="grid gap-4">
         {report.emptySockets.length ? (

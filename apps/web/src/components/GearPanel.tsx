@@ -3,7 +3,15 @@
 import type { EquippedItem, PassiveAllocation } from '@poe2/core'
 import { Panel, Tag, fmt } from './ui'
 
-export function GearPanel({ items, passives }: { items: EquippedItem[]; passives: PassiveAllocation }) {
+export function GearPanel({
+  items,
+  passives,
+  bare = false,
+}: {
+  items: EquippedItem[]
+  passives: PassiveAllocation
+  bare?: boolean
+}) {
   const active = items.filter((i) => i.active)
   const inactive = items.filter((i) => !i.active)
   const levels = active.map((i) => i.itemLevel).filter((l): l is number => l !== null)
@@ -17,6 +25,7 @@ export function GearPanel({ items, passives }: { items: EquippedItem[]; passives
           Weapon sets are alternates, never additive. Set {passives.activeSet} is live.
         </>
       }
+      bare={bare}
     >
       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="rounded-lg bg-surface-sunken px-3 py-2">

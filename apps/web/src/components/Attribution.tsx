@@ -105,11 +105,12 @@ function ItemRow({ item }: { item: ItemAttribution }) {
   )
 }
 
-export function Attribution({ report }: { report: AttributionReport }) {
+export function Attribution({ report, bare = false }: { report: AttributionReport; bare?: boolean }) {
   return (
     <Panel
       title="What each item is holding up"
       subtitle="Read from poe.ninja's own per-stat attribution. “Without it” is what the character sheet would show, cap applied — so a modifier covered by overcap correctly costs nothing."
+      bare={bare}
     >
       {report.items.length ? (
         <ul className="space-y-1.5">

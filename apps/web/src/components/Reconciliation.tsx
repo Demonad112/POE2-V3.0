@@ -9,7 +9,7 @@ import { Panel, Tag, fmt } from './ui'
  * our own arithmetic. It never picks a winner — silently preferring one source
  * is how a wrong number ships looking confident.
  */
-export function Reconciliation({ report }: { report: ReconciliationReport }) {
+export function Reconciliation({ report, bare = false }: { report: ReconciliationReport; bare?: boolean }) {
   const [open, setOpen] = useState(false)
   const interesting = report.checks.filter((c) => c.severity === 'major' || c.severity === 'minor')
   const shown = open ? report.checks : interesting
@@ -29,6 +29,7 @@ export function Reconciliation({ report }: { report: ReconciliationReport }) {
           {report.unresolved ? <Tag>{report.unresolved} unverifiable</Tag> : null}
         </div>
       }
+      bare={bare}
     >
       {interesting.length === 0 ? (
         <>
