@@ -96,6 +96,21 @@ describe('per-item attribution', () => {
     const losses = helmet.contributions.map((c) => c.loss)
     expect(losses).toEqual([...losses].sort((a, b) => b - a))
   })
+
+  it('folds a rune’s resistance into the item that carries it, same as any other flat mod', () => {
+    // The body armour (Viper Hide, "Runeforged Hawker's Jacket") carries a
+    // +18% Cold Resistance rune on top of its own +26% explicit affix. Runes
+    // never appear in an item's structured `mods` — poe.ninja ships them as
+    // display text only — but they DO appear as their own entry in
+    // `charModel.breakdowns`, credited to the same item, indistinguishable
+    // from an explicit affix's contribution. Since this reads the breakdown
+    // ledger rather than reconstructing resistances from item text, the rune
+    // is already folded in: two flat contributions (18 and 26) summing to 44,
+    // not the 26 an item-mods-only reading would see.
+    const body = attributionForSlot(report, 3)
+    const cold = body?.contributions.find((c) => c.stat === 'coldResistance')
+    expect(cold).toMatchObject({ flat: 44, increased: 0, without: 30, loss: 44 })
+  })
 })
 
 describe('the overcap question a gear swap has to answer', () => {
