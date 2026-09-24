@@ -101,3 +101,16 @@ export function targetFor(res: Pick<ResistanceState, 'type' | 'max'>): number {
 export function isHealthy(res: Pick<ResistanceState, 'type' | 'max' | 'value'>): boolean {
   return res.value >= targetFor(res)
 }
+
+/**
+ * Endgame-guide gates, as the companion's progression checklist states them.
+ * They grade a character snapshot against the guide, not against the game.
+ */
+/** Elemental resistance cap before any max-resistance bonuses. */
+export const ELEMENTAL_RES_CAP = 75
+/** The guide's "3rd Ascendancy at ~70, slightly over-levelled" advice. */
+export const LEVEL_THIRD_ASCENDANCY = 70
+/** The guide's hard gate before the Arbiter of Divinity push. */
+export const LEVEL_PINNACLE_PUSH = 85
+/** The guide's "5,000+ life" pinnacle gate, read as the combined pool. */
+export const POOL_PINNACLE = 5000

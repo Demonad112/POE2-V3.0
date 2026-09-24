@@ -19,7 +19,7 @@ jobs:
         run: npm run typecheck
       - name: Lint
         run: npm run lint
-      - name: Test core
+      - name: Test core and web
         run: npm test
       - name: Test ninja-proxy
         # Not an npm workspace (it deploys separately), so the root test run

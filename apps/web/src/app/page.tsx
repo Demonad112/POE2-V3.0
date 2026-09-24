@@ -3,13 +3,14 @@ import Link from "next/link";
 import { CURRENT_PATCH, LEAGUE_LABEL } from "@/lib/constants";
 import { BASE_PATH } from "@/lib/basePath";
 import { ProgressSummary } from "@/components/home/ProgressSummary";
+import { NextStepCard } from "@/components/checklist/NextStepCard";
 
 const CARDS = [
   {
     href: "/checklist",
     title: "Progression Checklist",
     description:
-      "Step-by-step endgame roadmap from campaign end through the full 301-point Atlas tree, with benchmark gates and common-mistake warnings at each stage.",
+      "Step-by-step roadmap from campaign end to a juiced farm: Waystone planner, readiness check, Master and league quest chains, and the mistakes to avoid at each step.",
     icon: (
       <path
         d="M5 6h14M5 12h14M5 18h9"
@@ -23,7 +24,7 @@ const CARDS = [
     href: "/atlas",
     title: "Atlas Tree Planner",
     description:
-      "Named cluster sequencing for early progression, the top-of-tree memory forks, and per-mechanic sub-tree priority lists.",
+      "Allocation order for early sustain, the trap nodes to skip (points can't be refunded), biome picks, memory forks and per-mechanic sub-trees.",
     icon: (
       <>
         <circle cx="12" cy="4" r="1.8" stroke="currentColor" strokeWidth="1.4" />
@@ -42,7 +43,7 @@ const CARDS = [
     href: "/dashboard",
     title: "Farming Dashboard",
     description:
-      "Ranked farming strategies, a quick strategy-picker quiz, pinnacle boss requirements, and current meta builds.",
+      "0.5.5 farming tier list, a quick strategy-picker quiz, pinnacle boss requirements, and current meta builds.",
     icon: (
       <>
         <rect x="3.5" y="3.5" width="7" height="8" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
@@ -96,14 +97,17 @@ export default function Home() {
             <span className="text-ink">Endgame Companion</span>
           </h1>
           <p className="max-w-2xl text-lg text-ink-dim">
-            A second-monitor reference for the &quot;Return of the Ancients&quot;
-            endgame: track your progression, plan your Atlas allocation, and
-            pick a farming loop.
+            A second-monitor guide for the {CURRENT_PATCH} endgame, built on what
+            top creators teach: what to do next, which Waystones to run, which
+            Atlas nodes to skip, and which farm to commit to.
           </p>
         </div>
       </div>
 
-      <ProgressSummary />
+      <div className="flex flex-col gap-4">
+        <NextStepCard />
+        <ProgressSummary />
+      </div>
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {CARDS.map((card) => (

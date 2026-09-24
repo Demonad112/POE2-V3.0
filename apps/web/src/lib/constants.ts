@@ -40,7 +40,8 @@ export const ROADMAP_PHASE_LABELS: Record<string, string> = {
   "precursor-fortress": "Precursor Fortress",
   "arbiter-of-ash": "Arbiter of Ash",
   "t11-checkpoint": "T11 Gearing Checkpoint",
-  "arbiter-of-divinity-loop": "Arbiter of Divinity",
-  "full-tree": "Full 301-Point Tree",
+  "arbiter-of-divinity-loop": "Arbiter of Divinity — 2 kills = full Atlas",
+  "full-tree": "Full Atlas Tree",
+  "masters-and-mechanics": "Masters & League Quest Chains",
   "juiced-farming": "Juiced Farming Loop",
 };

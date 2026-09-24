@@ -10,7 +10,32 @@ export function actionItemKey(stepId: string, index: number) {
 
 export function useChecklistState() {
   const { state, setState } = usePersistedState();
-  const { completedStepIds, completedActionItemKeys } = state.checklist;
+  const {
+    completedStepIds,
+    completedActionItemKeys,
+    hideCompleted = false,
+    highestTier = 0,
+  } = state.checklist;
+
+  const setHideCompleted = useCallback(
+    (value: boolean) => {
+      setState((prev) => ({
+        ...prev,
+        checklist: { ...prev.checklist, hideCompleted: value },
+      }));
+    },
+    [setState]
+  );
+
+  const setHighestTier = useCallback(
+    (tier: number) => {
+      setState((prev) => ({
+        ...prev,
+        checklist: { ...prev.checklist, highestTier: tier },
+      }));
+    },
+    [setState]
+  );
 
   const toggleStep = useCallback(
     (stepId: string) => {
@@ -55,11 +80,12 @@ export function useChecklistState() {
     [completedActionItemKeys]
   );
 
+  // Count only ids that still exist: a renamed or removed step must not keep
+  // inflating the percentage from an old save.
   const completionPercent = useMemo(() => {
     if (roadmapSteps.length === 0) return 0;
-    return Math.round(
-      (completedStepIds.length / roadmapSteps.length) * 100
-    );
+    const done = roadmapSteps.filter((s) => completedStepIds.includes(s.id)).length;
+    return Math.round((done / roadmapSteps.length) * 100);
   }, [completedStepIds]);
 
   return {
@@ -69,5 +95,9 @@ export function useChecklistState() {
     isActionItemComplete,
     completionPercent,
     completedStepIds,
+    hideCompleted,
+    setHideCompleted,
+    highestTier,
+    setHighestTier,
   };
 }

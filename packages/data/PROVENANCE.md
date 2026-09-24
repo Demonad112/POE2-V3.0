@@ -1,5 +1,9 @@
 # Data provenance
 
+This file covers generated game data. The hand-written endgame guide content
+(`apps/web/src/data`) and its source precedence are documented in
+[`docs/GUIDE_CONTENT.md`](../../docs/GUIDE_CONTENT.md).
+
 ## Freshness
 
 Every artifact below was last generated on **2026-07-28**, before Path of Exile

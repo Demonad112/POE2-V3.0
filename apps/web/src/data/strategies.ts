@@ -1,52 +1,55 @@
 import type { FarmingStrategy } from "@/lib/types";
-import { patchSource, strategySource } from "./sourceMeta";
+import { patchSource, strategySource, videoSource } from "./sourceMeta";
 
 export const farmingStrategies: FarmingStrategy[] = [
   {
     id: "abyss-amanamu",
-    name: "Abyss (Amanamu faction)",
+    name: "Omen Abyss — Omen of Light (Amanamu)",
+    tier: "S",
     mechanics: ["abyss"],
     atlasSetup:
-      "Abyss sub-tree (Shadow of Undeath, Lightless Legions), Rogue Exile nodes, 1→3 Abyss tablets as sustain builds; avoid Desert biome.",
+      "Abyss sub-tree (Shadow of Undeath, Lightless Legions), Rogue Exile nodes for Abyss jewels, Monster Effectiveness focus. Fubgun prefers a Hilda Master setup (cheaper tablets). Always full-clear Abyssal Depths — buffed mid-0.5, they drop lots of echoes and often a Light. Do NOT take Survival of the Fittest (merges rares; one Omen per rare). Avoid the Desert biome.",
     investment: "low",
     expectedReturn:
-      "Best floor; ~1 Omen of Light / 2 maps (~7 Div each), Heart-of-the-Well jewels can be huge.",
+      "1–2 Omens of Light per juiced map (price-dependent); Heart-of-the-Well jewels can be huge.",
     risk: "low",
     leagueStartViable: true,
     lateGameViable: true,
-    rank: 1,
-    source: strategySource(),
+    rank: 2,
+    source: videoSource(["2IvZ4D9b5bs@02:26", "2IvZ4D9b5bs@03:13", "-oMeaRoAX-o@01:32"]),
   },
   {
     id: "expedition-runes-of-aldur",
     name: "Expedition",
+    tier: "S",
     mechanics: ["expedition"],
     atlasSetup:
-      "0.5.4 Expedition Atlas tree ('Feeling Lucky?' for Liquid Verisium), Grand Expeditions, Jado pairing. Since 0.5.5 Expedition is core in every league: Expedition Tablets (1-4 per map, each adding Expeditions, Verisium Remnants or density) drop in Standard and Forbidden Rites but not in Runes of Aldur. Aldur's Saga stays Runes of Aldur-only, though its modifiers can roll on Grand Expeditions elsewhere.",
+      "Fubgun's #1 farm in 0.5.5 — \"by far the best farm\", even without Aldur's Saga, but hard: your build must handle high-juice Expeditions, and it takes practice to learn. City maps + Expedition tablets; 200% Delirium on top is the digest-reported ceiling. 0.5.4 Expedition Atlas tree ('Feeling Lucky?' for Liquid Verisium), Grand Expeditions, Jado pairing. Since 0.5.5 Expedition is core in every league: Expedition Tablets (1-4 per map, each adding Expeditions, Verisium Remnants or density) drop in Standard and Forbidden Rites but not in Runes of Aldur. Aldur's Saga stays Runes of Aldur-only, though its modifiers can roll on Grand Expeditions elsewhere.",
     investment: "low",
     expectedReturn:
-      "~10-20 Div/hr disciplined; the viral '50/hr' figure is an optimized ceiling, not a floor.",
-    risk: "medium",
+      "Pre-0.5.5 guide: ~10-20 Div/hr disciplined, '50/hr' as an optimized ceiling. Fubgun shows single 25-Div maps; web digests claim 100+ Div/hr (unverified).",
+    risk: "high",
     leagueStartViable: true,
     lateGameViable: true,
-    rank: 2,
-    source: strategySource({
-      note: "League availability of Expedition Tablets and Aldur's Saga is from the 0.5.5 patch notes; the return figures predate 0.5.5.",
+    rank: 1,
+    source: videoSource(["2IvZ4D9b5bs@01:40", "2IvZ4D9b5bs@02:26"], {
+      note: "League availability of Expedition Tablets and Aldur's Saga is from the 0.5.5 patch notes; the Div/hr figures predate 0.5.5.",
     }),
   },
   {
     id: "breach-genesis-budget",
-    name: "Breach (Genesis Tree, budget)",
+    name: "Breach Hiveblood (Genesis Tree)",
+    tier: "S",
     mechanics: ["breach"],
     atlasSetup:
-      "Breach sub-tree (Lavish Wombgifts, catalysts/rings), city biomes, 3-4 Breach tablets (Hive Blood + rare-monster quantity), Doryani or Jado.",
-    investment: "low",
-    expectedReturn: "~16-35 Div/hr; Fracturing Orbs bonus.",
+      "Pack-size Atlas focus. Breach sub-tree (Lavish Wombgifts, catalysts/rings), 3-4 Breach tablets (Hive Blood), Doryani or Jado. Works on non-city maps (no city hunting), better in cities. Needs strong clear speed; crafting knowledge raises the ceiling.",
+    investment: "medium",
+    expectedReturn: "Pre-0.5.5 guide: ~16-35 Div/hr; Fracturing Orbs bonus. Consistent.",
     risk: "medium",
     leagueStartViable: true,
     lateGameViable: true,
     rank: 3,
-    source: strategySource({
+    source: videoSource(["2IvZ4D9b5bs@03:13", "-oMeaRoAX-o@01:32"], {
       verified: "unverified",
       note: "0.5.5 removed Doryani's Refined Formula Master option (replaced by Archaic Corruption: monsters released from Essences become Corrupted) and made Unstable Breaches spawn their rares in waves of 5. The source doesn't say which Doryani option it meant — check it still exists.",
     }),
@@ -62,7 +65,7 @@ export const farmingStrategies: FarmingStrategy[] = [
     risk: "high",
     leagueStartViable: false,
     lateGameViable: true,
-    rank: 4,
+    rank: 8,
     source: strategySource({
       verified: "unverified",
       note: "0.5.5: Delirium monster pack count no longer scales past 100% Deliriousness, and Grand Mirror fog now spreads to exactly 10 maps (was 8-16). Returns reported at 200% predate this.",
@@ -71,17 +74,18 @@ export const farmingStrategies: FarmingStrategy[] = [
   {
     id: "ritual-city",
     name: "Ritual (City)",
+    tier: "A",
     mechanics: ["ritual"],
     atlasSetup:
-      "Ritual sub-tree, Tribute deferral to fish Omens/chase uniques.",
+      "Pack-size (more favour) + rarity Atlas focus, Summoning Circle nodes, Ritual sub-tree, Tribute deferral to fish Omens/chase uniques. Ritual is the league mechanic and spawns in every map, so Omens are cheap — value swings with Omen prices.",
     investment: "low",
     expectedReturn:
-      "Highest jackpot potential (Mageblood/Headhunter), lower Div/hr floor.",
+      "Highest jackpot potential (Mageblood/Headhunter), lower Div/hr floor. Web digests: ~60 Div/hr (unverified).",
     risk: "medium",
     leagueStartViable: true,
     lateGameViable: true,
-    rank: 5,
-    source: strategySource(),
+    rank: 6,
+    source: videoSource(["2IvZ4D9b5bs@05:29", "-oMeaRoAX-o@00:46"]),
   },
   {
     id: "abyss-delirium-ritual-hybrid",
@@ -93,10 +97,10 @@ export const farmingStrategies: FarmingStrategy[] = [
     risk: "high",
     leagueStartViable: false,
     lateGameViable: true,
-    rank: 6,
+    rank: 9,
     source: strategySource({
       verified: "unverified",
-      note: "0.5.5: Delirium monster pack count no longer scales past 100% Deliriousness, and the Invigorated Sacrifices bug that over-granted Ritual Tribute was fixed. The ~150 Div/hr report predates both.",
+      note: "Not on Fubgun's 0.5.5 list. 0.5.5: Delirium monster pack count no longer scales past 100% Deliriousness, and the Invigorated Sacrifices bug that over-granted Ritual Tribute was fixed. The ~150 Div/hr report predates both.",
     }),
   },
   {
@@ -110,7 +114,7 @@ export const farmingStrategies: FarmingStrategy[] = [
     risk: "low",
     leagueStartViable: true,
     lateGameViable: true,
-    rank: 7,
+    rank: 10,
     source: strategySource(),
   },
   {
@@ -123,7 +127,7 @@ export const farmingStrategies: FarmingStrategy[] = [
     risk: "low",
     leagueStartViable: true,
     lateGameViable: true,
-    rank: 8,
+    rank: 11,
     source: strategySource(),
   },
   {
@@ -136,7 +140,7 @@ export const farmingStrategies: FarmingStrategy[] = [
     risk: "low",
     leagueStartViable: false,
     lateGameViable: false,
-    rank: 9,
+    rank: 14,
     source: strategySource({
       verified: "unverified",
       note: "Layer onto another strategy — never run as your main loop. 0.5.5 disabled the Viridian Wildwood unique map (Wildwood now only via Sacred Blooms in Forbidden Rites) and made Azmeri Spirit release a chance scaling with the possessed monster's empowerment.",
@@ -153,7 +157,7 @@ export const farmingStrategies: FarmingStrategy[] = [
     risk: "medium",
     leagueStartViable: true,
     lateGameViable: true,
-    rank: 10,
+    rank: 12,
     source: patchSource({
       verified: "unverified",
       note: "Mechanics are from the 0.5.5 patch notes; no community return data yet.",
@@ -170,10 +174,59 @@ export const farmingStrategies: FarmingStrategy[] = [
     risk: "medium",
     leagueStartViable: false,
     lateGameViable: true,
-    rank: 11,
+    rank: 13,
     source: patchSource({
       verified: "unverified",
-      note: "Mechanics are from the 0.5.5 patch notes; no community return data yet.",
+      note: "Mechanics are from the 0.5.5 patch notes. Web digests call it S tier (30 rooms, killing rares in Survive rooms shortens the timer) but no creator video ranks it yet.",
     }),
+  },
+  {
+    id: "delirium-lineage-rush",
+    name: "Delirium / Lineage rush",
+    tier: "S",
+    mechanics: ["delirium"],
+    atlasSetup:
+      "3× Delirium tablets while hunting cities, anomaly maps and Matriarch/Patriarch Halls. High Waystone-drop, max-mod (zero-portal) maps on the bosses for 2–3 fragments back. Grand Mirrors spread fog → free Simulacra. Pairs with Jado and the Lineage Support nodes.",
+    investment: "medium",
+    expectedReturn:
+      "High-value boss loot plus Simulacra and expensive Lineage gems; Fubgun's pick as a starter for strong builds.",
+    risk: "high",
+    leagueStartViable: true,
+    lateGameViable: true,
+    rank: 4,
+    source: videoSource(["2IvZ4D9b5bs@03:58", "2IvZ4D9b5bs@04:43"]),
+  },
+  {
+    id: "breach-rares",
+    name: "Breach rares",
+    tier: "A",
+    mechanics: ["breach"],
+    atlasSetup:
+      "Monster-effectiveness + rarity Atlas focus, Breach tablets with extra-rare mods. Nerfed in 0.5.5: the tablet's extra rares went from 3 to 2, and Unstable Breaches spawn their rares in waves of 5.",
+    investment: "medium",
+    expectedReturn: "Was S tier in 0.5; one tier lower after the nerf.",
+    risk: "medium",
+    leagueStartViable: true,
+    lateGameViable: true,
+    rank: 5,
+    source: videoSource(["2IvZ4D9b5bs@04:43", "-oMeaRoAX-o@01:32"], {
+      note: "Unstable Breach wave change is from the 0.5.5 patch notes.",
+    }),
+  },
+  {
+    id: "currency-abyss-hardwell",
+    name: "Currency Abyss / Hardwell (Ulaman)",
+    tier: "B",
+    mechanics: ["abyss"],
+    atlasSetup:
+      "Rarity Atlas focus (Ulaman currency). One-mod tablets are fine — no real tablet investment. Fubgun runs it on day one every league.",
+    investment: "low",
+    expectedReturn:
+      "Good day-one starter that doesn't scale. The Hardwell seems noticeably rarer in 0.5.5.",
+    risk: "low",
+    leagueStartViable: true,
+    lateGameViable: false,
+    rank: 7,
+    source: videoSource(["2IvZ4D9b5bs@05:29", "-oMeaRoAX-o@01:32"]),
   },
 ];

@@ -1,5 +1,10 @@
 import type { AtlasCluster, MemoryFork } from "@/lib/types";
-import { atlasSource, patchSource, strategySource } from "./sourceMeta";
+import {
+  atlasSource,
+  patchSource,
+  strategySource,
+  video05Source,
+} from "./sourceMeta";
 
 /**
  * `order` is the recommended allocation sequence within a cluster's `group`,
@@ -128,6 +133,35 @@ export const atlasClusters: AtlasCluster[] = [
       "Final node before the three memory forks — scales tablet modifiers broadly.",
     source: atlasSource(),
   },
+  {
+    id: "cluster-fracturing-orbs",
+    name: "Hidden Scars + From Distance Untold (Fracturing Orbs)",
+    order: 15,
+    group: "early-progression",
+    description:
+      "Chance for Fracturing Orbs — essential, valuable crafting currency. Take both as you leave the Citadel area.",
+    source: video05Source(["lsu7-ITJe_M@16:08", "jOU2zNgLxJ0@12:12"]),
+  },
+  {
+    id: "cluster-lineage-support-nodes",
+    name: "Anomaly-map Lineage Support drop nodes",
+    order: 16,
+    group: "early-progression",
+    description:
+      "Chance for extra Lineage Support gems from anomaly maps. Allocate before running any anomaly map or Jado quest.",
+    source: video05Source(["VSeDfybR3Cc@21:17", "lsu7-ITJe_M@17:08"]),
+  },
+  {
+    id: "cluster-propagating-secrets",
+    name: "Propagating Secrets (tablet quantity)",
+    order: 17,
+    group: "early-progression",
+    description: "Increases tablet drops — take it alongside Reverse Transcription.",
+    source: video05Source(["jOU2zNgLxJ0@11:27"], {
+      verified: "unverified",
+      note: "Node name comes from the synthesis notes, not a verbatim transcript line — check the in-game name.",
+    }),
+  },
 
   // --- General / late-game clusters ---
   {
@@ -136,8 +170,8 @@ export const atlasClusters: AtlasCluster[] = [
     order: 1,
     group: "general",
     description:
-      "Stitch the Flesh, Hidden Patterns, Remnants of the Greatness — spec this and path outward from newly-unlocked wall towers in one direction only (don't run random maps) to find the next Halls pair faster, until a non-quest Origin Core kill completes the Fortress (0.5.5).",
-    source: atlasSource(),
+      "Stitch the Flesh (+1 revive), Hidden Patterns, Remnants of the Greatness, then Map Irradiation or Volatile Connection. Path outward from a Fortress wall tower in one direction only, clearing corrupted nexuses for Doryani points, to find a Matriarch/Patriarch Hall pair outside the walls for the non-quest Origin Core.",
+    source: video05Source(["VSeDfybR3Cc@22:18", "uMHfOL8sT6I@10:40"]),
   },
   {
     id: "cluster-generic-quantity-rarity",
@@ -145,8 +179,8 @@ export const atlasClusters: AtlasCluster[] = [
     order: 2,
     group: "general",
     description:
-      "Remaining points once the Precursor Fortress is complete go here before finishing out mechanic sub-trees.",
-    source: atlasSource(),
+      "Remaining points once the Precursor Fortress is complete go here before finishing out mechanic sub-trees. Fubgun: search \"rare\" and \"tablet\" in the tree and take them all. Leave the city/middle-region nodes for last if you farm outside cities.",
+    source: video05Source(["-R5KjDJQu9w@09:04", "-R5KjDJQu9w@08:19", "VSeDfybR3Cc@24:20"]),
   },
   {
     id: "cluster-closeout-sequencing",
@@ -156,6 +190,16 @@ export const atlasClusters: AtlasCluster[] = [
     description:
       "Recommended order: Ritual → Vaal Temple → Delirium (hardest last). Past ~120 total points, allocation order stops mattering much.",
     source: atlasSource(),
+  },
+
+  {
+    id: "cluster-undergeared-opener",
+    name: "Alternative opener for undergeared characters (Scorpius)",
+    order: 4,
+    group: "general",
+    description:
+      "Shrine cluster → magic-monster circle → Eons of Contamination (irradiated tablets, T6+/area 70+) → No Simple Battles → Valuable Paths → Specialized Seeker → Chosen Path (Rogue Exiles) → Journey Ahead → Archaeological Interest. Stuck under T10? Take the middle circle and star cluster instead of going north.",
+    source: video05Source(["jOU2zNgLxJ0@08:22", "jOU2zNgLxJ0@10:07"]),
   },
 
   // --- Mechanic sub-trees: Breach (Genesis Tree / Keepers of the Flame) ---
@@ -318,6 +362,20 @@ export const atlasClusters: AtlasCluster[] = [
     source: atlasSource(),
   },
 
+  {
+    id: "cluster-ritual-quest-passives",
+    name: "Ritual quest passives: Reborn / Shadow from the Mists, Invigorated Sacrifices, Attrition",
+    order: 6,
+    group: "mechanic-subtree",
+    mechanic: "ritual",
+    description:
+      "Passives unlocked along the King in the Mists → Bodach chain.",
+    source: video05Source(["VSeDfybR3Cc@25:21"], {
+      verified: "unverified",
+      note: "Node names are from auto-captions — check the in-game spelling.",
+    }),
+  },
+
   // --- Mechanic sub-trees: Expedition (flagged version conflict) ---
   {
     id: "cluster-expedition-atlas-tree",
@@ -326,10 +384,10 @@ export const atlasClusters: AtlasCluster[] = [
     group: "mechanic-subtree",
     mechanic: "expedition",
     description:
-      "0.5.4 'Grand Expedition' patch notes describe a dedicated Expedition Atlas tree (e.g. 'Feeling Lucky?' for Liquid Verisium), but this contradicts an earlier source claiming Expedition has no tree at all. Since 0.5.5 Expedition is a core Atlas mechanic in every league, including Standard; Expedition Tablets drop in Standard and Forbidden Rites but not in Runes of Aldur.",
+      "0.5.4 'Grand Expedition' patch notes describe a dedicated Expedition Atlas tree (e.g. 'Feeling Lucky?' for Liquid Verisium), and Lazy Exile (0.5.5) says the Grand Expedition quest line awards points; only a pre-0.5.4 guide says there's no tree. Since 0.5.5 Expedition is a core Atlas mechanic in every league, including Standard; Expedition Tablets drop in Standard and Forbidden Rites but not in Runes of Aldur.",
     source: atlasSource({
       verified: "conflicting",
-      note: "Asmodeus's guide (pre-0.5.4) says Expedition has no Atlas tree; the 0.5.4 'Grand Expedition' patch notes say one was added. Verify in-game before planning around either claim.",
+      note: "Asmodeus's guide (pre-0.5.4) says Expedition has no Atlas tree; the 0.5.4 'Grand Expedition' patch notes and Lazy Exile (5Vp_3gUFbwI@10:44, 0.5.5) say it has points. Leaning 'has a tree'.",
     }),
   },
 ];

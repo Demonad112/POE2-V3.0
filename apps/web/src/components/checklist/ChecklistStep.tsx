@@ -4,6 +4,7 @@ import type { BenchmarkGate as BenchmarkGateType, RoadmapStep } from "@/lib/type
 import { BenchmarkGate } from "@/components/shared/BenchmarkGate";
 import { SourceFlag } from "@/components/shared/SourceFlag";
 import { actionItemKey, useChecklistState } from "@/hooks/useChecklistState";
+import { commonMistakes } from "@/data/commonMistakes";
 
 export function ChecklistStep({
   step,
@@ -12,9 +13,17 @@ export function ChecklistStep({
   step: RoadmapStep;
   gates: BenchmarkGateType[];
 }) {
-  const { isStepComplete, toggleStep, isActionItemComplete, toggleActionItem } =
-    useChecklistState();
+  const {
+    isStepComplete,
+    toggleStep,
+    isActionItemComplete,
+    toggleActionItem,
+    hideCompleted,
+  } = useChecklistState();
   const complete = isStepComplete(step.id);
+  const avoid = commonMistakes.filter((m) => step.relatedMistakeIds?.includes(m.id));
+
+  if (complete && hideCompleted) return null;
 
   return (
     <li
@@ -48,6 +57,14 @@ export function ChecklistStep({
         </div>
       </label>
 
+      {step.tips && step.tips.length > 0 && (
+        <ul className="mt-2 ml-7 list-disc space-y-1 pl-4 text-xs text-ink-mute marker:text-[var(--accent)]">
+          {step.tips.map((tip) => (
+            <li key={tip}>{tip}</li>
+          ))}
+        </ul>
+      )}
+
       {step.actionItems && step.actionItems.length > 0 && (
         <ul className="mt-3 ml-7 space-y-1 border-l border-line pl-3">
           {step.actionItems.map((item, index) => {
@@ -70,6 +87,24 @@ export function ChecklistStep({
             );
           })}
         </ul>
+      )}
+
+      {avoid.length > 0 && (
+        <div className="mt-3 ml-7 space-y-1">
+          {avoid.map((m) => (
+            <details
+              key={m.id}
+              className="group rounded-md border border-danger/20 bg-danger/[0.05] px-2.5 py-1.5 text-xs"
+            >
+              <summary className="cursor-pointer list-none text-[var(--danger)] [&::-webkit-details-marker]:hidden">
+                <span aria-hidden>⚠ </span>
+                <span className="font-semibold">Avoid:</span> {m.title}
+                <span className="ml-1 text-ink-mute group-open:hidden">(why?)</span>
+              </summary>
+              <p className="mt-1 text-danger/80">{m.description}</p>
+            </details>
+          ))}
+        </div>
       )}
 
       {gates.length > 0 && (
