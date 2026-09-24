@@ -85,6 +85,29 @@ mostly empty space and other classes' wheels.
 (`MARAUDER`, `RANGER`, `WITCH`, …), so the display names above come from the
 build script, not the data.
 
+## `generated/pob-skills.json`
+
+Support-gem effects and active-skill types, extracted from
+[Path of Building PoE2](https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2)
+(`src/Data/Skills/sup_*.lua`, `act_*.lua`, `Gems.lua`). MIT licensed, Path of
+Building Community.
+
+```
+POB2_DIR=/path/to/PathOfBuilding-PoE2 npm run build:pob-skills -w @poe2/data
+```
+
+The output records the source commit. What's kept:
+
+- **Supports** that exist as socketable gems (Gems.lua `gemType = "Support"`):
+  name, gem family, tier, the `requireSkillTypes` / `excludeSkillTypes`
+  postfix expressions, and every constant stat. Stats with a local `statMap`
+  entry carry the PoB modifier they map to (name, MORE/INC, flags, and whether
+  a condition table is attached); the rest are kept raw under `unmapped`.
+- **Actives**: skill name → skill types.
+
+What's deliberately not kept: effects whose value scales per gem level. The
+damage review reports those supports as "not quantified" rather than guessing.
+
 ## Licensing
 
 Passive tree data derives from Path of Exile 2, © Grinding Gear Games. It is

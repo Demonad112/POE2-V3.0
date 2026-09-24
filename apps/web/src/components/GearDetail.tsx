@@ -27,8 +27,10 @@ import {
   type ItemAnalysis,
   type ItemModAnalysis,
   type LocatedMod,
+  type ModTiers,
 } from '@poe2/core'
 import type { ModTiersState } from '@/lib/useModTiers'
+import { ReplacementPlanner } from './ReplacementPlanner'
 import { Empty, Panel, Tag } from './ui'
 
 /** T1 is the best. Colour carries that, but never alone — the label says T1. */
@@ -103,8 +105,16 @@ function ModRow({ mod }: { mod: ItemModAnalysis }) {
   )
 }
 
-function ItemCard({ item }: { item: ItemAnalysis }) {
+interface PlanContext {
+  analysed: ItemAnalysis[]
+  items: EquippedItem[]
+  defense: DefenseSummary
+  tiers: ModTiers
+}
+
+function ItemCard({ item, context }: { item: ItemAnalysis; context: PlanContext }) {
   const [open, setOpen] = useState(false)
+  const [planning, setPlanning] = useState(false)
   const wasted = item.mods.filter((m) => m.waste).length
   const upgradable = item.mods.filter((m) => m.upgrades.some((u) => u.reachableOnThisItem)).length
 
@@ -146,6 +156,25 @@ function ItemCard({ item }: { item: ItemAnalysis }) {
               {w}
             </li>
           ))}
+          <li className="px-1 pt-1">
+            <button
+              type="button"
+              onClick={() => setPlanning((v) => !v)}
+              aria-expanded={planning}
+              className="rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent transition-colors hover:bg-accent/20"
+            >
+              {planning ? 'Hide replacement plan' : 'Plan a replacement for this item →'}
+            </button>
+            {planning ? (
+              <ReplacementPlanner
+                target={item}
+                analysed={context.analysed}
+                items={context.items}
+                defense={context.defense}
+                tiers={context.tiers}
+              />
+            ) : null}
+          </li>
         </ul>
       ) : null}
     </li>
@@ -170,6 +199,7 @@ export function GearDetail({
     const analysed = active.map((i) => analyzeItem(i, state.tiers, defense))
     const swaps = findResistanceSwaps(analysed, active, state.tiers, defense)
     return {
+      context: { analysed, items: active, defense, tiers: state.tiers } satisfies PlanContext,
       analysed,
       swaps,
       shortfalls: summarizeSwaps(swaps, defense),
@@ -204,17 +234,17 @@ export function GearDetail({
     )
   }
 
-  const { analysed, swaps, upgrades, shortfalls } = result
+  const { analysed, swaps, upgrades, shortfalls, context } = result
 
   return (
     <div className="grid gap-4">
       <Panel
         title="Gear modifiers"
-        subtitle="Tier 1 is the best roll. Tiers are counted against each item's own class, so a ring and a bow have different ladders for the same stat."
+        subtitle="Tier 1 is the best roll. Tiers are counted against each item's own class, so a ring and a bow have different ladders for the same stat. Open an item and choose “Plan a replacement” to see what to look for instead — and what else to change to stay capped."
       >
         <ul className="space-y-1.5">
           {analysed.map((item) => (
-            <ItemCard key={item.slotId} item={item} />
+            <ItemCard key={item.slotId} item={item} context={context} />
           ))}
         </ul>
       </Panel>

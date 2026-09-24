@@ -11,7 +11,8 @@
     "build:mods": "node scripts/build-mods.mjs",
     "build:mod-bases": "node scripts/build-mod-bases.mjs",
     "build:monster-stats": "node scripts/build-monster-stats.mjs",
-    "build:skills": "node scripts/build-skills.mjs"
+    "build:skills": "node scripts/build-skills.mjs",
+    "build:pob-skills": "node scripts/build-pob-skills.mjs"
   },
   "engines": {
     "node": ">=22"
