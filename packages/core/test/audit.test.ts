@@ -17,6 +17,7 @@ import {
   auditAttributes,
   auditCharacter,
   auditGemQuality,
+  auditSoulCoreLimits,
   auditSpirit,
   findEmptySockets,
 } from '../src/gear/audit.js'
@@ -198,5 +199,60 @@ describe('degrading without data', () => {
 describe('gem quality without a model', () => {
   it('returns an empty list rather than throwing', () => {
     expect(auditGemQuality({} as CharModel)).toEqual([])
+  })
+})
+
+describe('soul core limits', () => {
+  // Synthetic gear: the fixture predates 0.5.5 and socketed only one core.
+  const core = (typeLine: string, properties: unknown[] = []) => ({ typeLine, baseType: typeLine, properties })
+  const gear = (slotLabel: string, socketedItems: unknown[], active = true) =>
+    ({
+      slotId: 0,
+      slotLabel,
+      active,
+      name: slotLabel,
+      baseType: '',
+      itemLevel: null,
+      rarity: 'Rare',
+      corrupted: false,
+      mods: [],
+      raw: { itemSlot: 0, itemData: { socketedItems } },
+    }) as unknown as Parameters<typeof auditSoulCoreLimits>[0][number]
+
+  it('flags a Limit-1 core socketed twice, citing the 0.5.5 table', () => {
+    const report = auditSoulCoreLimits([
+      gear('Helmet', [core('Soul Core of Tzamoto')]),
+      gear('Boots', [core('Soul Core of Tzamoto')]),
+    ])
+    expect(report).toEqual([
+      {
+        name: 'Soul Core of Tzamoto',
+        limit: 1,
+        limitSource: 'patch-0.5.5',
+        socketed: 2,
+        excess: 1,
+        slotLabels: ['Helmet', 'Boots'],
+      },
+    ])
+  })
+
+  it('reports nothing within the limit, for unlimited cores, or for the inactive weapon set', () => {
+    expect(
+      auditSoulCoreLimits([
+        gear('Helmet', [core('Soul Core of Tzamoto')]),
+        gear('Body Armour', [core('Soul Core of Citaqualotl'), core('Soul Core of Citaqualotl')]),
+        gear('Weapon 2', [core('Soul Core of Tzamoto')], false),
+      ]),
+    ).toEqual([])
+  })
+
+  it('prefers a limit the payload states over the table', () => {
+    const limited = core('Soul Core of Citaqualotl', [{ name: '[Limit]', values: [['1', 0]] }])
+    const report = auditSoulCoreLimits([gear('Helmet', [limited]), gear('Gloves', [limited])])
+    expect(report).toMatchObject([{ name: 'Soul Core of Citaqualotl', limit: 1, limitSource: 'payload', excess: 1 }])
+  })
+
+  it('finds nothing on the real pre-0.5.5 character', () => {
+    expect(audit.soulCoreLimits).toEqual([])
   })
 })

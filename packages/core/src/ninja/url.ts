@@ -15,22 +15,78 @@ export interface ProfileRef {
   character: string
 }
 
-/** Display name -> API slug. Verified against /poe2/api/data/index-state. */
-export const LEAGUE_SLUGS: Readonly<Record<string, string>> = Object.freeze({
+/**
+ * League base name -> API slug, for the bases whose slug is not simply the name
+ * with its spaces removed ("Fate of the Vaal" is `vaal`) plus the ones named
+ * outright so the table documents what is live. Verified against
+ * /poe2/api/data/index-state.
+ *
+ * Hardcore and SSF variants are NOT listed: poe.ninja appends `hc` then `ssf`
+ * to the base slug ("HC SSF Forbidden Rites" is `forbiddenriteshcssf`), the
+ * reverse of the display name's word order, and `leagueSlug` derives that. A
+ * new league with an unabbreviated slug therefore needs no entry here at all.
+ */
+export const BASE_SLUGS: Readonly<Record<string, string>> = Object.freeze({
+  'forbidden rites': 'forbiddenrites',
   'runes of aldur': 'runesofaldur',
-  'hc runes of aldur': 'runesofaldurhc',
-  'ssf runes of aldur': 'runesofaldurssf',
   'fate of the vaal': 'vaal',
-  'hc fate of the vaal': 'vaalhc',
   abyss: 'abyss',
   dawn: 'dawn',
   standard: 'standard',
   hardcore: 'hardcore',
 })
 
+/** Leading display-name tokens poe.ninja turns into slug suffixes. */
+const HC_PREFIX = /^(?:hc|hardcore)(?:\s+|$)/
+const SSF_PREFIX = /^(?:ssf|solo self-found)(?:\s+|$)/
+
+/**
+ * Every display name this module resolves, with its slug. Derived from
+ * `BASE_SLUGS`, so the two cannot disagree.
+ */
+export const LEAGUE_SLUGS: Readonly<Record<string, string>> = Object.freeze(
+  Object.fromEntries(
+    Object.entries(BASE_SLUGS).flatMap(([name, slug]) =>
+      name === 'standard' || name === 'hardcore'
+        ? [[name, slug]]
+        : [
+            [name, slug],
+            [`hc ${name}`, `${slug}hc`],
+            [`ssf ${name}`, `${slug}ssf`],
+            [`hc ssf ${name}`, `${slug}hcssf`],
+          ],
+    ),
+  ),
+)
+
+/**
+ * The API slug for a league display name, or the slug itself passed through.
+ *
+ * This is the only slug function in core: the ladder lookup delegates here, so
+ * the profile URL and the ladder can never resolve one league two ways.
+ */
 export function leagueSlug(nameOrSlug: string): string {
-  const key = nameOrSlug.trim().toLowerCase()
-  return LEAGUE_SLUGS[key] ?? key.replace(/[^a-z0-9]/g, '')
+  const key = nameOrSlug.trim().toLowerCase().replace(/\s+/g, ' ')
+  const exact = BASE_SLUGS[key]
+  if (exact) return exact
+
+  let rest = key
+  let hc = false
+  let ssf = false
+  for (;;) {
+    if (!hc && HC_PREFIX.test(rest)) {
+      hc = true
+      rest = rest.replace(HC_PREFIX, '')
+    } else if (!ssf && SSF_PREFIX.test(rest)) {
+      ssf = true
+      rest = rest.replace(SSF_PREFIX, '')
+    } else break
+  }
+
+  const flat = (s: string) => s.replace(/[^a-z0-9]/g, '')
+  // "Hardcore SSF" has no base league to suffix, so it is left as written.
+  if ((!hc && !ssf) || !flat(rest)) return BASE_SLUGS[rest] ?? flat(key)
+  return (BASE_SLUGS[rest] ?? flat(rest)) + (hc ? 'hc' : '') + (ssf ? 'ssf' : '')
 }
 
 const PATTERNS: Array<{ re: RegExp; order: Array<keyof ProfileRef> }> = [

@@ -14,7 +14,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { decodeSearchResponse, toNumber, summarise } from '../api/ladder.js'
+import { decodeSearchResponse, findSnapshot, toNumber, summarise } from '../api/ladder.js'
 
 const fixturePath = fileURLToPath(new URL('./fixtures/builds-search-runes-of-aldur.bin', import.meta.url))
 const bytes = new Uint8Array(readFileSync(fixturePath))
@@ -65,4 +65,18 @@ test('summarise() over the fixture produces an ordered, sane band', () => {
   const pool = summarise(decoded.rows.map((r) => (toNumber(r.life) ?? 0) + (toNumber(r.energyshield) ?? 0)))
   assert.ok(pool)
   assert.ok(pool.p25 <= pool.median && pool.median <= pool.p75 && pool.p75 <= pool.max)
+})
+
+test('finds a snapshot by slug first, then by display name', () => {
+  const versions = [
+    { url: 'forbiddenrites', name: 'Forbidden Rites', version: 'a' },
+    { url: 'forbiddenriteshc', name: 'HC Forbidden Rites', version: 'b' },
+  ]
+  assert.equal(findSnapshot(versions, 'forbiddenriteshc').version, 'b')
+  // A wrongly-derived slug still resolves if the caller sent the display name.
+  assert.equal(findSnapshot(versions, 'hc forbidden rites').version, 'b')
+  assert.equal(findSnapshot([{ url: 'x', displayName: 'Some League', version: 'c' }], 'Some League').version, 'c')
+  assert.equal(findSnapshot(versions, 'hcforbiddenrites', 'HC Forbidden Rites').version, 'b')
+  assert.equal(findSnapshot(versions, 'hcforbiddenrites'), null)
+  assert.equal(findSnapshot(undefined, 'forbiddenrites'), null)
 })

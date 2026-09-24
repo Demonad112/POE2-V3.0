@@ -1,5 +1,5 @@
 import type { AtlasCluster, MemoryFork } from "@/lib/types";
-import { atlasSource, strategySource } from "./sourceMeta";
+import { atlasSource, patchSource, strategySource } from "./sourceMeta";
 
 /**
  * `order` is the recommended allocation sequence within a cluster's `group`,
@@ -136,7 +136,7 @@ export const atlasClusters: AtlasCluster[] = [
     order: 1,
     group: "general",
     description:
-      "Stitch the Flesh, Hidden Patterns, Remnants of the Greatness — spec this and path outward from newly-unlocked wall towers in one direction only (don't run random maps) to find the next Halls pair faster, across all 5 Arbiter of Divinity cycles.",
+      "Stitch the Flesh, Hidden Patterns, Remnants of the Greatness — spec this and path outward from newly-unlocked wall towers in one direction only (don't run random maps) to find the next Halls pair faster, until a non-quest Origin Core kill completes the Fortress (0.5.5).",
     source: atlasSource(),
   },
   {
@@ -145,7 +145,7 @@ export const atlasClusters: AtlasCluster[] = [
     order: 2,
     group: "general",
     description:
-      "Remaining points after the 5th Arbiter of Divinity cycle go here before finishing out mechanic sub-trees.",
+      "Remaining points once the Precursor Fortress is complete go here before finishing out mechanic sub-trees.",
     source: atlasSource(),
   },
   {
@@ -274,8 +274,21 @@ export const atlasClusters: AtlasCluster[] = [
     order: 1,
     group: "mechanic-subtree",
     mechanic: "ritual",
-    description: "Defer Tribute to fish Omens/chase uniques.",
-    source: strategySource(),
+    description:
+      "Defer Tribute to fish Omens/chase uniques. 0.5.5 fixed Invigorated Sacrifices granting far more Tribute than intended, so Tribute totals from pre-0.5.5 guides may run high.",
+    source: strategySource({
+      note: "Invigorated Sacrifices fix is from the 0.5.5 patch notes.",
+    }),
+  },
+  {
+    id: "cluster-ritual-royal-lenience",
+    name: "Royal Lenience (notable, new in 0.5.5)",
+    order: 5,
+    group: "mechanic-subtree",
+    mechanic: "ritual",
+    description:
+      "Tribute already offered to the King can be used to Defer items; Deferring this way costs 500% more Offered Tribute. Lets Tribute you gave up still buy a deferral.",
+    source: patchSource(),
   },
   {
     id: "cluster-ritual-tablet-reroll",
@@ -313,7 +326,7 @@ export const atlasClusters: AtlasCluster[] = [
     group: "mechanic-subtree",
     mechanic: "expedition",
     description:
-      "0.5.4 'Grand Expedition' patch notes describe a dedicated Expedition Atlas tree (e.g. 'Feeling Lucky?' for Liquid Verisium), but this contradicts an earlier source claiming Expedition has no tree at all.",
+      "0.5.4 'Grand Expedition' patch notes describe a dedicated Expedition Atlas tree (e.g. 'Feeling Lucky?' for Liquid Verisium), but this contradicts an earlier source claiming Expedition has no tree at all. Since 0.5.5 Expedition is a core Atlas mechanic in every league, including Standard; Expedition Tablets drop in Standard and Forbidden Rites but not in Runes of Aldur.",
     source: atlasSource({
       verified: "conflicting",
       note: "Asmodeus's guide (pre-0.5.4) says Expedition has no Atlas tree; the 0.5.4 'Grand Expedition' patch notes say one was added. Verify in-game before planning around either claim.",

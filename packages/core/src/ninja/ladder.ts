@@ -23,6 +23,7 @@
  */
 
 import type { FetchLike } from './client.js'
+import { leagueSlug } from './url.js'
 
 export interface LadderStat {
   /** Rows that carried this figure. */
@@ -52,10 +53,15 @@ export interface LadderSummary {
 
 /**
  * poe.ninja's league slug, derived from the league name a character model
- * carries ("Runes of Aldur" -> "runesofaldur").
+ * carries ("Runes of Aldur" -> "runesofaldur", "HC Runes of Aldur" ->
+ * "runesofaldurhc").
+ *
+ * Delegates to `leagueSlug`. This used to strip the name independently, which
+ * turned every hardcore or SSF league into a slug poe.ninja does not serve
+ * ("hcrunesofaldur"), so those characters silently got no ladder comparison.
  */
 export function leagueSlugOf(league: string): string {
-  return league.toLowerCase().replace(/[^a-z0-9]/g, '')
+  return leagueSlug(league)
 }
 
 /**
@@ -114,6 +120,9 @@ export async function fetchLadder(req: LadderRequest): Promise<LadderSummary | n
   if (!league) return null
 
   const params = new URLSearchParams({ league })
+  // The display name too, so the proxy can look the league up in poe.ninja's
+  // own index when this slug is wrong (a league launched after this table).
+  if (req.league.trim() && req.league.trim() !== league) params.set('name', req.league.trim())
   if (req.ascendancy) params.set('class', req.ascendancy)
   const base = req.proxyBaseUrl.replace(/\/+$/, '')
 
@@ -121,7 +130,13 @@ export async function fetchLadder(req: LadderRequest): Promise<LadderSummary | n
     const signal =
       typeof AbortSignal?.timeout === 'function' ? AbortSignal.timeout(req.timeoutMs ?? 15_000) : undefined
     const res = await req.fetch(`${base}/api/ladder?${params}`, signal ? { signal } : {})
-    if (!res.ok) return null
+    if (!res.ok) {
+      // Still null, as documented, but a 404 is the proxy saying it has no
+      // snapshot for this slug: usually a slug mapping gap, not a missing
+      // sample. Say which slug so that case is diagnosable.
+      if (res.status === 404) console.warn(`[ladder] no poe.ninja snapshot for league slug "${league}"`)
+      return null
+    }
     return validateLadder(await res.json())
   } catch {
     return null

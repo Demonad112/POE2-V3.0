@@ -14,9 +14,9 @@
  * Where the export is absent, those two report `null` rather than a guess.
  */
 
-import type { CharModel, NinjaItem } from '../model/types.js'
+import type { CharModel, NinjaItem, NinjaItemData } from '../model/types.js'
 import { normalizeItems, type EquippedItem } from '../model/slots.js'
-import { analyzeItem, type ItemAnalysis } from './analyze.js'
+import { analyzeItem, stripModMarkup, type ItemAnalysis } from './analyze.js'
 import type { ModTiers } from './tiers.js'
 
 // ---------------------------------------------------------------------------
@@ -254,10 +254,97 @@ export function auditSpirit(pobStats: Record<string, number> | null): SpiritRepo
 }
 
 // ---------------------------------------------------------------------------
+// Soul Core limits
+// ---------------------------------------------------------------------------
+
+/**
+ * Soul Cores with a Limit, from the Path of Exile 2 0.5.5 patch notes
+ * (2026-09-04), which gave each of these "a Limit of 1". A core over its limit
+ * grants nothing for the extra copies.
+ *
+ * A fallback only. A payload that states the limit itself (a `Limit` property
+ * on the socketed item) wins, so this table goes stale safely: a later patch
+ * that changes a limit is read from the item, and one that is not in the table
+ * is simply not checked.
+ */
+export const SOUL_CORE_LIMITS: Readonly<Record<string, number>> = Object.freeze({
+  'Soul Core of Jiquani': 1,
+  'Soul Core of Opiloti': 1,
+  'Soul Core of Puhuarte': 1,
+  'Soul Core of Ticaba': 1,
+  'Soul Core of Topotante': 1,
+  'Soul Core of Tzamoto': 1,
+  'Soul Core of Xopec': 1,
+  'Soul Core of Zalatl': 1,
+})
+
+export interface SoulCoreLimitReport {
+  name: string
+  limit: number
+  /** Where the limit came from: the item itself, or the 0.5.5 table above. */
+  limitSource: 'payload' | 'patch-0.5.5'
+  socketed: number
+  /** Copies beyond the limit, which grant nothing. */
+  excess: number
+  slotLabels: string[]
+}
+
+/** A `Limit` property stated on the socketed item, if the payload carries one. */
+function statedLimit(data: NinjaItemData): number | null {
+  const props = Array.isArray(data.properties) ? data.properties : []
+  for (const p of props as Array<{ name?: unknown; values?: unknown }>) {
+    if (typeof p?.name !== 'string') continue
+    if (stripModMarkup(p.name).trim().toLowerCase() !== 'limit') continue
+    const first = Array.isArray(p.values) && Array.isArray(p.values[0]) ? p.values[0][0] : null
+    const n = typeof first === 'string' ? Number.parseInt(first, 10) : typeof first === 'number' ? first : NaN
+    if (Number.isFinite(n) && n > 0) return n
+  }
+  return null
+}
+
+/**
+ * Limited Soul Cores socketed more times than their limit allows, across the
+ * gear actually in use. The inactive weapon set is excluded: its sockets do
+ * nothing while it is swapped out.
+ */
+export function auditSoulCoreLimits(items: EquippedItem[]): SoulCoreLimitReport[] {
+  const seen = new Map<string, { limit: number; limitSource: SoulCoreLimitReport['limitSource']; slots: string[] }>()
+
+  for (const item of items) {
+    if (!item.active) continue
+    const socketed = item.raw.itemData?.socketedItems
+    if (!Array.isArray(socketed)) continue
+    for (const core of socketed) {
+      const name = core?.typeLine || core?.baseType
+      if (!name) continue
+      const stated = statedLimit(core)
+      const tabled = SOUL_CORE_LIMITS[name]
+      const limit = stated ?? tabled
+      if (limit === undefined) continue
+      const entry = seen.get(name) ?? {
+        limit,
+        limitSource: stated !== null ? ('payload' as const) : ('patch-0.5.5' as const),
+        slots: [],
+      }
+      entry.slots.push(item.slotLabel)
+      seen.set(name, entry)
+    }
+  }
+
+  const out: SoulCoreLimitReport[] = []
+  for (const [name, { limit, limitSource, slots }] of seen) {
+    if (slots.length <= limit) continue
+    out.push({ name, limit, limitSource, socketed: slots.length, excess: slots.length - limit, slotLabels: slots })
+  }
+  return out
+}
+
+// ---------------------------------------------------------------------------
 
 export interface AuditReport {
   jewels: ItemAnalysis[]
   emptySockets: SocketReport[]
+  soulCoreLimits: SoulCoreLimitReport[]
   gemQuality: GemQualityReport[]
   attributes: AttributeHeadroom[]
   spirit: SpiritReport | null
@@ -283,6 +370,7 @@ export function auditCharacter(
   return {
     jewels: tiers ? analyzeJewels(model, tiers) : [],
     emptySockets: findEmptySockets(normalizeItems(model)),
+    soulCoreLimits: auditSoulCoreLimits(normalizeItems(model)),
     gemQuality: auditGemQuality(model),
     attributes: auditAttributes(pobStats),
     spirit: auditSpirit(pobStats),
