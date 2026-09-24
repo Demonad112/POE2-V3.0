@@ -1,10 +1,10 @@
 'use client'
 
 /**
- * Five checks over parts of the payload no other panel reads.
+ * Six checks over parts of the payload no other panel reads.
  *
- * Ordered by how unambiguous each is. An empty socket and a sub-maximum gem
- * quality are improvements regardless of build direction. Idle spirit and spare
+ * Ordered by how unambiguous each is. An empty socket, a Soul Core over its
+ * limit and a sub-maximum gem quality are improvements regardless of build direction. Idle spirit and spare
  * attributes are reported as facts without a verdict, because whether they are
  * worth spending depends on where the build is heading.
  */
@@ -38,6 +38,7 @@ export function AuditPanel({
   const nothingFound =
     !report.jewels.length &&
     !report.emptySockets.length &&
+    !report.soulCoreLimits.length &&
     !report.gemQuality.length &&
     !report.attributes.length &&
     !report.spirit
@@ -68,6 +69,25 @@ export function AuditPanel({
                   <span className="font-medium">{s.itemName}</span>
                   <span className="ml-2 text-ink-mute">
                     {s.slotLabel} · {s.empty} of {s.sockets} socket{s.sockets === 1 ? '' : 's'} empty
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {report.soulCoreLimits.length ? (
+          <section>
+            <h3 className="mb-1.5 text-[11px] font-medium tracking-wide text-warn uppercase">
+              Soul Cores over their limit — extra copies grant nothing
+            </h3>
+            <ul className="space-y-1">
+              {report.soulCoreLimits.map((c) => (
+                <li key={c.name} className="rounded-md bg-warn/10 px-3 py-2 text-[11px] text-ink">
+                  <span className="font-medium">{c.name}</span>
+                  <span className="ml-2 text-ink-mute">
+                    {c.socketed} socketed ({c.slotLabels.join(', ')}) · limit {c.limit} · {c.excess} wasted
+                    {c.limitSource === 'patch-0.5.5' ? ' · limit per 0.5.5 patch notes' : ''}
                   </span>
                 </li>
               ))}

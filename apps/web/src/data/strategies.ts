@@ -1,5 +1,5 @@
 import type { FarmingStrategy } from "@/lib/types";
-import { strategySource } from "./sourceMeta";
+import { patchSource, strategySource } from "./sourceMeta";
 
 export const farmingStrategies: FarmingStrategy[] = [
   {
@@ -19,10 +19,10 @@ export const farmingStrategies: FarmingStrategy[] = [
   },
   {
     id: "expedition-runes-of-aldur",
-    name: "Expedition / Runes of Aldur",
+    name: "Expedition",
     mechanics: ["expedition"],
     atlasSetup:
-      "0.5.4 Expedition Atlas tree ('Feeling Lucky?' for Liquid Verisium), Grand Expeditions, Jado pairing.",
+      "0.5.4 Expedition Atlas tree ('Feeling Lucky?' for Liquid Verisium), Grand Expeditions, Jado pairing. Since 0.5.5 Expedition is core in every league: Expedition Tablets (1-4 per map, each adding Expeditions, Verisium Remnants or density) drop in Standard and Forbidden Rites but not in Runes of Aldur. Aldur's Saga stays Runes of Aldur-only, though its modifiers can roll on Grand Expeditions elsewhere.",
     investment: "low",
     expectedReturn:
       "~10-20 Div/hr disciplined; the viral '50/hr' figure is an optimized ceiling, not a floor.",
@@ -30,7 +30,9 @@ export const farmingStrategies: FarmingStrategy[] = [
     leagueStartViable: true,
     lateGameViable: true,
     rank: 2,
-    source: strategySource(),
+    source: strategySource({
+      note: "League availability of Expedition Tablets and Aldur's Saga is from the 0.5.5 patch notes; the return figures predate 0.5.5.",
+    }),
   },
   {
     id: "breach-genesis-budget",
@@ -44,7 +46,10 @@ export const farmingStrategies: FarmingStrategy[] = [
     leagueStartViable: true,
     lateGameViable: true,
     rank: 3,
-    source: strategySource(),
+    source: strategySource({
+      verified: "unverified",
+      note: "0.5.5 removed Doryani's Refined Formula Master option (replaced by Archaic Corruption: monsters released from Essences become Corrupted) and made Unstable Breaches spawn their rares in waves of 5. The source doesn't say which Doryani option it meant — check it still exists.",
+    }),
   },
   {
     id: "breach-delirium-200",
@@ -58,7 +63,10 @@ export const farmingStrategies: FarmingStrategy[] = [
     leagueStartViable: false,
     lateGameViable: true,
     rank: 4,
-    source: strategySource(),
+    source: strategySource({
+      verified: "unverified",
+      note: "0.5.5: Delirium monster pack count no longer scales past 100% Deliriousness, and Grand Mirror fog now spreads to exactly 10 maps (was 8-16). Returns reported at 200% predate this.",
+    }),
   },
   {
     id: "ritual-city",
@@ -86,7 +94,10 @@ export const farmingStrategies: FarmingStrategy[] = [
     leagueStartViable: false,
     lateGameViable: true,
     rank: 6,
-    source: strategySource(),
+    source: strategySource({
+      verified: "unverified",
+      note: "0.5.5: Delirium monster pack count no longer scales past 100% Deliriousness, and the Invigorated Sacrifices bug that over-granted Ritual Tribute was fixed. The ~150 Div/hr report predates both.",
+    }),
   },
   {
     id: "vaal-temple-atziri",
@@ -127,7 +138,42 @@ export const farmingStrategies: FarmingStrategy[] = [
     lateGameViable: false,
     rank: 9,
     source: strategySource({
-      note: "Layer onto another strategy — never run as your main loop.",
+      verified: "unverified",
+      note: "Layer onto another strategy — never run as your main loop. 0.5.5 disabled the Viridian Wildwood unique map (Wildwood now only via Sacred Blooms in Forbidden Rites) and made Azmeri Spirit release a chance scaling with the possessed monster's empowerment.",
+    }),
+  },
+  {
+    id: "forbidden-rites-ritual",
+    name: "Forbidden Rites campaign Ritual + Sacred Blooms",
+    mechanics: ["ritual"],
+    atlasSetup:
+      "Forbidden Rites league only. Every campaign area has a levelling-focused Ritual; twice per Act (once per Interlude) a cluster of boss Ritual Effigies chains each defeated boss into the next area's waves, ending in a Tribute spend on Uniques. In maps, Sacred Blooms from Ritual rewards add the Viridian Wildwood to a map cluster — collect Wisp trails, and monsters in that map area become stronger and more rewarding.",
+    investment: "low",
+    expectedReturn: "Not yet measured — no post-launch return figures in the source material.",
+    risk: "medium",
+    leagueStartViable: true,
+    lateGameViable: true,
+    rank: 10,
+    source: patchSource({
+      verified: "unverified",
+      note: "Mechanics are from the 0.5.5 patch notes; no community return data yet.",
+    }),
+  },
+  {
+    id: "trial-of-chaos-soul-cores",
+    name: "Trial of Chaos (Soul Cores)",
+    mechanics: [],
+    atlasSetup:
+      "Since 0.5.5: a run can be left and resumed from the same room, each room ends in a reward chest, and completion rewards are only Currency and Soul Cores (no Corrupted items). A 10-trial Inscribed Ultimatum can be continued twice without a new Ultimatum, each successful continuation awarding a different Trialmaster Fragment, with an optional double-or-nothing Currency wager. Area-level bonuses stand in for Atlas passives, which don't apply inside.",
+    investment: "low",
+    expectedReturn: "Not yet measured — no post-0.5.5 return figures in the source material.",
+    risk: "medium",
+    leagueStartViable: false,
+    lateGameViable: true,
+    rank: 11,
+    source: patchSource({
+      verified: "unverified",
+      note: "Mechanics are from the 0.5.5 patch notes; no community return data yet.",
     }),
   },
 ];
