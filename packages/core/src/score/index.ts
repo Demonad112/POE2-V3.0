@@ -21,7 +21,17 @@ import type { DpsSummary } from '../dps/index.js'
 import { effectiveArmour, effectivePool, NO_KEYSTONE_EFFECTS, type KeystoneEffects } from '../keystones/index.js'
 import { bandFor, describeLadderSample, type LadderStat, type LadderSummary } from '../ninja/ladder.js'
 import type { PobConfig } from '../pob/config.js'
-import { CHAOS_CRITICAL, CHAOS_TARGET, isHealthy, ONE_SHOT_RATIO, POOL_GOOD, POOL_THIN } from '../thresholds.js'
+import {
+  ARMOUR_NEGLIGIBLE,
+  BLOCK_NEGLIGIBLE,
+  CHAOS_CRITICAL,
+  CHAOS_TARGET,
+  EVASION_SUBSTANTIAL,
+  isHealthy,
+  ONE_SHOT_RATIO,
+  POOL_GOOD,
+  POOL_THIN,
+} from '../thresholds.js'
 
 export type Severity = 'critical' | 'warning'
 
@@ -177,7 +187,7 @@ export function assessBuild(input: BuildAssessmentInput): BuildAssessment {
   // nor leaves the build short on armour — both judgements below would
   // otherwise be backwards.
   const armour = effectiveArmour(defense, keystones)
-  if (defense.evasion > 4000) {
+  if (defense.evasion > EVASION_SUBSTANTIAL) {
     strengths.push(
       keystones.evasionIsArmour
         ? `${defense.evasion.toLocaleString()} evasion converted to armour is a real mitigation layer`
@@ -187,7 +197,7 @@ export function assessBuild(input: BuildAssessmentInput): BuildAssessment {
   if (defense.ward > 0) {
     strengths.push(`${defense.ward.toLocaleString()} ward adds a recovering buffer over life and energy shield`)
   }
-  if (armour < 500 && defense.blockChance < 20) {
+  if (armour < ARMOUR_NEGLIGIBLE && defense.blockChance < BLOCK_NEGLIGIBLE) {
     weaknesses.push({
       text: 'Little armour or block — leaning on evasion and resistances alone',
       severity: 'warning',

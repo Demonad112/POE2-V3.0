@@ -36,6 +36,21 @@ export const POOL_GOOD = 6000
 export const POOL_THIN = 4000
 
 /**
+ * Evasion above this is a real mitigation layer worth naming as a strength,
+ * rather than a side effect of the base class having some.
+ */
+export const EVASION_SUBSTANTIAL = 4000
+
+/**
+ * Below both of these, the build leans on evasion and resistances alone —
+ * armour points too low to matter, and no meaningful block chance either.
+ * Both must hold: a low-armour, high-block build is not thin on mitigation,
+ * it just gets it from a different layer.
+ */
+export const ARMOUR_NEGLIGIBLE = 500
+export const BLOCK_NEGLIGIBLE = 20
+
+/**
  * A maximum-hit-taken value below this fraction of the character's best is a
  * one-shot risk worth flagging.
  *
