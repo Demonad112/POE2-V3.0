@@ -47,7 +47,7 @@ loaded, and — with `checkNetwork: true` — whether poe.ninja is reachable.
 damage threshold to grade against, and this codebase carries no invented ones.
 
 ```json
-"env": { "POE2_NINJA_PROXY_BASE": "https://poe2-endgame-ninja-proxy.vercel.app" }
+"env": { "POE2_NINJA_PROXY_BASE": "https://poe2-v3-ninja-proxy.vercel.app" }
 ```
 
 Opt-in because it is an outbound call this server does not otherwise make. The

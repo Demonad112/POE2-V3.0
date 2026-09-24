@@ -22,7 +22,7 @@ export default function handler(req, res) {
 
   res.status(200).json({
     ok: true,
-    service: "poe2-endgame-ninja-proxy",
+    service: "poe2-v3-ninja-proxy",
     endpoints: ["/api/character", "/api/ladder", "/api/health"],
     // Set by Vercel on every deployment; useful for telling which build a
     // response came from when a deploy looks like it did not take effect.

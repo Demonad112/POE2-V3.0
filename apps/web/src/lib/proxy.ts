@@ -12,18 +12,15 @@
  *
  * NEXT_PUBLIC_NINJA_PROXY_BASE overrides it if the proxy ever moves.
  *
- * The default points at the deployment that also serves /api/ladder and
- * /api/health, which the one at poe2-ninja-proxy.vercel.app does not. Both
- * answer the same ?account&league&character contract, so either works for
- * character import alone; this one is a superset. NOTE: that deployment is
- * currently built from the Poe2-endgame repository, so the copy of its source
- * in services/ninja-proxy here will drift until the Vercel project's Root
- * Directory is re-pointed at this repo.
+ * The default is the Vercel project `poe2-v3-ninja-proxy`, built by the Vercel
+ * GitHub integration from services/ninja-proxy in THIS repository, so the
+ * deployed proxy and its source here cannot drift. It serves /api/character,
+ * /api/ladder (with the display-name league fallback) and /api/health.
  *
  * Lives here rather than in the import bar because the ladder comparison needs
  * the same base, and two copies of a URL are two chances to point at different
  * deployments.
  */
-const DEFAULT_PROXY = 'https://poe2-endgame-ninja-proxy.vercel.app'
+const DEFAULT_PROXY = 'https://poe2-v3-ninja-proxy.vercel.app'
 
 export const PROXY_BASE = (process.env.NEXT_PUBLIC_NINJA_PROXY_BASE || DEFAULT_PROXY).replace(/\/+$/, '')

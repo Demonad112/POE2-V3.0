@@ -22,7 +22,7 @@
 import { readFileSync } from "node:fs";
 
 const PROXY =
-  process.env.NINJA_PROXY_BASE ?? "https://poe2-endgame-ninja-proxy.vercel.app";
+  process.env.NINJA_PROXY_BASE ?? "https://poe2-v3-ninja-proxy.vercel.app";
 const NINJA = "https://poe.ninja";
 const MODULE_PATH = "src/lib/characterImport/breakdowns.ts";
 
