@@ -1,0 +1,68 @@
+name: Deploy ninja-proxy to Vercel
+
+# The web app on GitHub Pages cannot reach poe.ninja directly (no CORS), so
+# every character import and ladder lookup goes through services/ninja-proxy.
+# This keeps that deployment built from this repository's main branch instead
+# of drifting from a copy deployed by hand.
+#
+# Needs one repository secret, VERCEL_TOKEN (vercel.com/account/tokens), from
+# an account allowed to create production deployments in the team below.
+# Without it the job skips with a notice rather than failing.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/ninja-proxy/**'
+      - '.github/workflows/deploy-proxy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ninja-proxy
+  cancel-in-progress: false
+
+env:
+  # Not secrets: these identify the project, they grant nothing.
+  VERCEL_ORG_ID: team_x5tq3njZQm3WVWgKq1nEa7AM
+  VERCEL_PROJECT_ID: prj_YH2UJaME4FJWh0uIoQ5zwd9hT3Oo
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test before deploying
+        run: npm test
+        working-directory: services/ninja-proxy
+      - name: Deploy to production
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        # Runs from the repository root: the Vercel project's Root Directory is
+        # services/ninja-proxy, so the CLI resolves the functions from there.
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::notice::VERCEL_TOKEN is not set; skipping the proxy deploy. See services/ninja-proxy/README.md."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          url=$(npx --yes vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN")
+          echo "Deployed: $url"
+      - name: Check the production alias answers
+        if: steps.deploy.outputs.skipped != 'true'
+        # READY is not proof the functions built (see api/health.js), and the
+        # app only works through the public production alias, not the
+        # SSO-walled deployment URL, so that is what gets checked.
+        run: |
+          for i in 1 2 3 4 5; do
+            body=$(curl -fsS https://poe2-v3-ninja-proxy.vercel.app/api/health) && break
+            sleep 10
+          done
+          echo "$body"
+          echo "$body" | grep -q '"/api/ladder"'

@@ -57,7 +57,29 @@ access-control-allow-origin: *
 content-type: application/json; charset=utf-8   # 407 KB charModel
 ```
 
-## Redeploying
+## Deploying from this repository
+
+The Vercel project **`poe2-v3-ninja-proxy`** (team `obsidian-intelligenceyyc`,
+Root Directory `services/ninja-proxy`, deployment protection on previews only)
+exists for this repo. `.github/workflows/deploy-proxy.yml` deploys it to
+production on every push to `main` that touches this directory, then checks
+`https://poe2-v3-ninja-proxy.vercel.app/api/health`. It needs one repository
+secret:
+
+```
+Settings → Secrets and variables → Actions → Secrets
+VERCEL_TOKEN = <token from vercel.com/account/tokens>
+```
+
+Without it the workflow skips with a notice. Once it has deployed, point the
+web app at it with the `NEXT_PUBLIC_NINJA_PROXY_BASE` repository variable
+(below) and re-run the Pages deploy.
+
+Keep deployment protection on **previews only**. The team default,
+`all_except_custom_domains`, walls the production `.vercel.app` alias behind
+Vercel login, and every anonymous browser request would get a 302.
+
+## Redeploying elsewhere
 
 Deploy it anywhere that runs a JS function, then point the web app at it.
 
