@@ -1,36 +1,22 @@
 import type { Metadata } from "next";
-import { roadmapSteps } from "@/data/roadmap";
 import { benchmarkGates } from "@/data/benchmarks";
 import { ChecklistSection } from "@/components/checklist/ChecklistSection";
 import { ChecklistProgressHeader } from "@/components/checklist/ChecklistProgressHeader";
+import { ChecklistPhaseNav } from "@/components/checklist/ChecklistPhaseNav";
 import { CommonMistakesPanel } from "@/components/checklist/CommonMistakesPanel";
+import { GlossaryPanel } from "@/components/checklist/GlossaryPanel";
 import { MechanicsPrimer } from "@/components/checklist/MechanicsPrimer";
+import { NextStepCard } from "@/components/checklist/NextStepCard";
+import { ReadinessPanel } from "@/components/checklist/ReadinessPanel";
+import { WaystonePlanner } from "@/components/checklist/WaystonePlanner";
 import { PageHeader } from "@/components/layout/PageHeader";
-import type { RoadmapPhase } from "@/lib/types";
+import { stepsByPhase } from "@/lib/roadmapOrder";
 
 export const metadata: Metadata = {
   title: "Progression Checklist — PoE2 Endgame Companion",
 };
 
-const PHASE_ORDER: RoadmapPhase[] = [
-  "campaign-end",
-  "precursor-fortress",
-  "arbiter-of-ash",
-  "t11-checkpoint",
-  "arbiter-of-divinity-loop",
-  "full-tree",
-  "masters-and-mechanics",
-  "juiced-farming",
-];
-
 export default function ChecklistPage() {
-  const stepsByPhase = PHASE_ORDER.map((phase) => ({
-    phase,
-    steps: roadmapSteps
-      .filter((step) => step.phase === phase)
-      .sort((a, b) => a.order - b.order),
-  })).filter((group) => group.steps.length > 0);
-
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -39,8 +25,20 @@ export default function ChecklistPage() {
       />
 
       <ChecklistProgressHeader />
-      <MechanicsPrimer />
-      <CommonMistakesPanel />
+      <NextStepCard onChecklistPage />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <WaystonePlanner />
+        <ReadinessPanel />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <MechanicsPrimer />
+        <GlossaryPanel />
+        <CommonMistakesPanel />
+      </div>
+
+      <ChecklistPhaseNav />
 
       <div className="flex flex-col gap-8">
         {stepsByPhase.map(({ phase, steps }) => (

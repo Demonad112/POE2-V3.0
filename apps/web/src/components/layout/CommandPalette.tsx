@@ -11,6 +11,7 @@ const CATEGORY_COLORS: Record<SearchCategory, string> = {
   Boss: "text-[var(--danger)]",
   Build: "text-cold",
   Mistake: "text-[var(--danger)]",
+  Glossary: "text-ink-dim",
   Character: "text-[var(--accent)]",
 };
 

@@ -7,6 +7,7 @@ import { commonMistakes } from "@/data/commonMistakes";
 import { atlasTrapNodes } from "@/data/trapNodes";
 import { biomes } from "@/data/biomes";
 import { primerFacts } from "@/data/mechanicsPrimer";
+import { glossary } from "@/data/glossary";
 import type { Stage } from "@/lib/types";
 
 export type SearchCategory =
@@ -16,6 +17,7 @@ export type SearchCategory =
   | "Boss"
   | "Build"
   | "Mistake"
+  | "Glossary"
   | "Character";
 
 export interface SearchEntry {
@@ -107,6 +109,13 @@ export const searchIndex: SearchEntry[] = [
     subtitle: `${b.gives} — pick ${b.recommendedPick}`,
     category: "Atlas",
     href: "/atlas",
+  })),
+  ...glossary.map((g): SearchEntry => ({
+    id: g.id,
+    title: g.term,
+    subtitle: g.definition,
+    category: "Glossary",
+    href: "/checklist",
   })),
   ...primerFacts.map((f): SearchEntry => ({
     id: f.id,

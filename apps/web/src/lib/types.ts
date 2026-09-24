@@ -192,6 +192,14 @@ export interface TierBreakpoint {
   source: SourceRef;
 }
 
+export interface GlossaryTerm {
+  id: string;
+  term: string;
+  definition: string;
+  /** Where in the app it matters, e.g. a checklist step id. */
+  seeStepId?: string;
+}
+
 export interface CurrencyMilestone {
   id: string;
   label: string;
@@ -204,6 +212,10 @@ export interface PersistedState {
   checklist: {
     completedStepIds: string[];
     completedActionItemKeys: string[];
+    /** Hide ticked-off steps. Optional: older payloads simply lack it. */
+    hideCompleted?: boolean;
+    /** Highest Waystone tier completed, for the Waystone planner. 0 = none yet. */
+    highestTier?: number;
   };
   atlas: {
     allocatedClusterIds: string[];
