@@ -4,6 +4,7 @@ import type { FarmingStrategy } from "@/lib/types";
 import { Tag } from "@/components/shared/Tag";
 import { SourceFlag } from "@/components/shared/SourceFlag";
 import { useStrategySelection } from "@/hooks/useStrategySelection";
+import { StrategyTierBadge } from "./StrategyTable";
 
 const TIER_STYLES: Record<string, string> = {
   low: "text-[var(--good)]",
@@ -25,7 +26,10 @@ export function StrategyCard({ strategy }: { strategy: FarmingStrategy }) {
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-ink">{strategy.name}</h3>
+        <h3 className="flex items-center gap-2 font-semibold text-ink">
+          <StrategyTierBadge tier={strategy.tier} />
+          {strategy.name}
+        </h3>
         <button
           onClick={() => pinStrategy(pinned ? undefined : strategy.id)}
           className={`shrink-0 rounded-md border px-2 py-1 text-xs transition-colors ${

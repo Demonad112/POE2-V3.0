@@ -4,6 +4,7 @@ import { benchmarkGates } from "@/data/benchmarks";
 import { ChecklistSection } from "@/components/checklist/ChecklistSection";
 import { ChecklistProgressHeader } from "@/components/checklist/ChecklistProgressHeader";
 import { CommonMistakesPanel } from "@/components/checklist/CommonMistakesPanel";
+import { MechanicsPrimer } from "@/components/checklist/MechanicsPrimer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { RoadmapPhase } from "@/lib/types";
 
@@ -18,6 +19,7 @@ const PHASE_ORDER: RoadmapPhase[] = [
   "t11-checkpoint",
   "arbiter-of-divinity-loop",
   "full-tree",
+  "masters-and-mechanics",
   "juiced-farming",
 ];
 
@@ -33,10 +35,11 @@ export default function ChecklistPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Progression Checklist"
-        description="Campaign end through the full 301-point Atlas tree. Check off steps as you complete them — progress is saved in this browser."
+        description="Campaign end through the full Atlas tree, the Master quest chains and your farming loop. Check off steps as you complete them — progress is saved in this browser."
       />
 
       <ChecklistProgressHeader />
+      <MechanicsPrimer />
       <CommonMistakesPanel />
 
       <div className="flex flex-col gap-8">

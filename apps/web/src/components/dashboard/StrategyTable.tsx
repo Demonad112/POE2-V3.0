@@ -8,6 +8,26 @@ import { SourceFlag } from "@/components/shared/SourceFlag";
 type SortKey = "rank" | "investment" | "risk";
 const TIER_ORDINAL: Record<string, number> = { low: 0, medium: 1, high: 2 };
 
+export const STRATEGY_TIER_STYLES: Record<string, string> = {
+  S: "border-[var(--accent)]/50 bg-[var(--accent-dim)] text-[var(--accent)]",
+  A: "border-good/40 bg-good/10 text-[var(--good)]",
+  B: "border-line bg-surface-sunken text-ink-dim",
+  C: "border-line bg-surface-sunken text-ink-mute",
+};
+
+export function StrategyTierBadge({ tier }: { tier?: string }) {
+  return (
+    <span
+      title={tier ? `${tier} tier on the 0.5.5 creator tier list` : "Not ranked by a 0.5.5 source"}
+      className={`inline-flex size-6 shrink-0 items-center justify-center rounded border font-mono text-xs font-bold ${
+        tier ? STRATEGY_TIER_STYLES[tier] : "border-line text-ink-mute"
+      }`}
+    >
+      {tier ?? "–"}
+    </span>
+  );
+}
+
 export function StrategyTable({ strategies }: { strategies: FarmingStrategy[] }) {
   const [sortKey, setSortKey] = useState<SortKey>("rank");
 
@@ -53,6 +73,7 @@ export function StrategyTable({ strategies }: { strategies: FarmingStrategy[] })
             >
               <td className="px-3 py-2 font-medium text-ink">
                 <div className="flex flex-wrap items-center gap-2">
+                  <StrategyTierBadge tier={strategy.tier} />
                   {strategy.name}
                   <SourceFlag source={strategy.source} />
                 </div>

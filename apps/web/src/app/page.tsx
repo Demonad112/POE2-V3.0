@@ -9,7 +9,7 @@ const CARDS = [
     href: "/checklist",
     title: "Progression Checklist",
     description:
-      "Step-by-step endgame roadmap from campaign end through the full 301-point Atlas tree, with benchmark gates and common-mistake warnings at each stage.",
+      "Step-by-step endgame roadmap from campaign end through the full Atlas tree, with benchmark gates and common-mistake warnings at each stage.",
     icon: (
       <path
         d="M5 6h14M5 12h14M5 18h9"

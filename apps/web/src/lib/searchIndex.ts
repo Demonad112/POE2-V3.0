@@ -4,6 +4,9 @@ import { farmingStrategies } from "@/data/strategies";
 import { pinnacleBosses } from "@/data/bosses";
 import { metaBuilds } from "@/data/metaBuilds";
 import { commonMistakes } from "@/data/commonMistakes";
+import { atlasTrapNodes } from "@/data/trapNodes";
+import { biomes } from "@/data/biomes";
+import { primerFacts } from "@/data/mechanicsPrimer";
 import type { Stage } from "@/lib/types";
 
 export type SearchCategory =
@@ -90,6 +93,27 @@ export const searchIndex: SearchEntry[] = [
     subtitle: m.role,
     category: "Build",
     href: "/dashboard",
+  })),
+  ...atlasTrapNodes.map((t): SearchEntry => ({
+    id: t.id,
+    title: `Trap node: ${t.node}`,
+    subtitle: t.problem,
+    category: "Atlas",
+    href: "/atlas",
+  })),
+  ...biomes.map((b): SearchEntry => ({
+    id: b.id,
+    title: `Biome: ${b.name}`,
+    subtitle: `${b.gives} — pick ${b.recommendedPick}`,
+    category: "Atlas",
+    href: "/atlas",
+  })),
+  ...primerFacts.map((f): SearchEntry => ({
+    id: f.id,
+    title: f.topic,
+    subtitle: f.detail,
+    category: "Checklist",
+    href: "/checklist",
   })),
   ...commonMistakes.map((m): SearchEntry => ({
     id: m.id,

@@ -48,6 +48,14 @@ export function ChecklistStep({
         </div>
       </label>
 
+      {step.tips && step.tips.length > 0 && (
+        <ul className="mt-2 ml-7 list-disc space-y-1 pl-4 text-xs text-ink-mute marker:text-[var(--accent)]">
+          {step.tips.map((tip) => (
+            <li key={tip}>{tip}</li>
+          ))}
+        </ul>
+      )}
+
       {step.actionItems && step.actionItems.length > 0 && (
         <ul className="mt-3 ml-7 space-y-1 border-l border-line pl-3">
           {step.actionItems.map((item, index) => {

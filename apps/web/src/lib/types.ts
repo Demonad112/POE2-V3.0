@@ -1,6 +1,12 @@
 import type { CharacterSnapshot } from "@poe2/core";
 
-export type SourceDoc = "atlas-tree-fundamentals" | "strategy-guide" | "patch-0.5.5";
+export type SourceDoc =
+  | "atlas-tree-fundamentals"
+  | "strategy-guide"
+  | "patch-0.5.5"
+  | "creator-videos-0.5.5"
+  | "creator-videos-0.5"
+  | "community-digest-0.5.5";
 export type Verification = "confirmed" | "unverified" | "conflicting";
 
 export interface SourceRef {
@@ -8,6 +14,11 @@ export interface SourceRef {
   asOfPatch: string;
   verified: Verification;
   note?: string;
+  /**
+   * Video timestamps backing the claim, as `"<youtubeId>@mm:ss"`. Rendered as
+   * links so a player can check the exact moment a creator says it.
+   */
+  citations?: string[];
 }
 
 export type RoadmapPhase =
@@ -17,6 +28,7 @@ export type RoadmapPhase =
   | "t11-checkpoint"
   | "arbiter-of-divinity-loop"
   | "full-tree"
+  | "masters-and-mechanics"
   | "juiced-farming";
 
 export interface RoadmapStep {
@@ -25,7 +37,13 @@ export interface RoadmapStep {
   phase: RoadmapPhase;
   title: string;
   description: string;
+  /**
+   * Checkable sub-steps. Progress is stored by index, so on an existing step
+   * only ever append to this list — never insert or reorder.
+   */
   actionItems?: string[];
+  /** Non-checkable pointers and warnings shown under the description. */
+  tips?: string[];
   benchmarkGateIds?: string[];
   relatedMistakeIds?: string[];
   source: SourceRef;
@@ -93,9 +111,13 @@ export interface MemoryFork {
 export type RiskTier = "low" | "medium" | "high";
 export type InvestmentTier = "low" | "medium" | "high";
 
+export type StrategyTier = "S" | "A" | "B" | "C";
+
 export interface FarmingStrategy {
   id: string;
   name: string;
+  /** Creator tier placement for the current patch; absent = not ranked by any current-patch source. */
+  tier?: StrategyTier;
   mechanics: Mechanic[];
   atlasSetup: string;
   investment: InvestmentTier;
@@ -132,6 +154,41 @@ export interface MetaBuild {
   playratePercent?: number;
   budgetTier: BudgetTier;
   role: string;
+  source: SourceRef;
+}
+
+export interface AtlasTrapNode {
+  id: string;
+  node: string;
+  affects: string;
+  problem: string;
+  /** When to skip it — "always" when there's no build it helps. */
+  avoidIf: string;
+  severity: "avoid" | "situational" | "optional";
+  source: SourceRef;
+}
+
+export interface Biome {
+  id: string;
+  name: string;
+  /** What the biome's passives push. */
+  gives: string;
+  recommendedPick: string;
+  source: SourceRef;
+}
+
+export interface PrimerFact {
+  id: string;
+  topic: string;
+  detail: string;
+  source: SourceRef;
+}
+
+export interface TierBreakpoint {
+  tier: string;
+  areaLevel: string;
+  unlocks: string;
+  purpose: string;
   source: SourceRef;
 }
 
