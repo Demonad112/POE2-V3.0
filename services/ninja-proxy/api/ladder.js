@@ -9,16 +9,31 @@
 //   1. poe.ninja's builds endpoints moved to protobuf. There is no published
 //      schema, so the payload is parsed schema-lessly (field number + wire
 //      type) into a columnar table. Decoder ported from poe2-mcp's
-//      src/api/poe_ninja_ladder.py.
+//      src/api/poe_ninja_ladder.py, and RE-VERIFIED 2026-09-24 against a live
+//      capture — see below.
 //   2. Same CORS wall as the character endpoint — a browser can't call it.
 //
-// IMPORTANT, and reflected in the response: the search endpoint returns ONE
-// page of 100 rows and ignores every pagination parameter tried (skip, offset,
-// page, from, start all return the identical page). Those rows are the TOP of
-// the ladder and are essentially all level 100. So this can honestly answer
-// "what do the best builds of this class run?" and can NOT answer "what
-// percentile is this character in?". The response carries sampleSize and the
-// observed level range so the client cannot forget that.
+// ## Column layout (verified against a live capture, 2026-09-24)
+//
+// This had never been checked against real traffic — it was written from the
+// same understanding as the mock proxy that stood in for it in every prior
+// test run, so nothing could have caught a shared misunderstanding. It turned
+// out to have one: the schema had moved. Columns used to live under field 5;
+// live traffic carries them under field 12, with two cell encodings rather
+// than one:
+//
+//   - a column with a field 6 entry is NUMERIC: one blob of consecutive
+//     protobuf varints, standard "packed repeated" wire form, one value per
+//     row (confirmed on `level` — 100 rows, uniformly 100 — and on `life` /
+//     `energyshield`, whose ranges are exactly what a top-of-ladder sample
+//     should show).
+//   - a column with repeated field 7 entries is a DISPLAY STRING per row
+//     (`"280k"`, `"96k"`) — this is what `dps.total` and `ehp__str` carry, and
+//     `toNumber()` below already parses that suffix form.
+//
+// `dps.total` and `ehp__str` replace the old flat `dps` / `ehp` keys. Two
+// columns (`skills`, `keypassives`) carry neither shape — they are per-row
+// lists — and are left undecoded since nothing here reads them.
 
 const NINJA_BASE = "https://poe.ninja";
 
@@ -95,8 +110,26 @@ function parseMessage(buf, depth = 0, maxDepth = 10) {
   return out;
 }
 
+/**
+ * A field-6 blob is a run of consecutive varints with no length prefixes
+ * between them — protobuf's standard "packed repeated" form for a scalar
+ * field. Read until the blob is exhausted; one value per row.
+ */
+function decodePackedVarints(value) {
+  const buf = typeof value === "string" ? new TextEncoder().encode(value) : value;
+  const out = [];
+  let i = 0;
+  while (i < buf.length) {
+    const [v, ni] = readVarint(buf, i);
+    if (v === null) return null;
+    out.push(v);
+    i = ni;
+  }
+  return out;
+}
+
 /** Decode a /builds/{version}/search response into {total, columns, rows}. */
-function decodeSearchResponse(bytes) {
+export function decodeSearchResponse(bytes) {
   const msg = parseMessage(bytes);
   if (!msg || msg[0]?.[1] !== "msg") throw new Error("unrecognised search response shape");
   const env = msg[0][2];
@@ -106,15 +139,23 @@ function decodeSearchResponse(bytes) {
   const order = [];
 
   for (const [f, kind, value] of env) {
-    if (f !== 5 || kind !== "msg") continue;
+    if (f !== 12 || kind !== "msg") continue;
     let colName = value.find(([ff, kk]) => ff === 1 && kk === "str")?.[2];
     if (!colName) continue;
-    // 'ehp' appears twice (value + tooltip variant) — keep the first.
     if (colName in columns) colName = `${colName}_2`;
+
+    const packed = value.find(([ff]) => ff === 6);
+    if (packed) {
+      const cells = packed[1] === "str" || packed[1] === "bytes" ? decodePackedVarints(packed[2]) : null;
+      if (!cells) continue;
+      columns[colName] = cells;
+      order.push(colName);
+      continue;
+    }
 
     const cells = [];
     for (const [ff, kk, cell] of value) {
-      if (ff !== 2) continue;
+      if (ff !== 7) continue;
       if (kk === "msg") {
         const display = cell.find(([g, w]) => g === 1 && w === "str")?.[2];
         const number = cell.find(([g, w]) => g === 2 && w === "int")?.[2];
@@ -123,6 +164,9 @@ function decodeSearchResponse(bytes) {
         cells.push(kk === "str" ? cell : null);
       }
     }
+    // A column with neither a field 6 blob nor field 7 cells is a per-row
+    // list value (skills, keypassives) this decoder does not read.
+    if (!cells.length) continue;
     columns[colName] = cells;
     order.push(colName);
   }
@@ -140,7 +184,7 @@ function decodeSearchResponse(bytes) {
 // --- helpers ----------------------------------------------------------------
 
 /** "205k" / "1.0M" / 1497 / "" -> number | null. */
-function toNumber(v) {
+export function toNumber(v) {
   if (typeof v === "number") return v;
   if (typeof v !== "string" || v.trim() === "") return null;
   const m = /^([\d.]+)\s*([kKmMbB]?)$/.exec(v.trim().replace(/,/g, ""));
@@ -159,7 +203,7 @@ function quantile(sorted, q) {
   return lo === hi ? sorted[lo] : sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
 }
 
-function summarise(values) {
+export function summarise(values) {
   const s = values.filter((v) => typeof v === "number" && v > 0).sort((a, b) => a - b);
   if (s.length === 0) return null;
   return {
@@ -236,8 +280,8 @@ export default async function handler(req, res) {
       levelRange: levels.length
         ? { min: Math.min(...levels), max: Math.max(...levels) }
         : null,
-      dps: summarise(rows.map((r) => toNumber(r.dps))),
-      ehp: summarise(rows.map((r) => toNumber(r.ehp))),
+      dps: summarise(rows.map((r) => toNumber(r["dps.total"]))),
+      ehp: summarise(rows.map((r) => toNumber(r.ehp__str))),
       pool: summarise(pool),
       /**
        * Stated in the payload so a consumer cannot present this as a
