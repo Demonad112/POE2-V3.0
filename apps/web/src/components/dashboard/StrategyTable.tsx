@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { FarmingStrategy } from "@/lib/types";
 import { Tag } from "@/components/shared/Tag";
+import { SourceFlag } from "@/components/shared/SourceFlag";
 
 type SortKey = "rank" | "investment" | "risk";
 const TIER_ORDINAL: Record<string, number> = { low: 0, medium: 1, high: 2 };
@@ -51,7 +52,10 @@ export function StrategyTable({ strategies }: { strategies: FarmingStrategy[] })
               className="border-b border-line transition-colors last:border-0 hover:bg-surface-sunken"
             >
               <td className="px-3 py-2 font-medium text-ink">
-                {strategy.name}
+                <div className="flex flex-wrap items-center gap-2">
+                  {strategy.name}
+                  <SourceFlag source={strategy.source} />
+                </div>
               </td>
               <td className="px-3 py-2">
                 <div className="flex flex-wrap gap-1">

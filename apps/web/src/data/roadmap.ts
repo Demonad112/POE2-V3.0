@@ -1,5 +1,5 @@
 import type { RoadmapStep } from "@/lib/types";
-import { atlasSource, strategySource } from "./sourceMeta";
+import { atlasSource, patchSource, strategySource } from "./sourceMeta";
 
 export const roadmapSteps: RoadmapStep[] = [
   {
@@ -8,8 +8,10 @@ export const roadmapSteps: RoadmapStep[] = [
     phase: "campaign-end",
     title: "Finish campaign, enter the Ziggurat Refuge",
     description:
-      "Open the Waygate, clear the first map to its boss, and talk to Doryani and Farrow to start quests. Set up your hideout and the Verisium Anvil.",
-    source: strategySource(),
+      "Open the Waygate, clear the first map to its boss, and talk to Doryani and Farrow to start quests. Set up your hideout and the Verisium Anvil — outside Runes of Aldur (Standard, Forbidden Rites) the Anvil unlocks by completing The Runeseeker quest in Act 4, and Farrow can then be placed in your hideout.",
+    source: strategySource({
+      note: "Verisium Anvil unlock outside Runes of Aldur is from the 0.5.5 patch notes.",
+    }),
   },
   {
     id: "step-hilda-contract",
@@ -27,7 +29,7 @@ export const roadmapSteps: RoadmapStep[] = [
     phase: "precursor-fortress",
     title: "Rush the first Precursor Tower",
     description:
-      "Precursor Tower → Ancient Gateway → Burning Monolith, grabbing guaranteed trial keys en route. Buy Honour Resistance relics for the Trial of Sekhemas (aim for a full 75% Honour Resistance set).",
+      "Precursor Tower → Ancient Gateway → Burning Monolith, grabbing guaranteed trial keys en route. Buy Honour Resistance relics for the Trial of Sekhemas (aim for a full 75% Honour Resistance set). Since 0.5.5 the Trial of Sekhemas has inherent monster and reward bonuses from area level 65, compensating for Atlas passives not applying inside it.",
     source: atlasSource(),
   },
   {
@@ -150,10 +152,13 @@ export const roadmapSteps: RoadmapStep[] = [
     id: "step-cardinal-device",
     order: 15,
     phase: "arbiter-of-divinity-loop",
-    title: "Hit a Cardinal Device",
+    title: "Complete the Precursor Fortress",
     description:
-      "Auto-completes a Fortress region (~40 points; start bottom-left) — this is why you don't need to manually clear every Fortress node.",
-    source: atlasSource(),
+      "Since 0.5.5, killing Arbiter of Divinity with the non-quest Origin Core completes the entire Precursor Fortress for the map owner, so you don't need to clear Fortress regions one by one. A kill with the quest Origin Core no longer completes a section. (Before 0.5.5 each kill let you hit a Cardinal Device that auto-completed one ~40-point region.)",
+    source: patchSource({
+      verified: "unverified",
+      note: "The 0.5.5 patch notes state the full-Fortress completion but not how the non-quest Origin Core is obtained, or whether Cardinal Devices still exist — verify in-game.",
+    }),
   },
   {
     id: "step-memory-forks",
@@ -173,10 +178,13 @@ export const roadmapSteps: RoadmapStep[] = [
     id: "step-repeat-divinity-loop",
     order: 17,
     phase: "arbiter-of-divinity-loop",
-    title: "Repeat the Halls → Divinity → Cardinal Device loop 5 times total",
+    title: "Find the Halls again for a non-quest Origin Core kill",
     description:
-      "Spec Doryani's exploration branch (Stitch the Flesh, Hidden Patterns, Remnants of the Greatness) and path outward from newly-unlocked wall towers in one direction only — don't run random maps. Save high-Waystone-drop-chance tablets/stones for this phase.",
-    source: atlasSource(),
+      "The old 5-cycle Halls → Divinity → Cardinal Device loop is gone in 0.5.5: one non-quest Origin Core kill completes the Fortress. Spec Doryani's exploration branch (Stitch the Flesh, Hidden Patterns, Remnants of the Greatness) and path outward in one direction only to find the next Matriarch/Patriarch Hall pair — 0.5.5 also lets the Halls spawn closer to the Ziggurat Refuge. Save high-Waystone-drop-chance tablets/stones for this phase.",
+    source: patchSource({
+      verified: "unverified",
+      note: "Assumes the next Halls pair yields a non-quest Origin Core; the 0.5.5 patch notes don't say where it comes from — verify in-game.",
+    }),
   },
   {
     id: "step-close-out-tree",
@@ -184,7 +192,7 @@ export const roadmapSteps: RoadmapStep[] = [
     phase: "full-tree",
     title: "Close out the remaining tree",
     description:
-      "Remaining points after the 5th cycle go to generic quantity/rarity/pack-size, then finish out mechanic sub-trees you still want. Recommended close-out order: Ritual → Vaal Temple → Delirium (hardest last). Past ~120 points, allocation order stops mattering much.",
+      "Once the Fortress is complete, remaining points go to generic quantity/rarity/pack-size, then finish out mechanic sub-trees you still want. Recommended close-out order: Ritual → Vaal Temple → Delirium (hardest last). Past ~120 points, allocation order stops mattering much.",
     relatedMistakeIds: ["m-spread-atlas-points"],
     source: atlasSource(),
   },

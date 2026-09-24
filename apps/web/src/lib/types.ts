@@ -1,6 +1,6 @@
 import type { CharacterSnapshot } from "@poe2/core";
 
-export type SourceDoc = "atlas-tree-fundamentals" | "strategy-guide";
+export type SourceDoc = "atlas-tree-fundamentals" | "strategy-guide" | "patch-0.5.5";
 export type Verification = "confirmed" | "unverified" | "conflicting";
 
 export interface SourceRef {

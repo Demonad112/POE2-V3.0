@@ -1,5 +1,27 @@
 # Data provenance
 
+## Freshness
+
+Every artifact below was last generated on **2026-07-28**, before Path of Exile
+2 patch 0.5.5 (2026-09-04). What that patch could have made stale:
+
+- **Soul Core entries.** 0.5.5 reworked about 20 Soul Cores and added 17 (13
+  "Jiquani's Soul Core of …", 4 "Atziri's Soul Core of …"). `mod-tiers.json`
+  carries Soul Core base tags and display-only mods, so the new bases are absent
+  and reworked values are the old ones. Nothing grades against these: socketed
+  core text reaches the item view verbatim from the character payload, and
+  resistances are attributed from poe.ninja's `breakdowns`. Limit checks read
+  the item first and fall back to a table in `packages/core/src/gear/audit.ts`.
+- **Affix ladders.** The 0.5.5 notes list no affix changes, so none are known to
+  be affected.
+- **Passive tree.** Unchanged by 0.5.5; it needs no regeneration.
+
+To regenerate, run from the repository root, in this order:
+`npm run build:mod-tiers -w @poe2/data`, `build:mods`, `build:mod-bases`,
+`build:monster-stats`, `build:skills`. The RePoE-fork sources must be reachable
+(`repoe-fork.github.io`). Afterwards, update the counts quoted below and run
+`npm test`.
+
 ## `generated/passive-tree.json`
 
 Built by `scripts/build-tree.mjs` from `data/psg_passive_nodes.json` in

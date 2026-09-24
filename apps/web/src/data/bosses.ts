@@ -1,5 +1,5 @@
 import type { PinnacleBoss } from "@/lib/types";
-import { atlasSource, strategySource } from "./sourceMeta";
+import { atlasSource, patchSource, strategySource } from "./sourceMeta";
 
 export const pinnacleBosses: PinnacleBoss[] = [
   {
@@ -17,8 +17,10 @@ export const pinnacleBosses: PinnacleBoss[] = [
       "Place all 3 fragments in the Burning Monolith",
     ],
     notes:
-      "Hard 55% phase transition, fire-heavy encounter. Apex gateway boss before Arbiter of Divinity becomes accessible.",
-    source: strategySource(),
+      "Hard 55% phase transition, fire-heavy encounter. Apex gateway boss before Arbiter of Divinity becomes accessible. Since 0.5.5 it no longer has All Elemental Resistances — it has Fire Resistance and Cold Vulnerability, so cold damage is favoured and fire damage is penalised.",
+    source: patchSource({
+      note: "Encounter notes from the 0.5.4b strategy guide; resistance profile from the 0.5.5 patch notes.",
+    }),
   },
   {
     id: "arbiter-of-divinity",
@@ -34,8 +36,11 @@ export const pinnacleBosses: PinnacleBoss[] = [
       "5,000+ life and 80%+ relevant resistances recommended before this tier",
     ],
     notes:
-      "Killing it auto-completes ~40 Atlas points per Fortress region via a Cardinal Device — repeat 5 times total for the full 301-point tree. 0.5.4 added a Spear of Kitava drop.",
-    source: strategySource(),
+      "Since 0.5.5, a kill using the non-quest Origin Core completes the entire Precursor Fortress for the map owner, so the Atlas tree can be allocated freely; a kill using the quest Origin Core no longer completes a Fortress section. This replaces the old repeat-5-times Cardinal Device loop. It also no longer has All Elemental Resistances — it has Lightning Resistance and Fire Vulnerability, so fire damage is favoured and lightning is penalised. 0.5.4 added a Spear of Kitava drop.",
+    source: patchSource({
+      verified: "unverified",
+      note: "0.5.5 patch notes state the full-Fortress completion but not how the non-quest Origin Core is obtained, or whether Cardinal Devices still exist — verify in-game.",
+    }),
   },
   {
     id: "xesht",
@@ -96,7 +101,7 @@ export const pinnacleBosses: PinnacleBoss[] = [
       "Wave 7 grants 2 Delirium Atlas points plus the Raven's Reflection key needed to fight Tangmazu at the Withered Willow",
     ],
     notes:
-      "Omniphobia appears from ~wave 3, Kosis from ~wave 5. Tangmazu drops a unique amethyst ring and the Raven Staff (~25-30 Div).",
+      "Omniphobia appears from ~wave 3, Kosis from ~wave 5. Tangmazu drops a unique amethyst ring and the Raven Staff (~25-30 Div). Since 0.5.5, Omniphobia and the Raven Trickster no longer have All Elemental Resistances.",
     source: strategySource(),
   },
   {

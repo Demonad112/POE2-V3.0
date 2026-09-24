@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CURRENT_PATCH, LEAGUE_NAME } from "@/lib/constants";
+import { CURRENT_PATCH, LEAGUE_LABEL } from "@/lib/constants";
 import { BASE_PATH } from "@/lib/basePath";
 import { ProgressSummary } from "@/components/home/ProgressSummary";
 
@@ -88,7 +88,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[var(--surface)]/55 to-[var(--surface)]" />
         <div className="relative z-10 flex flex-col items-start gap-4 px-6 py-16 sm:px-10 sm:py-24">
           <span className="rounded-full border border-[var(--accent)]/25 bg-[var(--accent-dim)] px-3 py-1 text-xs font-medium tracking-wide text-[var(--accent)] uppercase backdrop-blur-sm">
-            Patch {CURRENT_PATCH} · {LEAGUE_NAME}
+            Patch {CURRENT_PATCH} · {LEAGUE_LABEL}
           </span>
           <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
             <span className="text-gradient-gold">Path of Exile 2</span>

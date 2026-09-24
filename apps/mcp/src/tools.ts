@@ -889,8 +889,9 @@ export const TOOLS: ToolDef[] = [
     name: 'poe2_audit_character',
     title: 'Audit the things nothing else checks',
     description:
-      'Five checks over parts of the character payload the other tools never read. Socketed jewels, tiered against ' +
-      'jewel spawn rules rather than gear ones. Empty rune sockets, which are free stats not taken. Levelled skill ' +
+      'Six checks over parts of the character payload the other tools never read. Socketed jewels, tiered against ' +
+      'jewel spawn rules rather than gear ones. Empty rune sockets, which are free stats not taken. Limited Soul ' +
+      'Cores socketed more times than their limit allows, whose extra copies grant nothing. Levelled skill ' +
       'gems below the 20% quality cap, flagged most confidently where another copy of the same gem IS at higher ' +
       'quality. How close each attribute sits to what the gear requires — a small margin means losing one source ' +
       'unequips something. And how much spirit is reserved versus idle. Nothing here is estimated; anything needing ' +
@@ -912,12 +913,13 @@ export const TOOLS: ToolDef[] = [
           jewels: report.jewels.length,
           jewelMods: report.jewels.reduce((n, j) => n + j.mods.length, 0),
           emptySockets: report.emptySockets.reduce((n, s) => n + s.empty, 0),
+          soulCoresOverLimit: report.soulCoreLimits.reduce((n, c) => n + c.excess, 0),
           gemsBelowMaxQuality: report.gemQuality.length,
           tightAttributes: report.attributes.filter((a) => a.tight).map((a) => a.attribute),
           spiritIdle: report.spirit ? `${report.spirit.unreserved} of ${report.spirit.total}` : null,
         },
         note:
-          'An empty socket and a sub-maximum gem quality are unambiguous improvements. Idle spirit and spare ' +
+          'An empty socket, a Soul Core over its limit and a sub-maximum gem quality are unambiguous improvements. Idle spirit and spare ' +
           'attributes are reported without judgement — whether they are worth spending depends on where the build ' +
           'is heading, which is not decided here.',
       }

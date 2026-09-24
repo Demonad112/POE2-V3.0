@@ -217,6 +217,32 @@ export function summarise(values) {
 
 // --- handler ----------------------------------------------------------------
 
+/**
+ * The index-state snapshot entry for a league.
+ *
+ * Matches the slug first (`url`, what core sends as `league`). If nothing
+ * matches, falls back to the display name core sends as `name` (or the
+ * `league` value itself), case-insensitively, so a league whose
+ * slug core derives wrongly is still found: poe.ninja's own index says what
+ * "HC Forbidden Rites" is called, so the proxy asks it instead of guessing.
+ * The display-name field is read as `name`, falling back to `displayName`,
+ * because the field name has not been re-checked against live traffic since
+ * the 0.5.5 league launch.
+ */
+export function findSnapshot(snapshotVersions, league, displayName = league) {
+  const list = Array.isArray(snapshotVersions) ? snapshotVersions : [];
+  const bySlug = list.find((s) => s && s.url === league);
+  if (bySlug) return bySlug;
+  if (!displayName) return null;
+  const wanted = String(displayName).trim().toLowerCase();
+  return (
+    list.find((s) => {
+      const name = s && (s.name ?? s.displayName);
+      return typeof name === "string" && name.trim().toLowerCase() === wanted;
+    }) ?? null
+  );
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -226,7 +252,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { league, class: className } = req.query;
+  const { league, class: className, name: leagueName } = req.query;
   if (!league) {
     res.status(400).json({ error: "league query param is required" });
     return;
@@ -239,7 +265,7 @@ export default async function handler(req, res) {
       return;
     }
     const idx = await idxRes.json();
-    const snap = (idx.snapshotVersions || []).find((s) => s.url === league);
+    const snap = findSnapshot(idx.snapshotVersions, league, leagueName || league);
     if (!snap) {
       res.status(404).json({ error: `no ladder snapshot for league "${league}"` });
       return;

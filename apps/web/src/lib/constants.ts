@@ -1,5 +1,11 @@
-export const CURRENT_PATCH = "0.5.4b";
-export const LEAGUE_NAME = "Runes of Aldur";
+export const CURRENT_PATCH = "0.5.5";
+/**
+ * Every challenge league currently live, newest first. 0.5.5 launched Forbidden
+ * Rites while Runes of Aldur kept running, so "the current league" is not one
+ * value: a Runes of Aldur character is still current.
+ */
+export const LEAGUES = ["Forbidden Rites", "Runes of Aldur"] as const;
+export const LEAGUE_LABEL = LEAGUES.join(" · ");
 
 export const MECHANIC_LABELS: Record<string, string> = {
   breach: "Breach",
@@ -34,7 +40,7 @@ export const ROADMAP_PHASE_LABELS: Record<string, string> = {
   "precursor-fortress": "Precursor Fortress",
   "arbiter-of-ash": "Arbiter of Ash",
   "t11-checkpoint": "T11 Gearing Checkpoint",
-  "arbiter-of-divinity-loop": "Arbiter of Divinity Loop",
+  "arbiter-of-divinity-loop": "Arbiter of Divinity",
   "full-tree": "Full 301-Point Tree",
   "juiced-farming": "Juiced Farming Loop",
 };

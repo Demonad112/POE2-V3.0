@@ -7,6 +7,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { NinjaClient, NinjaError, type FetchLike, type ResponseLike } from '../src/ninja/client.js'
 import { LEAGUE_SLUGS, leagueSlug, normalizeAccount, parseProfileUrl } from '../src/ninja/url.js'
+import { leagueSlugOf } from '../src/ninja/ladder.js'
 
 function jsonResponse(body: unknown): ResponseLike {
   return {
@@ -156,6 +157,25 @@ describe('URL parsing', () => {
     expect(leagueSlug('Runes of Aldur')).toBe('runesofaldur')
     expect(leagueSlug('Fate of the Vaal')).toBe('vaal')
     expect(LEAGUE_SLUGS['hc runes of aldur']).toBe('runesofaldurhc')
+  })
+
+  // Slugs as poe.ninja's index-state served them on 2026-09-24: hc and ssf are
+  // suffixes on the base slug, whatever order the display name puts them in.
+  it.each([
+    ['Forbidden Rites', 'forbiddenrites'],
+    ['HC Forbidden Rites', 'forbiddenriteshc'],
+    ['SSF Forbidden Rites', 'forbiddenritesssf'],
+    ['HC SSF Forbidden Rites', 'forbiddenriteshcssf'],
+    ['Hardcore Forbidden Rites', 'forbiddenriteshc'],
+    ['HC Runes of Aldur', 'runesofaldurhc'],
+    ['SSF Runes of Aldur', 'runesofaldurssf'],
+    ['HC Fate of the Vaal', 'vaalhc'],
+    ['forbiddenriteshc', 'forbiddenriteshc'],
+    ['Standard', 'standard'],
+    ['Hardcore', 'hardcore'],
+  ])('slugs %s as %s through both slug functions', (name, slug) => {
+    expect(leagueSlug(name)).toBe(slug)
+    expect(leagueSlugOf(name)).toBe(slug)
   })
 
   it('converts the display account form to the API path form', () => {
