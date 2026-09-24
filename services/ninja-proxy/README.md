@@ -41,13 +41,16 @@ All data is public. No authentication, no secrets, nothing persisted.
 
 ## Deployed at
 
-**https://poe2-ninja-proxy.vercel.app** — this is the app's default.
+**https://poe2-v3-ninja-proxy.vercel.app** — this is the app's default, built from this directory.
 
 Use the bare production alias. The team-scoped alias
-(`poe2-ninja-proxy-obsidian-intelligenceyyc.vercel.app`) sits behind Vercel SSO
+(`poe2-v3-ninja-proxy-obsidian-intelligenceyyc.vercel.app`) sits behind Vercel SSO
 and answers `302` to anonymous requests, so the app would silently fail to
 import through it. Same trap applies to preview deployment URLs — only the
 production alias is public.
+
+Measured 2026-07-24 against the predecessor deployment, which answers the
+same contract:
 
 ```
 $ curl -sI -H "Origin: https://demonad112.github.io" \
@@ -60,20 +63,10 @@ content-type: application/json; charset=utf-8   # 407 KB charModel
 ## Deploying from this repository
 
 The Vercel project **`poe2-v3-ninja-proxy`** (team `obsidian-intelligenceyyc`,
-Root Directory `services/ninja-proxy`, deployment protection on previews only)
-exists for this repo. `.github/workflows/deploy-proxy.yml` deploys it to
-production on every push to `main` that touches this directory, then checks
-`https://poe2-v3-ninja-proxy.vercel.app/api/health`. It needs one repository
-secret:
-
-```
-Settings → Secrets and variables → Actions → Secrets
-VERCEL_TOKEN = <token from vercel.com/account/tokens>
-```
-
-Without it the workflow skips with a notice. Once it has deployed, point the
-web app at it with the `NEXT_PUBLIC_NINJA_PROXY_BASE` repository variable
-(below) and re-run the Pages deploy.
+Root Directory `services/ninja-proxy`) is linked to this repository through
+the Vercel GitHub integration. Pushes deploy automatically, and the app's
+default proxy is its production alias, `https://poe2-v3-ninja-proxy.vercel.app`.
+After a deploy, `GET /api/health` confirms the functions actually built.
 
 Keep deployment protection on **previews only**. The team default,
 `all_except_custom_domains`, walls the production `.vercel.app` alias behind
