@@ -94,7 +94,7 @@ export function CommandPalette() {
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-xl overflow-hidden rounded-xl border border-line bg-surface-raised shadow-2xl"
+        className="w-full max-w-xl overflow-hidden card rounded-xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <input

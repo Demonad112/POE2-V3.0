@@ -43,7 +43,7 @@ export function ReadinessPanel() {
   const name = snapshot.key.split("/").pop();
 
   return (
-    <section className="rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-5">
+    <section className="rounded-xl card p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-semibold text-ink">Am I ready?</h2>
         <span className="text-xs text-ink-mute">

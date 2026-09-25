@@ -117,7 +117,7 @@ export function PobAnalysisView({ analysis }: { analysis: PobAnalysis }) {
         </p>
       </Panel>
 
-      <details className="rounded-xl border border-line bg-surface-raised">
+      <details className="card rounded-xl">
         <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-ink">
           All {Object.keys(analysis.playerStats).length} exported values
         </summary>

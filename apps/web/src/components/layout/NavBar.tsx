@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { OPEN_SEARCH_EVENT } from "./CommandPalette";
@@ -73,7 +74,7 @@ export function NavBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-20 flex items-center gap-1 border-b border-line bg-surface/80 px-3 py-3 backdrop-blur-md sm:px-4">
+    <nav className="sticky top-0 z-20 flex items-center gap-1 border-b border-accent-line/40 bg-surface/75 px-3 py-2.5 shadow-[0_8px_24px_-16px_rgb(0_0_0/0.6)] backdrop-blur-xl sm:px-4">
       <Link href="/" className="mr-2 flex shrink-0 items-center gap-2 lg:mr-5">
         <svg viewBox="0 0 24 24" className="size-5 shrink-0" fill="none">
           <path
@@ -86,7 +87,7 @@ export function NavBar() {
         </svg>
         {/* Full wordmark only where there's room for it alongside the nav —
             below lg the links themselves take priority. */}
-        <span className="text-gradient-gold hidden font-semibold tracking-wide lg:inline">
+        <span className="font-display text-gradient-gold hidden text-[15px] font-bold lg:inline">
           PoE2 Endgame Companion
         </span>
       </Link>
@@ -104,10 +105,11 @@ export function NavBar() {
               aria-label={link.label}
               title={link.label}
               // Taller hit area on touch screens; unchanged on desktop.
-              className={`flex items-center gap-1.5 rounded-md border px-2.5 py-2.5 text-sm font-medium transition-colors sm:px-3 sm:py-1.5 ${
+              aria-current={active ? "page" : undefined}
+              className={`relative flex items-center gap-1.5 rounded-md px-2.5 py-2.5 text-sm font-medium transition-colors sm:px-3 sm:py-1.5 ${
                 active
-                  ? "border-[var(--accent)]/30 bg-[var(--accent-dim)] text-[var(--accent)]"
-                  : "border-transparent text-ink-mute hover:bg-surface-sunken hover:text-ink-dim"
+                  ? "bg-accent-soft text-ink after:absolute after:inset-x-3 after:-bottom-[11px] after:h-0.5 after:rounded-full after:bg-accent [&_svg]:text-accent"
+                  : "text-ink-mute hover:bg-surface-raised hover:text-ink"
               }`}
             >
               {link.icon}
@@ -119,7 +121,7 @@ export function NavBar() {
       <button
         onClick={() => window.dispatchEvent(new Event(OPEN_SEARCH_EVENT))}
         aria-label="Search"
-        className="ml-auto flex shrink-0 items-center gap-2 rounded-md border border-line px-2.5 py-2.5 text-xs text-ink-mute transition-colors hover:border-line hover:text-ink-dim sm:py-1.5"
+        className="ml-auto flex shrink-0 items-center gap-2 rounded-md border border-line bg-surface-sunken/60 px-2.5 py-2.5 text-xs text-ink-mute transition-colors hover:border-line-strong hover:text-ink-dim sm:py-1.5"
       >
         <svg viewBox="0 0 20 20" fill="none" className="size-3.5">
           <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.5" />
@@ -131,6 +133,7 @@ export function NavBar() {
           ⌘K
         </kbd>
       </button>
+      <ThemeToggle />
     </nav>
   );
 }

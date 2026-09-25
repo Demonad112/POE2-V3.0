@@ -16,7 +16,7 @@ function SectionHeading({
   return (
     <div className="mb-4 border-b border-[var(--line)] pb-3">
       <h2 className="flex items-center gap-2.5 text-lg font-semibold text-ink-dim">
-        <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-[var(--accent)]/30 bg-[var(--accent-dim)] text-xs font-bold text-[var(--accent)]">
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-[var(--accent)]/30 bg-accent-soft text-xs font-bold text-[var(--accent)]">
           {step}
         </span>
         {title}

@@ -18,6 +18,55 @@ The page answers three questions in order:
 Evidence trails, buff skills, and the full cross-validation list are all
 collapsed by default. Everything is available; nothing shouts.
 
+## Surfaces and depth
+
+The dark theme is a warm charcoal scale, not black. Each step is far enough from the next that a card reads as raised off the page, and a well reads as cut into the card:
+
+| Token | Dark | Use |
+|---|---|---|
+| `--surface` | `#111014` | Page |
+| `--surface-raised` | `#1a181e` | Cards, panels, accordions |
+| `--surface-sunken` | `#0c0b0e` | Wells and stat tiles inside a card |
+| `--surface-overlay` | `#221f27` | Panel headers, open accordion rows |
+| `--line` / `--line-strong` | `#2f2a33` / `#3f3845` | Hairlines / hover borders |
+
+Depth comes from three things, all defined once in `globals.css`:
+
+- **`--lift` / `--lift-raised`.** A 1px inset top highlight plus a soft drop shadow. The highlight is what makes a card look bevelled rather than outlined on a dark surface. The `.card` class applies it with the border; use `.card` for any new container rather than restating the border and background.
+- **The atmosphere layer.** `body::before`, fixed, holds a faint gold glow behind the top of the page and a soft vignette. It's decoration only and sits behind all content. In light mode it becomes a faint warm wash.
+- **Gold hairlines.** `--accent-line` (gold at 35%) marks what's active: the nav underline, an open accordion, the character hero border. `--accent-soft` (gold at 12%) is the fill for active and selected states. A solid brass fill (`--accent-dim`) with gold text failed contrast, so it's no longer used for fills.
+
+Text contrast is checked against the new surfaces:
+
+| Pair | Ratio |
+|---|---|
+| `--ink-mute` on raised / overlay | 5.1 / 4.7 |
+| `--ink-dim` on raised | 7.8 |
+| Gold on raised | 9.0 |
+
+Light mode keeps muted text at 5.0 or better; its gold is darkened to `#86650e` for 5.4 on white.
+
+`.card`, `.eyebrow`, `.font-display`, `.gold-rule` and `.text-gradient-gold` sit in `@layer components`. That way a Tailwind utility on the same element (a gold border, a text colour) still wins; unlayered, they silently overrode them.
+
+## Typography
+
+- **Cinzel is for display only:** the wordmark, page titles, the home hero and the character's name. It never sets data, labels or body text; engraved capitals don't read at small sizes, and numbers need Geist's tabular figures.
+- **Geist is for everything else.** Panel titles are `text-base font-semibold`, so they outrank body text.
+- **Small uppercase labels use `.eyebrow`** (11px, 0.08em tracking). This replaces the ad-hoc `tracking-wide uppercase` combinations, which rendered with uneven gaps.
+
+## Character stat sheet
+
+Once a character is loaded, the page leads with `CharacterHero`: name, level, class, league, then a strip of tiles:
+
+- Life
+- Energy shield
+- the hit that kills
+- main-skill DPS
+- the four resistances with cap bars
+- spirit
+
+Every tile reads a value the analysis already has. A value the data lacks drops its tile rather than showing a zero. The verdict stays in the Assessment panel below instead of appearing twice. The import box collapses to "Load another character".
+
 ## Colour
 
 The damage-type palette is **validated, not chosen by eye**. It was run through
@@ -84,7 +133,7 @@ says which.
 
 ## Theme
 
-Dark by default. The viewer's toggle stamps `data-theme` on the root and wins
+Dark by default. The toggle sits in the nav bar, after Search; it used to float at a fixed position, where it overlapped Search. The viewer's toggle stamps `data-theme` on the root and wins
 over the OS preference in both directions; a bootstrap script applies the stored
 choice before paint so a light preference never flashes dark.
 

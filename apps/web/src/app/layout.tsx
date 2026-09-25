@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Cinzel, Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { ServiceWorker } from '@/components/ServiceWorker'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { NavBar } from '@/components/layout/NavBar'
 import { Footer } from '@/components/layout/Footer'
 import { PatchVersionBanner } from '@/components/layout/PatchVersionBanner'
@@ -12,6 +11,8 @@ import { PersistedStateProvider } from '@/hooks/usePersistedState'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
+// Display only: brand, page titles, the character name. Data stays in Geist.
+const cinzel = Cinzel({ variable: '--font-cinzel', subsets: ['latin'], weight: ['600', '700'] })
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
 
@@ -27,8 +28,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#0b0b0d' },
-    { media: '(prefers-color-scheme: light)', color: '#fcfcfb' },
+    { media: '(prefers-color-scheme: dark)', color: '#111014' },
+    { media: '(prefers-color-scheme: light)', color: '#f7f5f0' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -46,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} font-sans antialiased`}>
         <ServiceWorker />
         <a
           href="#main"
@@ -60,7 +61,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PersistedStateProvider>
           <PatchVersionBanner />
           <NavBar />
-          <ThemeToggle />
           {/* One page container for every route. The analyser used to carry
               its own, which is how two halves of a merged site end up at
               different widths on the same viewport. */}

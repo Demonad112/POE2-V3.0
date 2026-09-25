@@ -13,7 +13,7 @@ export function Skeleton() {
         <div className="skeleton h-6 w-28 rounded-md" />
       </div>
 
-      <div className="rounded-xl border border-line bg-surface-raised p-4">
+      <div className="card rounded-xl p-4">
         <div className="skeleton mb-3 h-4 w-24 rounded" />
         <div className="space-y-3">
           {[0, 1, 2].map((i) => (
@@ -24,7 +24,7 @@ export function Skeleton() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         {[0, 1].map((i) => (
-          <div key={i} className="rounded-xl border border-line bg-surface-raised p-4">
+          <div key={i} className="card rounded-xl p-4">
             <div className="skeleton mb-3 h-4 w-20 rounded" />
             <div className="skeleton mb-4 h-12 w-40 rounded" />
             <div className="grid grid-cols-3 gap-2">
@@ -36,7 +36,7 @@ export function Skeleton() {
         ))}
       </div>
 
-      <div className="rounded-xl border border-line bg-surface-raised p-4">
+      <div className="card rounded-xl p-4">
         <div className="skeleton mb-3 h-4 w-20 rounded" />
         <div className="skeleton h-48 rounded-lg" />
       </div>

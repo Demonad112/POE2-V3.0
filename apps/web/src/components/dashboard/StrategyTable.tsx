@@ -9,7 +9,7 @@ type SortKey = "rank" | "investment" | "risk";
 const TIER_ORDINAL: Record<string, number> = { low: 0, medium: 1, high: 2 };
 
 export const STRATEGY_TIER_STYLES: Record<string, string> = {
-  S: "border-[var(--accent)]/50 bg-[var(--accent-dim)] text-[var(--accent)]",
+  S: "border-[var(--accent)]/50 bg-accent-soft text-[var(--accent)]",
   A: "border-good/40 bg-good/10 text-[var(--good)]",
   B: "border-line bg-surface-sunken text-ink-dim",
   C: "border-line bg-surface-sunken text-ink-mute",
