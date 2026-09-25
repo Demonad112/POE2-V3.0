@@ -87,7 +87,7 @@ export function NavBar() {
         </svg>
         {/* Full wordmark only where there's room for it alongside the nav —
             below lg the links themselves take priority. */}
-        <span className="font-display text-gradient-gold hidden text-[15px] font-bold lg:inline">
+        <span className="font-display text-gradient-gold hidden text-[15px] font-bold tracking-[0.06em] uppercase lg:inline">
           PoE2 Endgame Companion
         </span>
       </Link>

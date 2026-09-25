@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { ClusterFlow } from "@/components/atlas/ClusterFlow";
 import { AtlasSequenceTracker } from "@/components/atlas/AtlasSequenceTracker";
 import { WarningPanel } from "@/components/shared/WarningPanel";
-import { TrapNodePanel } from "@/components/atlas/TrapNodePanel";
 import { BiomePanel } from "@/components/atlas/BiomePanel";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { AtlasMapProvider } from "@/components/atlas/AtlasMapContext";
+import { AtlasTreeMap } from "@/components/atlas/AtlasTreeMap";
+import { AtlasGuideTabs } from "@/components/atlas/AtlasGuideTabs";
 import { commonMistakes } from "@/data/commonMistakes";
 
 export const metadata: Metadata = {
@@ -13,17 +14,25 @@ export const metadata: Metadata = {
 
 export default function AtlasPage() {
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Atlas Tree Planner"
-        description="No real node-graph data exists for the Atlas tree in the source guides, so this is an ordered/grouped flow of the named clusters and sequencing they describe — not a pixel-accurate recreation of the in-game tree layout."
-      />
+    <AtlasMapProvider>
+      <div className="flex flex-col gap-5">
+        <PageHeader
+          title="Atlas Tree Planner"
+          description="The order to take Atlas nodes in, and where each one is. Tick nodes as you allocate them; tap Map on any node to find it on the tree."
+        />
 
-      <AtlasSequenceTracker />
-      <TrapNodePanel />
-      <WarningPanel mistakes={commonMistakes} stage="atlas" />
-      <BiomePanel />
-      <ClusterFlow />
-    </div>
+        <AtlasSequenceTracker />
+
+        <section className="card rounded-xl p-3 sm:p-4" aria-label="Atlas tree map">
+          <AtlasTreeMap />
+        </section>
+
+        <WarningPanel mistakes={commonMistakes} stage="atlas" title="Atlas mistakes" />
+
+        <AtlasGuideTabs />
+
+        <BiomePanel />
+      </div>
+    </AtlasMapProvider>
   );
 }

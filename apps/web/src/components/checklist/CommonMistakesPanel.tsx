@@ -20,7 +20,7 @@ export function CommonMistakesPanel() {
         </span>
       }
     >
-      <WarningPanel mistakes={commonMistakes} stage="roadmap" title="Common progression mistakes" />
+      <WarningPanel mistakes={commonMistakes} stage="roadmap" title="Common progression mistakes" collapsible={false} />
     </Accordion>
   );
 }

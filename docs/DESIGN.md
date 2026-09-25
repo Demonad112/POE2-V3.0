@@ -20,29 +20,29 @@ collapsed by default. Everything is available; nothing shouts.
 
 ## Surfaces and depth
 
-The dark theme is a warm charcoal scale, not black. Each step is far enough from the next that a card reads as raised off the page, and a well reads as cut into the card:
+The dark theme is a near-neutral charcoal scale, not black. An earlier warmer step (`#111014` page) read as brownish-grey, so it moved cooler and darker. Each step is far enough from the next that a card reads as raised off the page, and a well reads as cut into the card:
 
 | Token | Dark | Use |
 |---|---|---|
-| `--surface` | `#111014` | Page |
-| `--surface-raised` | `#1a181e` | Cards, panels, accordions |
-| `--surface-sunken` | `#0c0b0e` | Wells and stat tiles inside a card |
-| `--surface-overlay` | `#221f27` | Panel headers, open accordion rows |
-| `--line` / `--line-strong` | `#2f2a33` / `#3f3845` | Hairlines / hover borders |
+| `--surface` | `#0d0d10` | Page |
+| `--surface-raised` | `#151519` | Cards, panels, accordions |
+| `--surface-sunken` | `#09090b` | Wells and stat tiles inside a card |
+| `--surface-overlay` | `#1c1b21` | Panel headers, open accordion rows |
+| `--line` / `--line-strong` | `#27262c` / `#36343c` | Hairlines / hover borders |
 
 Depth comes from three things, all defined once in `globals.css`:
 
 - **`--lift` / `--lift-raised`.** A 1px inset top highlight plus a soft drop shadow. The highlight is what makes a card look bevelled rather than outlined on a dark surface. The `.card` class applies it with the border; use `.card` for any new container rather than restating the border and background.
-- **The atmosphere layer.** `body::before`, fixed, holds a faint gold glow behind the top of the page and a soft vignette. It's decoration only and sits behind all content. In light mode it becomes a faint warm wash.
+- **The atmosphere layer.** `body::before`, fixed, holds a faint gold glow (7.5% alpha) behind the top of the page and a soft vignette. A second, orange glow was removed because it tinted the page brown. It's decoration only and sits behind all content. In light mode it becomes a faint warm wash.
 - **Gold hairlines.** `--accent-line` (gold at 35%) marks what's active: the nav underline, an open accordion, the character hero border. `--accent-soft` (gold at 12%) is the fill for active and selected states. A solid brass fill (`--accent-dim`) with gold text failed contrast, so it's no longer used for fills.
 
 Text contrast is checked against the new surfaces:
 
 | Pair | Ratio |
 |---|---|
-| `--ink-mute` on raised / overlay | 5.1 / 4.7 |
-| `--ink-dim` on raised | 7.8 |
-| Gold on raised | 9.0 |
+| `--ink-mute` on raised / overlay | 5.3 / 4.9 |
+| `--ink-dim` on raised | 8.1 |
+| Gold on raised | 9.4 |
 
 Light mode keeps muted text at 5.0 or better; its gold is darkened to `#86650e` for 5.4 on white.
 
@@ -50,9 +50,40 @@ Light mode keeps muted text at 5.0 or better; its gold is darkened to `#86650e` 
 
 ## Typography
 
-- **Cinzel is for display only:** the wordmark, page titles, the home hero and the character's name. It never sets data, labels or body text; engraved capitals don't read at small sizes, and numbers need Geist's tabular figures.
-- **Geist is for everything else.** Panel titles are `text-base font-semibold`, so they outrank body text.
-- **Small uppercase labels use `.eyebrow`** (11px, 0.08em tracking). This replaces the ad-hoc `tracking-wide uppercase` combinations, which rendered with uneven gaps.
+- **EB Garamond is for display only:** the wordmark and home hero (uppercase, lightly tracked, like a printed title page), page titles and the character's name. It never sets data, labels or body text.
+- **Inter is for everything else.** It reads like Geist and is the standard partner for a Garamond. It's set with `cv11` and `ss01`, straight-sided `l` and open digits, which keep it close to Geist; numbers use `.tabular`.
+- **Why not Cinzel.** An engraved all-caps face beside a geometric sans looked like two different sites. Garamond and Inter share proportions and x-height closely enough to sit side by side.
+- **Geist Mono stays** for monospace.
+- **Panel titles** are `text-base font-semibold`.
+- **Small uppercase labels** use `.eyebrow`.
+
+## Checklist and Atlas density
+
+Long guide pages open one thing at a time:
+
+- **Checklist.**
+  - Phases and steps are `<details>`, and only the phase holding the next step and that step itself start open. A step's closed line still shows how many action items are done, how many warnings it has, and whether it carries a readiness gate.
+  - The ids sit on the `<details>` elements, so every deep link (Jump to step, search, the phase bar) opens its target through `HashHighlight`.
+  - On a 390px screen the page went from 17,476px to about 3,100px.
+- **Atlas.**
+  - The guide sits behind a tab bar (Path · Memory forks · Mechanics · Late game · Traps). A hash naming an item opens its tab.
+  - The page went from 7,829px to about 3,300px on a phone.
+- **Warnings.** Mistakes-to-avoid are a list of titles, each expanding to its reason. Red marks the panel's edge and icon; the words are ordinary ink. Whole paragraphs of red text read as an alarm and were skimmed past.
+
+## Atlas map
+
+`AtlasTreeMap` draws `atlas-tree.json` on a canvas (see `packages/data/PROVENANCE.md`):
+
+| Mark | Meaning |
+|---|---|
+| Gold ring | Recommended by the guide |
+| Red ring | Trap node |
+| Green fill | Ticked on this page |
+| Focus pulse | What a Map button asked for |
+
+- Every guide entry that names real nodes (`treeNodes`) gets a Map button.
+- It shares the viewport maths in `components/tree/geometry.ts` with the character tree. It has its own small painter, because the character painter's layers (ascendancy wheels, weapon sets, stat routes) don't apply to it.
+- Canvas text can't read CSS variables, so the palette reads the resolved font family from the element.
 
 ## Character stat sheet
 

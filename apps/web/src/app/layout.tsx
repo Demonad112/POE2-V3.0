@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Cinzel, Geist, Geist_Mono } from 'next/font/google'
+import { EB_Garamond, Geist_Mono, Inter } from 'next/font/google'
 import './globals.css'
 import { ServiceWorker } from '@/components/ServiceWorker'
 import { NavBar } from '@/components/layout/NavBar'
@@ -9,10 +9,12 @@ import { CommandPalette } from '@/components/layout/CommandPalette'
 import { HashHighlight } from '@/components/layout/HashHighlight'
 import { PersistedStateProvider } from '@/hooks/usePersistedState'
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
+// Inter for everything read: close to Geist in feel, and the usual partner
+// for a Garamond. Geist Mono stays for code-like figures.
+const inter = Inter({ variable: '--font-inter', subsets: ['latin'] })
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
-// Display only: brand, page titles, the character name. Data stays in Geist.
-const cinzel = Cinzel({ variable: '--font-cinzel', subsets: ['latin'], weight: ['600', '700'] })
+// Display only: brand, page titles, the character name. Never data.
+const garamond = EB_Garamond({ variable: '--font-garamond', subsets: ['latin'], weight: ['500', '600', '700'] })
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
 
@@ -28,7 +30,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#111014' },
+    { media: '(prefers-color-scheme: dark)', color: '#0d0d10' },
     { media: '(prefers-color-scheme: light)', color: '#f7f5f0' },
   ],
   width: 'device-width',
@@ -47,7 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${geistMono.variable} ${garamond.variable} font-sans antialiased`}>
         <ServiceWorker />
         <a
           href="#main"

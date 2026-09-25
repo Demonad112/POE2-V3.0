@@ -107,6 +107,37 @@ The replacement planner uses it to compare other bases for a slot. Totals:
 1,716 gear bases, 1,460 of them obtainable; 352 KB raw, 30 KB gzipped. The web
 build copies it to `apps/web/public/`.
 
+## `generated/atlas-tree.json`
+
+The 0.5.5 Atlas passive tree, built by `scripts/build-atlas-tree.mjs` from the data file poe2db serves to its interactive planner:
+
+```
+https://poe2db.tw/data/atlas-skill-tree/4.5/data_us.json
+```
+
+Regenerate with `npm run build:atlas-tree -w @poe2/data`. The download is cached in `generated/.cache/`, so delete the cached file to refetch.
+
+| | |
+|---|---|
+| Generated | 2026-09-25 |
+| Nodes | 576 (224 notable) |
+| Links | 593, undirected |
+| Distinct names | 378; "Pack Size", "Item Rarity" and others repeat |
+| Size | 104 KB raw · 26 KB gzipped |
+
+**What it is, and why this source.**
+
+- **The version tag.** "4.5" is poe2db's version tag for its PoE 2 data, not a game patch. The build refuses data that lacks Royal Lenience, a node new in 0.5.5.
+- **The only source found.** GGG's own export (`grindinggear/poe2-skilltree-export`) covers the character tree only. The user's `poe2-mcp` data has no Atlas tree, and RePoE-fork was unreachable.
+
+**What the build does.**
+
+- **Positions** come from the group position plus the node's orbit: `x = gx + r·sin θ`, `y = gy − r·cos θ`. Orbits of 16 and 40 nodes use the game's fixed angle tables, the same rule poe2db's renderer applies.
+- **Links** are stored under `connections` (the `orbit` there only bends the drawn arc) and, for the root, under `out`. Both are read, deduplicated and made undirected.
+- **Each node's subtree** (`t`: Ritual, Breach, Generic, …) comes from its internal id prefix.
+
+**How the guide uses it.** Guide entries name their nodes in a `treeNodes` field, and `apps/web/test/atlasTree.test.ts` fails if any of those names isn't in this file. The tree confirms that a node *exists* under that name. It says nothing about whether the guide's advice about the node is right.
+
 ## `generated/passive-tree.json`
 
 Built by `scripts/build-tree.mjs` from `data/psg_passive_nodes.json` in

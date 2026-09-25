@@ -16,6 +16,7 @@ export const atlasClusters: AtlasCluster[] = [
   // --- Main-path sequencing: pre-Arbiter of Ash sustain cluster ---
   {
     id: "cluster-trapped-subordinate",
+    treeNodes: ["Trapped Subordinate"],
     name: "Trapped Subordinate",
     order: 1,
     group: "early-progression",
@@ -24,6 +25,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-pathkeepers",
+    treeNodes: ["Pathkeepers"],
     name: "Pathkeepers",
     order: 2,
     group: "early-progression",
@@ -32,6 +34,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-eons-of-domination",
+    treeNodes: ["Eons of Domination"],
     name: "Eons of Domination",
     order: 3,
     group: "early-progression",
@@ -41,6 +44,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-valuable-paths",
+    treeNodes: ["Valuable Paths"],
     name: "Valuable Paths",
     order: 4,
     group: "early-progression",
@@ -49,6 +53,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-chosen-path-essences",
+    treeNodes: ["The Chosen Path"],
     name: "The Chosen Path: Essences",
     order: 5,
     group: "early-progression",
@@ -57,6 +62,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-journey-ahead-effectiveness",
+    treeNodes: ["The Journey Ahead"],
     name: "The Journey Ahead: Effectiveness",
     order: 6,
     group: "early-progression",
@@ -67,6 +73,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-archaeological-interest",
+    treeNodes: ["Archaeological Interest"],
     name: "Archaeological Interest",
     order: 7,
     group: "early-progression",
@@ -75,6 +82,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-expanding-hordes",
+    treeNodes: ["Expanding Hordes"],
     name: "Expanding Hordes",
     order: 8,
     group: "early-progression",
@@ -83,6 +91,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-atop-the-world",
+    treeNodes: ["Atop the World"],
     name: "Atop the World",
     order: 9,
     group: "early-progression",
@@ -94,6 +103,7 @@ export const atlasClusters: AtlasCluster[] = [
   // --- Main-path sequencing: post-Arbiter of Divinity, pre-memory-fork ---
   {
     id: "cluster-reverse-transcription",
+    treeNodes: ["Reverse Transcription"],
     name: "Reverse Transcription",
     order: 10,
     group: "early-progression",
@@ -102,6 +112,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-rogue-exile",
+    treeNodes: ["Competing Explorers", "Competitive Archaeology"],
     name: "Competing Explorers / Competitive Archaeology (Rogue Exile cluster)",
     order: 11,
     group: "early-progression",
@@ -126,6 +137,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-mountain-mastery-tablets",
+    treeNodes: ["Mountain Mastery"],
     name: "Mountain Mastery: Tablets",
     order: 14,
     group: "early-progression",
@@ -135,7 +147,8 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-fracturing-orbs",
-    name: "Hidden Scars + From Distance Untold (Fracturing Orbs)",
+    treeNodes: ["Hidden Scars", "From Distances Untold"],
+    name: "Hidden Scars + From Distances Untold (Fracturing Orbs)",
     order: 15,
     group: "early-progression",
     description:
@@ -153,13 +166,13 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-propagating-secrets",
+    treeNodes: ["Propagating Secrets"],
     name: "Propagating Secrets (tablet quantity)",
     order: 17,
     group: "early-progression",
     description: "Increases tablet drops — take it alongside Reverse Transcription.",
     source: video05Source(["jOU2zNgLxJ0@11:27"], {
-      verified: "unverified",
-      note: "Node name comes from the synthesis notes, not a verbatim transcript line — check the in-game name.",
+      note: "Node name and effect (8% more Tablets per Tablet on the map) confirmed in the Atlas tree data.",
     }),
   },
 
@@ -205,6 +218,7 @@ export const atlasClusters: AtlasCluster[] = [
   // --- Mechanic sub-trees: Breach (Genesis Tree / Keepers of the Flame) ---
   {
     id: "cluster-breach-banded-fruit",
+    treeNodes: ["Breeding Program"],
     name: "Breeding Program: Banded Fruit",
     order: 1,
     group: "mechanic-subtree",
@@ -214,6 +228,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-breach-diverse-control",
+    treeNodes: ["Diverse Control"],
     name: "Diverse Control",
     order: 2,
     group: "mechanic-subtree",
@@ -232,6 +247,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-breach-sole-purpose",
+    treeNodes: ["Sole Purpose"],
     name: "Sole Purpose: Destruction",
     order: 4,
     group: "mechanic-subtree",
@@ -243,6 +259,7 @@ export const atlasClusters: AtlasCluster[] = [
   // --- Mechanic sub-trees: Abyss ---
   {
     id: "cluster-abyss-shadow-of-undeath",
+    treeNodes: ["Shadow of Undeath"],
     name: "Shadow of Undeath",
     order: 1,
     group: "mechanic-subtree",
@@ -270,6 +287,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-abyss-balance-of-power",
+    treeNodes: ["Balance of Power"],
     name: "Balance of Power: Ulaman",
     order: 4,
     group: "mechanic-subtree",
@@ -292,6 +310,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-delirium-part1-emotions",
+    treeNodes: ["I know your childhood fears..."],
     name: "Part 1: \"I know your childhood fears...\"",
     order: 2,
     group: "mechanic-subtree",
@@ -326,6 +345,7 @@ export const atlasClusters: AtlasCluster[] = [
   },
   {
     id: "cluster-ritual-royal-lenience",
+    treeNodes: ["Royal Lenience"],
     name: "Royal Lenience (notable, new in 0.5.5)",
     order: 5,
     group: "mechanic-subtree",
@@ -364,6 +384,7 @@ export const atlasClusters: AtlasCluster[] = [
 
   {
     id: "cluster-ritual-quest-passives",
+    treeNodes: ["Reborn in Shadow", "From the Mists", "Invigorated Sacrifices"],
     name: "Ritual quest passives: Reborn / Shadow from the Mists, Invigorated Sacrifices, Attrition",
     order: 6,
     group: "mechanic-subtree",
@@ -372,7 +393,7 @@ export const atlasClusters: AtlasCluster[] = [
       "Passives unlocked along the King in the Mists → Bodach chain.",
     source: video05Source(["VSeDfybR3Cc@25:21"], {
       verified: "unverified",
-      note: "Node names are from auto-captions — check the in-game spelling.",
+      note: "Reborn in Shadow, From the Mists and Invigorated Sacrifices are confirmed in the Atlas tree data (the captions heard them as \"Reborn / Shadow from the Mists\"). Attrition isn't in the tree under that name.",
     }),
   },
 
@@ -395,6 +416,7 @@ export const atlasClusters: AtlasCluster[] = [
 export const memoryForks: MemoryFork[] = [
   {
     id: "fork-top-left",
+    treeNodes: ["Risk and Reward", "Enigmatic Intensification", "Memories of the Vaal", "Memories of the Maraketh"],
     branch: "top-left",
     title: "Top-Left Fork",
     nodes: [
@@ -408,6 +430,7 @@ export const memoryForks: MemoryFork[] = [
   },
   {
     id: "fork-top-right",
+    treeNodes: ["Controlled Climates", "Hard-Won Treasures", "Memories of the Ezomytes", "Memories of the Karui"],
     branch: "top-right",
     title: "Top-Right Fork",
     nodes: [
@@ -421,6 +444,7 @@ export const memoryForks: MemoryFork[] = [
   },
   {
     id: "fork-top",
+    treeNodes: ["Desert Mastery", "Curiously Durable Stone", "Partial Translation"],
     branch: "top",
     title: "Top Fork",
     nodes: [
