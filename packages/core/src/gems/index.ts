@@ -273,3 +273,4 @@ export function indexSupports(setups: SkillSetup[]): Map<string, SupportGem> {
   }
   return out
 }
+export * from './catalog.js'

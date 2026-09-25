@@ -9,6 +9,7 @@ import { Attribution } from '@/components/Attribution'
 import { BuildScore } from '@/components/BuildScore'
 import { DefensePanel } from '@/components/DefensePanel'
 import { DpsMatrix } from '@/components/DpsMatrix'
+import { DamageReview } from '@/components/DamageReview'
 import { GearDetail } from '@/components/GearDetail'
 import { GearPanel } from '@/components/GearPanel'
 import { Headroom } from '@/components/Headroom'
@@ -25,6 +26,7 @@ import { Tag, fmtCompact } from '@/components/ui'
 import { useCharacterHistory } from '@/lib/useCharacterHistory'
 import { useLadder } from '@/lib/useLadder'
 import { useModTiers } from '@/lib/useModTiers'
+import { useSupportCatalog } from '@/lib/useSupportCatalog'
 import { usePassiveTree } from '@/lib/usePassiveTree'
 
 /**
@@ -83,6 +85,7 @@ export default function Home() {
   // the same artifact into two components is how both of those drift.
   const tiersState = useModTiers(raw !== null)
   const treeState = usePassiveTree(raw !== null)
+  const catalogState = useSupportCatalog(raw !== null)
   // Needs the character's league and ascendancy, so it can only start once
   // there is a first analysis. Failure is silent: the assessment already knows
   // how to leave damage unscored and say why.
@@ -193,6 +196,24 @@ export default function Home() {
             dps={a.dps}
             pobConfig={a.pobConfig}
             configApplies={a.reconciliation?.checks.find((c) => c.stat.startsWith('dps:'))?.severity === 'match'}
+            bare
+          />
+        ),
+      },
+      {
+        id: 'damage-review',
+        title: 'Damage review — gems and gear',
+        summary: primary
+          ? `Support-gem swaps and damage-mod upgrades for ${primary.name}`
+          : 'Support-gem swaps and damage-mod upgrades',
+        content: (
+          <DamageReview
+            dps={a.dps}
+            model={a.model}
+            items={a.items}
+            defense={a.defense}
+            tiersState={tiersState}
+            catalogState={catalogState}
             bare
           />
         ),
