@@ -11,7 +11,7 @@ export function CurrencyMilestones({
       {milestones.map((milestone) => (
         <li
           key={milestone.id}
-          className="rounded-md border border-[var(--line)] bg-[var(--surface-raised)] p-3 transition-colors hover:border-line"
+          className="rounded-md card p-3 transition-colors hover:border-line-strong"
         >
           <div className="flex items-center gap-2">
             <span className="font-medium text-ink">

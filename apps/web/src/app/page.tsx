@@ -88,10 +88,10 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[var(--surface)]/55 to-[var(--surface)]" />
         <div className="relative z-10 flex flex-col items-start gap-4 px-6 py-16 sm:px-10 sm:py-24">
-          <span className="rounded-full border border-[var(--accent)]/25 bg-[var(--accent-dim)] px-3 py-1 text-xs font-medium tracking-wide text-[var(--accent)] uppercase backdrop-blur-sm">
+          <span className="rounded-full border border-[var(--accent)]/25 bg-accent-soft px-3 py-1 text-xs font-medium tracking-wide text-[var(--accent)] uppercase backdrop-blur-sm">
             Patch {CURRENT_PATCH} · {LEAGUE_LABEL}
           </span>
-          <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+          <h1 className="font-display text-4xl font-bold text-balance sm:text-6xl">
             <span className="text-gradient-gold">Path of Exile 2</span>
             <br />
             <span className="text-ink">Endgame Companion</span>
@@ -114,9 +114,9 @@ export default function Home() {
           <Link
             key={card.href}
             href={card.href}
-            className="group relative overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--accent)]/40 hover:bg-surface-sunken hover:shadow-[0_8px_30px_-8px_rgba(227,179,65,0.25)]"
+            className="group relative overflow-hidden rounded-xl card p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--accent)]/40 hover:bg-surface-sunken hover:shadow-[0_8px_30px_-8px_rgba(227,179,65,0.25)]"
           >
-            <div className="mb-4 flex size-10 items-center justify-center rounded-lg border border-[var(--accent)]/25 bg-[var(--accent-dim)] text-[var(--accent)] transition-transform duration-200 group-hover:scale-110">
+            <div className="mb-4 flex size-10 items-center justify-center rounded-lg border border-[var(--accent)]/25 bg-accent-soft text-[var(--accent)] transition-transform duration-200 group-hover:scale-110">
               <svg viewBox="0 0 24 24" fill="none" className="size-5">
                 {card.icon}
               </svg>

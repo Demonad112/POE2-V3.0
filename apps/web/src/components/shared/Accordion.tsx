@@ -39,9 +39,9 @@ export function Accordion({
     <details
       id={id}
       open={defaultOpen}
-      className="group overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--surface-raised)] shadow-[var(--lift)] transition-colors open:border-l-2 open:border-l-[var(--accent)] open:bg-[var(--surface-raised)] open:shadow-[var(--lift-raised)]"
+      className="card group overflow-hidden rounded-xl transition-[border-color,box-shadow] hover:border-line-strong open:border-accent-line open:shadow-[var(--lift-raised)]"
     >
-      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--accent)]/60 [&::-webkit-details-marker]:hidden">
+      <summary className="relative flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 transition-colors group-open:bg-surface-overlay/70 before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-accent before:opacity-0 before:transition-opacity group-open:before:opacity-100 hover:bg-surface-overlay/50 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--accent)]/60 [&::-webkit-details-marker]:hidden">
         <svg
           viewBox="0 0 20 20"
           fill="none"
@@ -59,13 +59,13 @@ export function Accordion({
 
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="font-semibold text-ink-dim group-open:text-ink">
+            <span className="font-semibold text-ink/90 group-open:text-ink">
               {title}
             </span>
             {badge}
           </span>
           {summary && (
-            <span className="mt-0.5 block text-xs text-ink-mute group-open:hidden">
+            <span className="mt-0.5 block text-xs text-ink-dim group-open:hidden">
               {summary}
             </span>
           )}
@@ -78,7 +78,7 @@ export function Accordion({
         )}
       </summary>
 
-      <div className="border-t border-[var(--line)] px-4 py-4">{children}</div>
+      <div className="border-t border-accent-line/50 px-4 py-5 sm:px-5">{children}</div>
     </details>
   );
 }

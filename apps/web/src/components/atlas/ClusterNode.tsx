@@ -14,7 +14,7 @@ export function ClusterNode({ cluster }: { cluster: AtlasCluster }) {
       className={`scroll-mt-24 rounded-md border p-3 transition-all ${
         allocated
           ? "border-good/30 bg-good/5"
-          : "border-[var(--line)] bg-[var(--surface-raised)] hover:border-line"
+          : "border-[var(--line)] bg-[var(--surface-raised)] shadow-[var(--lift)] hover:border-line-strong"
       }`}
     >
       <label className="flex cursor-pointer items-start gap-2">

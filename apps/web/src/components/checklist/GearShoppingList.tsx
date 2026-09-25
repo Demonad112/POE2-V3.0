@@ -17,7 +17,7 @@ export function GearShoppingList() {
   return (
     <section
       id="gear-shopping-list"
-      className="scroll-mt-28 rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-5"
+      className="scroll-mt-28 rounded-xl card p-5"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 className="font-semibold text-ink">Gear shopping list</h2>

@@ -12,6 +12,7 @@ import { DpsMatrix } from '@/components/DpsMatrix'
 import { DamageReview } from '@/components/DamageReview'
 import { GearDetail } from '@/components/GearDetail'
 import { ReplaceFirstPanel } from '@/components/ReplaceFirstPanel'
+import { CharacterHero } from '@/components/character/CharacterHero'
 import { useShoppingList } from '@/hooks/useShoppingList'
 import { attributesFrom } from '@/lib/attributes'
 import { GearPanel } from '@/components/GearPanel'
@@ -25,7 +26,7 @@ import { Reconciliation } from '@/components/Reconciliation'
 import { Recommendations } from '@/components/Recommendations'
 import { Skeleton } from '@/components/Skeleton'
 import { TreePanel } from '@/components/tree/TreePanel'
-import { Tag, fmtCompact } from '@/components/ui'
+import { fmtCompact } from '@/components/ui'
 import { useCharacterHistory } from '@/lib/useCharacterHistory'
 import { useLadder } from '@/lib/useLadder'
 import { useModTiers } from '@/lib/useModTiers'
@@ -324,15 +325,37 @@ export default function Home() {
   return (
     <>
       <header className="mb-6">
-        <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">Character analysis</h1>
-        <p className="mt-1 max-w-prose text-sm leading-relaxed text-ink-dim">
+        <h1 className="font-display text-3xl font-bold text-ink sm:text-4xl">Character analysis</h1>
+        <div className="mt-3 h-px w-24 bg-gradient-to-r from-[var(--accent)] to-transparent" />
+        <p className="mt-4 max-w-prose text-sm leading-relaxed text-ink-dim">
           Reads poe.ninja&rsquo;s own computed character data and turns it into ranked, quantified findings. Nothing
           here is re-derived from scratch, and nothing is invented — where a number can&rsquo;t be established, it says
           so.
         </p>
       </header>
 
-      <ImportBar onResult={handleResult} busy={busy} setBusy={setBusy} />
+      {analysis || pobAnalysis ? (
+        // Once a character is loaded the import box steps aside, so the stat
+        // sheet leads the page. Keyed so it closes again on the next load.
+        <details className="group">
+          <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-lg border border-line bg-surface-raised/70 px-3.5 py-2 text-sm text-ink-dim shadow-[var(--lift)] transition-colors hover:border-line-strong hover:text-ink [&::-webkit-details-marker]:hidden">
+            <svg
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+              className="size-3.5 text-accent transition-transform group-open:rotate-90"
+            >
+              <path d="M7.5 5l5 5-5 5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Load another character
+          </summary>
+          <div className="mt-3">
+            <ImportBar onResult={handleResult} busy={busy} setBusy={setBusy} />
+          </div>
+        </details>
+      ) : (
+        <ImportBar onResult={handleResult} busy={busy} setBusy={setBusy} />
+      )}
 
       {error ? (
         <p role="alert" className="mt-4 rounded-lg border border-danger/40 px-4 py-3 text-sm text-danger">
@@ -344,7 +367,7 @@ export default function Home() {
         {busy ? <Skeleton /> : null}
 
         {!busy && !analysis && !pobAnalysis ? (
-          <div className="rounded-xl border border-dashed border-line px-6 py-14 text-center">
+          <div className="rounded-xl border border-dashed border-line-strong bg-surface-raised/40 px-6 py-16 text-center">
             <p className="text-sm text-ink-dim">Import a character to see its analysis.</p>
             <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-ink-mute">
               Survivability is led by the smallest hit that kills, not by an averaged effective health pool — which on
@@ -362,14 +385,7 @@ export default function Home() {
 
         {!busy && analysis ? (
           <div className="space-y-4">
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 className="text-lg font-semibold text-ink">{analysis.identity.name}</h2>
-              <span className="text-sm text-ink-dim">
-                Level {analysis.identity.level} {analysis.identity.className}
-              </span>
-              {analysis.identity.league ? <Tag>{analysis.identity.league}</Tag> : null}
-              {analysis.pobStats ? <Tag tone="good">cross-validated</Tag> : null}
-            </div>
+            <CharacterHero analysis={analysis} />
 
             {analysis.warnings.map((w) => (
               <p key={w} className="rounded-lg border border-warn/40 px-4 py-3 text-xs leading-relaxed text-warn">
@@ -383,7 +399,7 @@ export default function Home() {
 
             <div>
               <div className="mb-2 flex items-center">
-                <h2 className="text-sm font-semibold tracking-wide text-ink">Full analysis</h2>
+                <h2 className="text-base font-semibold text-ink">Full analysis</h2>
                 <PanelControls targetId="full-analysis" />
               </div>
               <div id="full-analysis" className="flex flex-col gap-1.5">

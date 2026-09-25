@@ -31,7 +31,7 @@ export function ChecklistStep({
       className={`scroll-mt-24 rounded-lg border p-4 transition-all ${
         complete
           ? "border-good/30 bg-good/5"
-          : "border-[var(--line)] bg-[var(--surface-raised)] hover:border-line"
+          : "border-[var(--line)] bg-[var(--surface-raised)] shadow-[var(--lift)] hover:border-line-strong"
       }`}
     >
       <label className="flex cursor-pointer items-start gap-3">

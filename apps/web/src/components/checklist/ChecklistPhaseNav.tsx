@@ -28,7 +28,7 @@ export function ChecklistPhaseNav() {
               complete
                 ? "border-good/30 bg-good/10 text-[var(--good)]"
                 : current
-                  ? "border-[var(--accent)]/50 bg-[var(--accent-dim)] text-[var(--accent)]"
+                  ? "border-[var(--accent)]/50 bg-accent-soft text-[var(--accent)]"
                   : "border-line text-ink-mute hover:text-ink-dim"
             }`}
           >

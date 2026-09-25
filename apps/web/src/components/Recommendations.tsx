@@ -69,7 +69,7 @@ function Card({ r, rank }: { r: Recommendation; rank: number }) {
   const isQuestion = r.category === 'question'
 
   return (
-    <li className="rounded-xl border border-line bg-surface-raised">
+    <li className="card rounded-xl">
       <div className="p-4">
         <div className="flex items-start gap-3">
           <span

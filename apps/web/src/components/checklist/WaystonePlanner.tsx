@@ -18,7 +18,7 @@ export function WaystonePlanner() {
   return (
     <section
       id="waystone-planner"
-      className="scroll-mt-28 rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-5"
+      className="scroll-mt-28 rounded-xl card p-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-semibold text-ink">Waystone planner</h2>
@@ -87,7 +87,7 @@ export function WaystonePlanner() {
                 className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs transition-colors ${
                   passed
                     ? "border-good/30 bg-good/10 text-[var(--good)]"
-                    : "border-[var(--accent)]/50 bg-[var(--accent-dim)] text-[var(--accent)]"
+                    : "border-[var(--accent)]/50 bg-accent-soft text-[var(--accent)]"
                 }`}
               >
                 {passed ? "✓" : "→"} T{gate.tier}

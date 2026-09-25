@@ -13,12 +13,16 @@
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
   --color-surface-sunken: var(--surface-sunken);
+  --color-surface-overlay: var(--surface-overlay);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-ink: var(--ink);
   --color-ink-dim: var(--ink-dim);
   --color-ink-mute: var(--ink-mute);
   --color-accent: var(--accent);
   --color-accent-dim: var(--accent-dim);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
 
   --color-danger: var(--danger);
   --color-warn: var(--warn);
@@ -32,20 +36,27 @@
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-cinzel), ui-serif, Georgia, serif;
 }
 
 :root {
   color-scheme: dark;
 
-  --surface: #0b0b0d;
-  --surface-raised: #141417;
-  --surface-sunken: #08080a;
-  --line: #26262c;
-  --ink: #f2ede4;
-  --ink-dim: #a8a49c;
-  --ink-mute: #6f6c66;
+  /* Warm charcoal, stepped far enough apart that a card reads as raised off
+     the page and a well reads as cut into the card. */
+  --surface: #111014;
+  --surface-raised: #1a181e;
+  --surface-sunken: #0c0b0e;
+  --surface-overlay: #221f27;
+  --line: #2f2a33;
+  --line-strong: #3f3845;
+  --ink: #f3eee4;
+  --ink-dim: #b1aca3;
+  --ink-mute: #8f897f;
   --accent: #e3b341;
   --accent-dim: #8a6d22;
+  --accent-soft: rgb(227 179 65 / 0.12);
+  --accent-line: rgb(227 179 65 / 0.35);
 
   --danger: #e66767;
   --warn: #c98500;
@@ -63,15 +74,19 @@
   :root:where(:not([data-theme='dark'])) {
     color-scheme: light;
 
-    --surface: #fcfcfb;
+    --surface: #f7f5f0;
     --surface-raised: #ffffff;
-    --surface-sunken: #f2f1ee;
-    --line: #dedcd6;
+    --surface-sunken: #efece5;
+    --surface-overlay: #faf8f3;
+    --line: #e0dbd0;
+    --line-strong: #cbc4b5;
     --ink: #16161a;
-    --ink-dim: #52514e;
-    --ink-mute: #85837d;
-    --accent: #9a7412;
+    --ink-dim: #4d4b47;
+    --ink-mute: #67645d;
+    --accent: #86650e;
     --accent-dim: #d8c48a;
+    --accent-soft: rgb(154 116 18 / 0.09);
+    --accent-line: rgb(154 116 18 / 0.32);
 
     --danger: #c4302f;
     --warn: #8a5c00;
@@ -90,15 +105,19 @@
 :root[data-theme='light'] {
   color-scheme: light;
 
-  --surface: #fcfcfb;
+  --surface: #f7f5f0;
   --surface-raised: #ffffff;
-  --surface-sunken: #f2f1ee;
-  --line: #dedcd6;
+  --surface-sunken: #efece5;
+  --surface-overlay: #faf8f3;
+  --line: #e0dbd0;
+  --line-strong: #cbc4b5;
   --ink: #16161a;
-  --ink-dim: #52514e;
-  --ink-mute: #85837d;
-  --accent: #9a7412;
+  --ink-dim: #4d4b47;
+  --ink-mute: #67645d;
+  --accent: #86650e;
   --accent-dim: #d8c48a;
+  --accent-soft: rgb(154 116 18 / 0.09);
+  --accent-line: rgb(154 116 18 / 0.32);
 
   --danger: #c4302f;
   --warn: #8a5c00;
@@ -120,27 +139,65 @@
  * dark. Consumers reference --lift / --lift-raised and get the right one.
  */
 :root {
-  --lift: 0 1px 2px rgb(0 0 0 / 0.4);
-  --lift-raised: 0 6px 20px -6px rgb(0 0 0 / 0.55);
+  /* The inset top highlight is what makes a card read as bevelled rather than
+     outlined on a dark surface. */
+  --card-highlight: inset 0 1px 0 rgb(255 255 255 / 0.045);
+  --lift: var(--card-highlight), 0 1px 2px rgb(0 0 0 / 0.45), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --lift-raised: var(--card-highlight), 0 2px 4px rgb(0 0 0 / 0.4), 0 16px 40px -14px rgb(0 0 0 / 0.75);
 }
 
 @media (prefers-color-scheme: light) {
   :root:where(:not([data-theme='dark'])) {
-    --lift: 0 1px 2px rgb(0 0 0 / 0.06);
-    --lift-raised: 0 6px 20px -6px rgb(0 0 0 / 0.14);
+    --card-highlight: inset 0 1px 0 rgb(255 255 255 / 0.7);
+    --lift: var(--card-highlight), 0 1px 2px rgb(40 30 10 / 0.06), 0 6px 18px -10px rgb(40 30 10 / 0.12);
+    --lift-raised: var(--card-highlight), 0 2px 4px rgb(40 30 10 / 0.07), 0 14px 32px -14px rgb(40 30 10 / 0.18);
   }
 }
 
 :root[data-theme='light'] {
-  --lift: 0 1px 2px rgb(0 0 0 / 0.06);
-  --lift-raised: 0 6px 20px -6px rgb(0 0 0 / 0.14);
+  --card-highlight: inset 0 1px 0 rgb(255 255 255 / 0.7);
+  --lift: var(--card-highlight), 0 1px 2px rgb(40 30 10 / 0.06), 0 6px 18px -10px rgb(40 30 10 / 0.12);
+  --lift-raised: var(--card-highlight), 0 2px 4px rgb(40 30 10 / 0.07), 0 14px 32px -14px rgb(40 30 10 / 0.18);
 }
 
 html {
   background: var(--surface);
 }
 
+/*
+ * Page atmosphere: a low gold glow behind the top of the page and a soft
+ * vignette, on a fixed layer so it doesn't scroll or repaint with content.
+ * Flat black read as unfinished; this gives the dark surface depth without
+ * competing with the data.
+ */
+:root {
+  --atmosphere:
+    radial-gradient(ellipse 80% 55% at 50% -12%, rgb(227 179 65 / 0.11), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgb(160 90 40 / 0.07), transparent 70%),
+    radial-gradient(ellipse 120% 90% at 50% 120%, rgb(0 0 0 / 0.55), transparent 60%);
+}
+@media (prefers-color-scheme: light) {
+  :root:where(:not([data-theme='dark'])) {
+    --atmosphere:
+      radial-gradient(ellipse 80% 55% at 50% -12%, rgb(154 116 18 / 0.08), transparent 70%);
+  }
+}
+:root[data-theme='light'] {
+  --atmosphere: radial-gradient(ellipse 80% 55% at 50% -12%, rgb(154 116 18 / 0.08), transparent 70%);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--atmosphere);
+}
+
 body {
+  position: relative;
+  isolation: isolate;
   background: var(--surface);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
@@ -202,4 +259,62 @@ body {
 
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* --- Shared finishes ------------------------------------------------------
+   In the components layer so Tailwind utilities on the same element (a gold
+   border, a text colour) still win over them. */
+@layer components {
+  /* A raised card: the standard container across every route. */
+  .card {
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, color-mix(in oklab, var(--surface-raised) 100%, white 1.5%), var(--surface-raised));
+    box-shadow: var(--lift);
+  }
+
+  /* Small uppercase section labels. Tracking is set once here — the old mix of
+     tracking-wide values rendered with uneven gaps ("CO ULD NOT"). */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    word-spacing: 0.04em;
+  }
+
+  /* Display type: brand, page titles, the character name. Never data. */
+  .font-display {
+    /* --font-cinzel directly: @theme inline doesn't emit --font-display at runtime. */
+    font-family: var(--font-cinzel), ui-serif, Georgia, serif;
+    letter-spacing: 0.02em;
+  }
+
+  /* A gold hairline that fades out at both ends. */
+  .gold-rule {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-line), transparent);
+  }
+}
+
+@layer components {
+  /* Gold lettering for the brand and hero title. Used before, never defined. */
+  .text-gradient-gold {
+    background: linear-gradient(180deg, #f6dc92 0%, var(--accent) 55%, #b98a24 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  :root[data-theme='light'] .text-gradient-gold {
+    background: linear-gradient(180deg, #b58a1c, #7e5d0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:where(:not([data-theme='dark'])) .text-gradient-gold {
+      background: linear-gradient(180deg, #b58a1c, #7e5d0b);
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+  }
 }
