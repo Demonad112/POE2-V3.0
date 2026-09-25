@@ -110,6 +110,8 @@ interface PlanContext {
   items: EquippedItem[]
   defense: DefenseSummary
   tiers: ModTiers
+  characterName?: string
+  attributes?: Partial<Record<'str' | 'dex' | 'int', number>>
 }
 
 function ItemCard({ item, context }: { item: ItemAnalysis; context: PlanContext }) {
@@ -172,6 +174,8 @@ function ItemCard({ item, context }: { item: ItemAnalysis; context: PlanContext 
                 items={context.items}
                 defense={context.defense}
                 tiers={context.tiers}
+                {...(context.characterName !== undefined ? { characterName: context.characterName } : {})}
+                {...(context.attributes ? { attributes: context.attributes } : {})}
               />
             ) : null}
           </li>
@@ -185,12 +189,16 @@ export function GearDetail({
   items,
   defense,
   state,
+  characterName,
+  attributes,
   bare = false,
 }: {
   items: EquippedItem[]
   defense: DefenseSummary
   /** Loaded once at page level so this panel and the findings list agree. */
   state: ModTiersState
+  characterName?: string
+  attributes?: Partial<Record<'str' | 'dex' | 'int', number>>
   bare?: boolean
 }) {
   const result = useMemo(() => {
@@ -199,13 +207,20 @@ export function GearDetail({
     const analysed = active.map((i) => analyzeItem(i, state.tiers, defense))
     const swaps = findResistanceSwaps(analysed, active, state.tiers, defense)
     return {
-      context: { analysed, items: active, defense, tiers: state.tiers } satisfies PlanContext,
+      context: {
+        analysed,
+        items: active,
+        defense,
+        tiers: state.tiers,
+        ...(characterName !== undefined ? { characterName } : {}),
+        ...(attributes ? { attributes } : {}),
+      } satisfies PlanContext,
       analysed,
       swaps,
       shortfalls: summarizeSwaps(swaps, defense),
       upgrades: findTierUpgrades(analysed),
     }
-  }, [state, items, defense])
+  }, [state, items, defense, characterName, attributes])
 
   if (state.status === 'idle' || state.status === 'loading') {
     return (

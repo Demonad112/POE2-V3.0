@@ -240,5 +240,39 @@ export interface PersistedState {
   character: {
     snapshots: CharacterSnapshot[];
   };
+  /**
+   * Saved replacement plans. Optional and unversioned, like `hideCompleted`:
+   * the reader merges over defaults, so older payloads just lack it.
+   */
+  gear?: {
+    shoppingList: ShoppingEntry[];
+  };
+  gems?: {
+    /**
+     * Highest support gem tier the player can cut. `null` = no limit, chosen
+     * explicitly; absent = default to the highest tier already socketed.
+     */
+    maxSupportTier?: number | null;
+  };
   updatedAt: string;
+}
+
+/**
+ * One saved replacement: a snapshot of the plan's text, never a live reference
+ * to an analysed item — it has to read correctly after the character is
+ * re-imported, or after the gear it describes is gone.
+ */
+export interface ShoppingEntry {
+  id: string;
+  characterName: string;
+  slotLabel: string;
+  itemName: string;
+  baseType: string;
+  ilvlNeeded: number | null;
+  /** "T1 +(41-45)% to Cold Resistance", best first. */
+  lines: string[];
+  /** Follow-up steps on other items, in order. */
+  followUps: string[];
+  createdAt: string;
+  done: boolean;
 }

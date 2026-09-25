@@ -19,7 +19,7 @@ import {
   type PobSkillData,
 } from '../src/gems/catalog.js'
 import { parseAllSetups } from '../src/gems/index.js'
-import { reviewDamage } from '../src/recommend/damage.js'
+import { highestSocketedTier, reviewDamage } from '../src/recommend/damage.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const dataDir = join(here, '..', '..', 'data', 'generated')
@@ -117,5 +117,43 @@ describe('reviewDamage', () => {
     for (const g of review.gear) expect(g.why).not.toBe('')
     expect(review.gear.some((g) => /Cold damage/i.test(g.text))).toBe(true)
     expect(review.gear.some((g) => /Fire Resistance/.test(g.text))).toBe(false)
+  })
+})
+
+describe('support tier cap and lineage', () => {
+  const setups = parseAllSetups(model.skills)
+  const base = { dps: analysis.dps, setups, items: analysed, rawItems: items, tiers, catalog }
+  const uncapped = reviewDamage(base)!
+
+  it('reads the highest tier the character already sockets', () => {
+    const socketed = setups.flatMap((s) => s.supports.map((g) => catalog.support(g.name))).filter((s) => s && !s.lineage)
+    expect(highestSocketedTier(setups, catalog)).toBe(Math.max(...socketed.map((s) => s!.tier)))
+  })
+
+  it('never ranks a lineage support, and lists them apart', () => {
+    expect(uncapped.strongestCompatible.some((c) => c.lineage)).toBe(false)
+    for (const swap of uncapped.gemSwaps) expect(swap.candidates.some((c) => c.lineage)).toBe(false)
+    expect(uncapped.lineageOptions.length).toBeGreaterThan(0)
+    expect(uncapped.lineageOptions.every((c) => c.lineage)).toBe(true)
+    // Unique names: one row per gem, even where PoB lists a gem twice.
+    expect(new Set(uncapped.lineageOptions.map((c) => c.name)).size).toBe(uncapped.lineageOptions.length)
+    expect(uncapped.maxSupportTier).toBeNull()
+    expect(uncapped.aboveTierCap).toBe(0)
+  })
+
+  it('holds candidates to the cap and falls back within a family', () => {
+    const capped = reviewDamage({ ...base, maxSupportTier: 1 })!
+    expect(capped.maxSupportTier).toBe(1)
+    expect(capped.strongestCompatible.every((c) => c.tier <= 1)).toBe(true)
+    for (const swap of capped.gemSwaps) expect(swap.candidates.every((c) => c.tier <= 1)).toBe(true)
+    expect(capped.aboveTierCap).toBeGreaterThan(0)
+    expect(capped.notes.some((n) => n.includes('highest you\'ve said you can cut'))).toBe(true)
+    // A family whose top tier is above the cap is represented by a lower tier of it, never the top one.
+    const lowered = capped.strongestCompatible.filter((c) =>
+      catalog.support(c.name)!.family.some((f) =>
+        uncapped.strongestCompatible.some((u) => u.tier > 1 && catalog.support(u.name)!.family.includes(f)),
+      ),
+    )
+    for (const c of lowered) expect(uncapped.strongestCompatible.some((u) => u.name === c.name)).toBe(false)
   })
 })

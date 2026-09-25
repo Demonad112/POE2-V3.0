@@ -16,7 +16,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const from = join(here, '..', '..', '..', 'packages', 'data', 'generated')
 const to = join(here, '..', 'public')
 
-const FILES = ['passive-tree.json', 'mod-tiers.json', 'monster-stats.json', 'pob-skills.json']
+const FILES = ['passive-tree.json', 'mod-tiers.json', 'monster-stats.json', 'pob-skills.json', 'bases.json']
 
 mkdirSync(to, { recursive: true })
 for (const file of FILES) {

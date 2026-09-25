@@ -10,6 +10,8 @@
  *
  * The player can leave a resistance off the replacement (they want that suffix
  * for something else, or are swapping in a unique) and the follow-ups recompute.
+ * Other bases for the slot can be compared against the spec, and the plan can
+ * be saved to the gear shopping list shown on the checklist.
  */
 
 import { useMemo, useState } from 'react'
@@ -22,6 +24,8 @@ import {
   type SpecLine,
 } from '@poe2/core'
 import { Tag } from './ui'
+import { AlternativeBases } from './AlternativeBases'
+import { useShoppingList } from '@/hooks/useShoppingList'
 
 const WHY: Record<SpecLine['why'], { label: string; tone: 'good' | 'accent' | 'warn' }> = {
   'needed-resistance': { label: 'keeps you capped', tone: 'warn' },
@@ -36,15 +40,23 @@ export function ReplacementPlanner({
   items,
   defense,
   tiers,
+  characterName = '',
+  attributes,
 }: {
   target: ItemAnalysis
   analysed: ItemAnalysis[]
   items: EquippedItem[]
   defense: DefenseSummary
   tiers: ModTiers
+  /** Names the saved shopping-list entry. */
+  characterName?: string
+  /** From the PoB export, when present — checks the other bases' requirements. */
+  attributes?: Partial<Record<'str' | 'dex' | 'int', number>>
 }) {
   const [omit, setOmit] = useState<string[]>([])
   const [cap82, setCap82] = useState(false)
+  const shopping = useShoppingList()
+  const saved = shopping.entries.some((e) => e.characterName === characterName && e.slotLabel === target.slotLabel)
 
   const plan = useMemo(
     () =>
@@ -215,6 +227,21 @@ export function ReplacementPlanner({
           The replacement covers everything this item holds up — no other item needs to change.
         </p>
       ) : null}
+
+      <AlternativeBases plan={plan} tiers={tiers} {...(cap82 ? { maxIlvl: 82 } : {})} {...(attributes ? { attributes } : {})} />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => shopping.save(plan, characterName)}
+          className="rounded-md border border-good/40 bg-good/10 px-2.5 py-1 text-[11px] font-medium text-good transition-colors hover:bg-good/20"
+        >
+          {saved ? 'Update on shopping list' : 'Save to shopping list'}
+        </button>
+        {saved ? (
+          <span className="text-[10px] text-ink-mute">Saved — it&apos;s on the checklist page under Gear shopping list.</span>
+        ) : null}
+      </div>
 
       {plan.existingShortfalls.length ? (
         <p className="text-[11px] text-ink-mute">

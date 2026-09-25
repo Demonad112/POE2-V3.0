@@ -125,6 +125,19 @@ export function resistancesFrom(item: ItemAnalysis): Record<string, number> {
   return out
 }
 
+/**
+ * Points below cap each resistance would fall with the item removed and nothing
+ * in its place, per type. Types that stay capped are 0.
+ */
+export function removalDeficits(item: ItemAnalysis, defense: DefenseSummary): Record<string, number> {
+  const granted = resistancesFrom(item)
+  const out: Record<string, number> = {}
+  for (const res of defense.resistances) {
+    out[res.type] = Math.max(0, res.max - (res.value + res.overCap - (granted[res.type] ?? 0)))
+  }
+  return out
+}
+
 /** The best line of a ladder for one stat on a base, optionally capped by item level. */
 function bestFor(
   tiers: ModTiers,
@@ -213,11 +226,12 @@ export function planReplacement({
 
   // --- resistance impact of removing the item ------------------------------
   const granted = resistancesFrom(target)
+  const deficits = removalDeficits(target, defense)
   const impact = new Map<string, ResistanceImpact>()
   for (const res of defense.resistances) {
     const fromItem = granted[res.type] ?? 0
     const uncapped = res.value + res.overCap
-    const deficitIfRemoved = Math.max(0, res.max - (uncapped - fromItem))
+    const deficitIfRemoved = deficits[res.type] ?? 0
     impact.set(res.type, {
       type: res.type,
       fromItem,

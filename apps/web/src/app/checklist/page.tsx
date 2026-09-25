@@ -4,6 +4,7 @@ import { ChecklistSection } from "@/components/checklist/ChecklistSection";
 import { ChecklistProgressHeader } from "@/components/checklist/ChecklistProgressHeader";
 import { ChecklistPhaseNav } from "@/components/checklist/ChecklistPhaseNav";
 import { CommonMistakesPanel } from "@/components/checklist/CommonMistakesPanel";
+import { GearShoppingList } from "@/components/checklist/GearShoppingList";
 import { GlossaryPanel } from "@/components/checklist/GlossaryPanel";
 import { MechanicsPrimer } from "@/components/checklist/MechanicsPrimer";
 import { NextStepCard } from "@/components/checklist/NextStepCard";
@@ -31,6 +32,8 @@ export default function ChecklistPage() {
         <WaystonePlanner />
         <ReadinessPanel />
       </div>
+
+      <GearShoppingList />
 
       <div className="flex flex-col gap-3">
         <MechanicsPrimer />

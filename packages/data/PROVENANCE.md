@@ -6,25 +6,106 @@ This file covers generated game data. The hand-written endgame guide content
 
 ## Freshness
 
-Every artifact below was last generated on **2026-07-28**, before Path of Exile
-2 patch 0.5.5 (2026-09-04). What that patch could have made stale:
+`mod-tiers.json` and `bases.json` were regenerated for **0.5.5** on
+2026-09-25, from Path of Building 2's own 0.5.5 export (PathOfBuilding-PoE2
+`ce566ea`; the data commit is `49e9392` "Export 0.5.5 data", 2026-09-10). See
+[`mod-tiers.json` from Path of Building](#mod-tiersjson-from-path-of-building)
+below.
+
+The other artifacts were last generated on **2026-07-28**, before patch 0.5.5
+(2026-09-04):
 
 - **Soul Core entries.** 0.5.5 reworked about 20 Soul Cores and added 17 (13
   "Jiquani's Soul Core of …", 4 "Atziri's Soul Core of …"). `mod-tiers.json`
-  carries Soul Core base tags and display-only mods, so the new bases are absent
-  and reworked values are the old ones. Nothing grades against these: socketed
-  core text reaches the item view verbatim from the character payload, and
-  resistances are attributed from poe.ninja's `breakdowns`. Limit checks read
-  the item first and fall back to a table in `packages/core/src/gear/audit.ts`.
-- **Affix ladders.** The 0.5.5 notes list no affix changes, so none are known to
-  be affected.
+  still carries Soul Core base tags and display-only mods from the RePoE build,
+  so the new bases are absent and reworked values are the old ones. Nothing
+  grades against these: socketed core text reaches the item view verbatim from
+  the character payload, and resistances are attributed from poe.ninja's
+  `breakdowns`. Limit checks read the item first and fall back to a table in
+  `packages/core/src/gear/audit.ts`.
 - **Passive tree.** Unchanged by 0.5.5; it needs no regeneration.
 
-To regenerate, run from the repository root, in this order:
-`npm run build:mod-tiers -w @poe2/data`, `build:mods`, `build:mod-bases`,
-`build:monster-stats`, `build:skills`. The RePoE-fork sources must be reachable
-(`repoe-fork.github.io`). Afterwards, update the counts quoted below and run
-`npm test`.
+To regenerate `mod-tiers.json` and `bases.json` from Path of Building, run from
+the repository root:
+
+```bash
+POB2_DIR=/path/to/PathOfBuilding-PoE2 npm run build:mod-tiers:pob -w @poe2/data
+```
+
+The RePoE-fork route (`npm run build:mod-tiers -w @poe2/data`, then
+`build:mods`, `build:mod-bases`, `build:monster-stats`, `build:skills`) needs
+`repoe-fork.github.io` to be reachable. Run it first if you want to refresh the
+stat ids that the PoB build carries over. Afterwards, update the counts quoted
+below and run `npm test`.
+
+## `mod-tiers.json` from Path of Building
+
+Built by `scripts/build-mod-tiers-pob.mjs` from PoB's `src/Data/ModItem.lua`,
+`ModJewel.lua` and `Bases/*.lua`.
+
+**What PoB supplies:**
+
+- each mod's level, group, affix name and text;
+- its ordered spawn weights (`weightKey`/`weightVal`);
+- base tags.
+
+**What it doesn't: stat ids.** PoB has no stat ids (`additional_strength`),
+and item analysis joins on them. So the build carries stat ids over by mod id
+from the previous, RePoE-derived artifact, and checks every carried-over range
+against the numbers in PoB's own text for that mod.
+
+That check has to allow for display scaling. Stats are stored in internal
+units and shown converted:
+
+| Stat | Stored as | Shown as |
+|---|---|---|
+| Life regeneration | per minute | per second (÷60) |
+| Leech, crit chance | permyriad | % (÷100) |
+| Durations | ms | seconds (÷1000) |
+
+It also allows for two-decimal rounding.
+
+Three mods can't be checked from their text, and are listed in the script:
+
+- the fishing lure and hook mods roll an enum;
+- one rage line shows a single roll of its range.
+
+A mod with no stat source, or a range that disagrees, fails the build.
+`displayOnly` is carried over unchanged.
+
+**Result against the July artifact:**
+
+| | |
+|---|---|
+| Mods kept | 2,927 (was 2,962) |
+| Removed | 35, all gone from 0.5.5: trap throw speed / trigger radius / cascade speed, master-vendor and essence-only lines |
+| Level or roll-range changes | 0 |
+| Spawn-weight changes outside jewels | 0 |
+| Jewel spawn changes | 377, where PoB writes `jewel: 0` instead of `default: 0` (equivalent for jewels) |
+| Group changes | 122, all jewel mods; PoB splits crafted-jewel groups more finely |
+| Bases added | 5: Energy Blade 1H/2H, three Shrine Sceptres |
+| Bases retagged | 66, where PoB adds `genesis_tree_*` and `*_implicit_skill` tags |
+
+In short, 0.5.5 changed no affix ladder the planner uses. The data is now
+stamped as 0.5.5 rather than assumed to be.
+
+## `generated/bases.json`
+
+Written by the same script. It covers every equipment base (flasks, charms,
+jewels, fishing rods and Transcendent limbs excluded):
+
+- PoB item type and defence split (`subType`);
+- implicit lines;
+- base defences or weapon stats;
+- requirements (level, Str/Dex/Int);
+- whether the base is obtainable. Hidden bases and `not_for_sale` bases are
+  never suggested.
+
+Spawn tags are not duplicated here; they live in `mod-tiers.json` `baseTags`.
+
+The replacement planner uses it to compare other bases for a slot. Totals:
+1,716 gear bases, 1,460 of them obtainable; 352 KB raw, 30 KB gzipped. The web
+build copies it to `apps/web/public/`.
 
 ## `generated/passive-tree.json`
 
