@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { LazyMount } from "./LazyMount";
 
 /**
  * A collapsible section built on native <details>.
@@ -22,6 +23,7 @@ export function Accordion({
   badge,
   instrument,
   defaultOpen = false,
+  lazy = false,
   children,
 }: {
   id?: string;
@@ -33,6 +35,12 @@ export function Accordion({
   /** Right-aligned live readout — the section's headline measurement. */
   instrument?: ReactNode;
   defaultOpen?: boolean;
+  /**
+   * Mount the content on first open instead of up front. For heavy panels
+   * only: lazy content isn't in the page until opened, so browser find and
+   * links to ids inside it can't reach it.
+   */
+  lazy?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -78,7 +86,9 @@ export function Accordion({
         )}
       </summary>
 
-      <div className="border-t border-accent-line/50 px-4 py-5 sm:px-5">{children}</div>
+      <div className="border-t border-accent-line/50 px-4 py-5 sm:px-5">
+        {lazy ? <LazyMount>{children}</LazyMount> : children}
+      </div>
     </details>
   );
 }

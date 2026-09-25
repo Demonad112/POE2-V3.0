@@ -12,7 +12,8 @@ import { PersistedStateProvider } from '@/hooks/usePersistedState'
 // Inter for everything read: close to Geist in feel, and the usual partner
 // for a Garamond. Geist Mono stays for code-like figures.
 const inter = Inter({ variable: '--font-inter', subsets: ['latin'] })
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
+// Not preloaded: it only sets small figures, so a late swap is invisible.
+const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'], preload: false })
 // Display only: brand, page titles, the character name. Never data.
 const garamond = EB_Garamond({ variable: '--font-garamond', subsets: ['latin'], weight: ['500', '600', '700'] })
 

@@ -113,6 +113,17 @@ Below the hero:
   - **EHP** ranks closing a resistance gap first, then life + energy shield, then armour/evasion rating. Those units are never blended.
 - The "Gear & tree" panel is gone. Everything it listed is in the workbench and the tree.
 
+**Dashboard** follows the Atlas page: the quiz and the mistakes panel stay on top, and the reference material sits under a sticky tab bar (Strategies · Pinnacle bosses · Meta builds · Milestones). On mobile this took the page from about 7,300px to 2,050px.
+- Strategies are one-line rows showing tier, name, investment, risk and when the strategy fits. The expected return, Atlas setup and source clips open on tap. The old table needed 720px and scrolled sideways on a phone.
+- A boss card shows only what it takes to walk in: HP floor and fragments. The unlock route and fight notes open on tap.
+- Search results and deep links switch to the right tab. A same-page search now announces its hash change itself, because `router.push` fires no `hashchange`.
+
+## Performance
+
+- **Search:** the index of every step, cluster, strategy and boss loads with the search dialog, on first open, not with every page. Hovering or focusing the Search button warms it.
+- **Lazy panels:** character analysis panels use `<Accordion lazy>`, which mounts the content on first open. A closed `<details>` still renders its children, so every closed panel used to draw its canvas and run its analysis on import. Only use `lazy` where nothing links into the content: lazy content isn't in the page until opened.
+- **Fonts:** Geist Mono is not preloaded, since it only sets small figures.
+
 Checklist steps put their source-video chips on their own row under the description, so the chips never squeeze the text column on mobile.
 
 ## Colour
