@@ -46,6 +46,8 @@ export interface DisplayOnlyMod {
 export interface ModTierData {
   version: number
   generatedFrom: string[]
+  /** Game patch the data was exported for, when the builder records it. */
+  gameVersion?: string
   note: string
   baseTags: Record<string, string[]>
   baseClass: Record<string, string | null>
@@ -88,8 +90,25 @@ export class ModTiers {
   /** group|kind -> ids, cached per base tag set. */
   private readonly ladderCache = new Map<string, Ladder>()
 
+  /** stat id -> ids of the mods granting it, built on first use. */
+  private statIndex: Map<string, string[]> | null = null
+
   constructor(data: ModTierData) {
     this.data = data
+  }
+
+  private modsByStat(): Map<string, string[]> {
+    if (!this.statIndex) {
+      this.statIndex = new Map()
+      for (const [id, mod] of Object.entries(this.data.mods)) {
+        for (const [sid] of mod.stats) {
+          const list = this.statIndex.get(sid)
+          if (list) list.push(id)
+          else this.statIndex.set(sid, [id])
+        }
+      }
+    }
+    return this.statIndex
   }
 
   get modCount(): number {
@@ -212,7 +231,9 @@ export class ModTiers {
     const wanted = options.statIds ? new Set(options.statIds) : null
     const groups = new Map<string, LadderEntry>()
 
-    for (const [id, mod] of Object.entries(this.data.mods)) {
+    const ids = wanted ? [...new Set([...wanted].flatMap((sid) => this.modsByStat().get(sid) ?? []))] : Object.keys(this.data.mods)
+    for (const id of ids) {
+      const mod = this.data.mods[id]!
       if (mod.t !== short) continue
       if (wanted && !mod.stats.some(([sid]) => wanted.has(sid))) continue
       if (options.maxIlvl !== undefined && mod.lvl > options.maxIlvl) continue

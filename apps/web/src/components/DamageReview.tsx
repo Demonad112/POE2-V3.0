@@ -8,11 +8,16 @@
  * constant "more" figures, weighed against this skill's damage split). Gear
  * findings come from the affix ladders. Neither is a DPS simulation, and the
  * panel says so rather than dressing the numbers up as one.
+ *
+ * Candidates are held to the highest support tier the player says they can
+ * cut, saved per browser; until they choose, it defaults to the highest tier
+ * they already socket. Lineage supports are listed apart as chase items.
  */
 
 import { useMemo, useState } from 'react'
 import {
   analyzeItem,
+  highestSocketedTier,
   parseAllSetups,
   reviewDamage,
   type CharModel,
@@ -23,6 +28,7 @@ import {
 } from '@poe2/core'
 import type { ModTiersState } from '@/lib/useModTiers'
 import type { SupportCatalogState } from '@/lib/useSupportCatalog'
+import { useSupportTierCap } from '@/hooks/useSupportTierCap'
 import { Empty, Panel, Tag } from './ui'
 
 function pct(ratio: number): string {
@@ -36,9 +42,13 @@ function CandidateRow({ c, ratio }: { c: GemCandidate; ratio?: number }) {
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
         <span className="text-xs font-medium text-ink">{c.name}</span>
         {c.lineage ? <Tag tone="accent">lineage</Tag> : null}
-        <span className="tabular text-[11px] text-good">
-          {ratio !== undefined ? `${pct(ratio)} DPS vs current` : `${pct(c.value.dps)} on its own`}
-        </span>
+        {ratio !== undefined ? (
+          <span className="tabular text-[11px] text-good">{pct(ratio)} DPS vs current</span>
+        ) : c.value.offensive && c.value.quantified && c.value.dps !== 1 ? (
+          <span className="tabular text-[11px] text-good">{pct(c.value.dps)} on its own</span>
+        ) : (
+          <span className="text-[11px] text-ink-mute">effect not quantified — see its description</span>
+        )}
       </div>
       {c.description ? <p className="mt-0.5 text-[11px] text-ink-mute">{c.description}</p> : null}
       {c.value.notes.length ? (
@@ -76,6 +86,14 @@ export function DamageReview({
 }) {
   const damaging = dps.skills.filter((s) => s.totalDps > 0)
   const [skillName, setSkillName] = useState<string | undefined>(undefined)
+  const { cap: savedCap, setCap } = useSupportTierCap()
+  const setups = useMemo(() => parseAllSetups(model.skills), [model])
+  const evidenceTier = useMemo(
+    () => (catalogState.status === 'ready' ? highestSocketedTier(setups, catalogState.catalog) : null),
+    [catalogState, setups],
+  )
+  // Saved choice first (null = no limit), then what they already socket.
+  const cap = savedCap === undefined ? evidenceTier : savedCap
 
   const review = useMemo(() => {
     if (catalogState.status !== 'ready') return null
@@ -84,14 +102,15 @@ export function DamageReview({
     const analysed = tiers ? active.map((i) => analyzeItem(i, tiers, defense)) : []
     return reviewDamage({
       dps,
-      setups: parseAllSetups(model.skills),
+      setups,
       items: analysed,
       rawItems: active,
       tiers,
       catalog: catalogState.catalog,
       ...(skillName ? { skillName } : {}),
+      ...(cap !== null && cap !== undefined ? { maxSupportTier: cap } : {}),
     })
-  }, [catalogState, tiersState, items, defense, dps, model, skillName])
+  }, [catalogState, tiersState, items, defense, dps, setups, skillName, cap])
 
   if (catalogState.status === 'idle' || catalogState.status === 'loading') {
     return (
@@ -146,6 +165,35 @@ export function DamageReview({
           ) : null}
         </div>
 
+        <div className="flex flex-wrap items-center gap-2 text-xs text-ink-dim">
+          <label className="flex items-center gap-2">
+            Highest support tier I can cut
+            <select
+              value={cap === null || cap === undefined ? 'none' : String(cap)}
+              onChange={(e) => setCap(e.target.value === 'none' ? null : Number(e.target.value))}
+              className="rounded-md border border-line bg-surface-sunken px-2 py-1 text-ink"
+            >
+              {[1, 2, 3, 4, 5].map((t) => (
+                <option key={t} value={t}>
+                  Tier {t}
+                </option>
+              ))}
+              <option value="none">No limit</option>
+            </select>
+          </label>
+          <span className="text-[11px] text-ink-mute">
+            {savedCap === undefined
+              ? evidenceTier !== null
+                ? `Defaulted from your gems — you already socket a tier-${evidenceTier} support.`
+                : 'No limit until you choose one.'
+              : (
+                  <button type="button" onClick={() => setCap(undefined)} className="text-accent hover:underline">
+                    Reset to what you socket{evidenceTier !== null ? ` (tier ${evidenceTier})` : ''}
+                  </button>
+                )}
+          </span>
+        </div>
+
         {/* Gems */}
         <section>
           <h3 className="mb-1.5 text-[11px] font-medium tracking-wide text-ink-dim uppercase">Support gems</h3>
@@ -198,6 +246,20 @@ export function DamageReview({
               </summary>
               <ul className="mt-1.5 space-y-1">
                 {review.strongestCompatible.map((c) => (
+                  <CandidateRow key={c.name} c={c} />
+                ))}
+              </ul>
+            </details>
+          ) : null}
+
+          {review.lineageOptions.length ? (
+            <details className="mt-2">
+              <summary className="cursor-pointer text-[11px] text-ink-mute">
+                Lineage supports that fit this skill ({review.lineageOptions.length}) — chase drops, never part of a
+                suggested swap. Most have conditional effects, so few carry a figure.
+              </summary>
+              <ul className="mt-1.5 space-y-1">
+                {review.lineageOptions.map((c) => (
                   <CandidateRow key={c.name} c={c} />
                 ))}
               </ul>

@@ -19,6 +19,7 @@ apps/web/public/passive-tree.json
 apps/web/public/mod-tiers.json
 apps/web/public/monster-stats.json
 apps/web/public/pob-skills.json
+apps/web/public/bases.json
 
 # Downloaded source data for the build scripts. Regenerate with:
 #   node packages/data/scripts/build-mod-tiers.mjs

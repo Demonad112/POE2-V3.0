@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { analyzeCharacter, analyzeFromPob, type Analysis, type PobAnalysis } from '@poe2/core'
 import { Accordion } from '@/components/shared/Accordion'
 import { PanelControls } from '@/components/shared/PanelControls'
@@ -11,6 +11,9 @@ import { DefensePanel } from '@/components/DefensePanel'
 import { DpsMatrix } from '@/components/DpsMatrix'
 import { DamageReview } from '@/components/DamageReview'
 import { GearDetail } from '@/components/GearDetail'
+import { ReplaceFirstPanel } from '@/components/ReplaceFirstPanel'
+import { useShoppingList } from '@/hooks/useShoppingList'
+import { attributesFrom } from '@/lib/attributes'
 import { GearPanel } from '@/components/GearPanel'
 import { Headroom } from '@/components/Headroom'
 import { AuditPanel } from '@/components/AuditPanel'
@@ -90,6 +93,9 @@ export default function Home() {
   // there is a first analysis. Failure is silent: the assessment already knows
   // how to leave damage unscored and say why.
   const ladder = useLadder(analysis?.identity.league ?? null, analysis?.identity.className ?? null)
+  const shopping = useShoppingList()
+  // Memoised so the gear panels' own memos don't recompute on every render.
+  const attributes = useMemo(() => attributesFrom(analysis?.pobStats ?? null), [analysis])
 
   useEffect(() => {
     if (!raw) return
@@ -248,6 +254,25 @@ export default function Home() {
         content: <Attribution report={a.attribution} bare />,
       },
       {
+        id: 'replace-first',
+        title: 'Replace first',
+        summary: 'Your gear ranked by what a replacement would recover',
+        badge: (() => {
+          const open = shopping.entries.filter((e) => e.characterName === a.identity.name && !e.done).length
+          return open ? <StatusChip tone="good">{open} on shopping list</StatusChip> : undefined
+        })(),
+        content: (
+          <ReplaceFirstPanel
+            items={a.items}
+            defense={a.defense}
+            state={tiersState}
+            characterName={a.identity.name}
+            {...(attributes ? { attributes } : {})}
+            bare
+          />
+        ),
+      },
+      {
         id: 'gear-modifiers',
         title: 'Gear modifiers',
         summary:
@@ -256,7 +281,16 @@ export default function Home() {
             : tiersState.status === 'error'
               ? 'Affix tier data unavailable'
               : 'Loading affix tiers…',
-        content: <GearDetail items={a.items} defense={a.defense} state={tiersState} bare />,
+        content: (
+          <GearDetail
+            items={a.items}
+            defense={a.defense}
+            state={tiersState}
+            characterName={a.identity.name}
+            {...(attributes ? { attributes } : {})}
+            bare
+          />
+        ),
       },
       {
         id: 'passive-tree',
