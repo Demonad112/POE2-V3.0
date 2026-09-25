@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PassiveAllocation, PassiveTree, TreeNode } from '@poe2/core'
-import { resolveAllocation, suggestNodesForStat, supportedStats } from '@poe2/core'
+import { resolveAllocation, suggestTreeUpgrades, type UpgradeCharacter, type UpgradeSkill } from '@poe2/core'
 import { Tag } from '../ui'
 import { extentOf, fitExtent, zoomAt, type Viewport } from './geometry'
 import { hitTest, renderTree, type TreePalette } from './render'
@@ -26,21 +26,17 @@ function readPalette(el: HTMLElement): TreePalette {
   }
 }
 
-export interface WeakStat {
-  key: string
-  label: string
-  shortfall: string
-}
-
 export interface PassiveTreeViewProps {
   tree: PassiveTree
   allocation: PassiveAllocation
-  /** Stats the analysis found short, best first. Drives the route picker. */
-  weakStats?: WeakStat[]
+  /** The main skill, for the damage list. Null leaves that list empty. */
+  skill?: UpgradeSkill | null
+  /** Life, ES, ratings and resistance gaps, for the EHP list. */
+  character?: UpgradeCharacter | null
   className?: string
 }
 
-export function PassiveTreeView({ tree, allocation, weakStats = [], className = '' }: PassiveTreeViewProps) {
+export function PassiveTreeView({ tree, allocation, skill = null, character = null, className = '' }: PassiveTreeViewProps) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -58,24 +54,18 @@ export function PassiveTreeView({ tree, allocation, weakStats = [], className = 
     return new Set(inactive.filter((id) => !activeIds.has(id)))
   }, [allocation, activeIds])
   /**
-   * Routes to nodes granting a stat the build is short on. Computed on demand
-   * rather than up front: it walks the whole 4,975-node tree per stat.
+   * The best nearby nodes for damage and for effective health. One walk of the
+   * tree covers both lists.
    */
-  const [routeStat, setRouteStat] = useState<string | null>(null)
-  const [routeIndex, setRouteIndex] = useState(0)
+  const upgrades = useMemo(
+    () => (character ? suggestTreeUpgrades(tree, allocation.live, skill, character, { maxCost: 6, limit: 8 }) : null),
+    [tree, allocation.live, skill, character],
+  )
+  const [upgradeList, setUpgradeList] = useState<'damage' | 'ehp'>('damage')
+  const [routeIndex, setRouteIndex] = useState<number | null>(null)
+  const routes = upgrades ? upgrades[upgradeList] : []
 
-  const routes = useMemo(() => {
-    if (!routeStat) return []
-    return suggestNodesForStat(tree, allocation.live, routeStat, { maxCost: 4, limit: 5 })
-  }, [tree, allocation.live, routeStat])
-
-  /** Only offer stats this module can actually search for. */
-  const routable = useMemo(() => {
-    const supported = new Set(supportedStats())
-    return weakStats.filter((s) => supported.has(s.key))
-  }, [weakStats])
-
-  const activeRoute = routes[routeIndex] ?? null
+  const activeRoute = routeIndex !== null ? (routes[routeIndex] ?? null) : null
   const highlightIds = useMemo(
     () => new Set(activeRoute ? activeRoute.path.map((n) => n.id) : []),
     [activeRoute],
@@ -358,64 +348,69 @@ export function PassiveTreeView({ tree, allocation, weakStats = [], className = 
         ) : null}
       </div>
 
-      {routable.length ? (
+      {upgrades ? (
         <div className="mt-3 rounded-lg border border-line bg-surface-sunken p-3">
-          <h3 className="text-xs font-medium tracking-wide text-ink-dim uppercase">Routes to what you’re short on</h3>
-          <p className="mt-1 text-[11px] leading-relaxed text-ink-mute">
-            Cheapest unallocated nodes granting the stat, with the real point cost. Ranked by value per point — not a
-            claim that a node is the right choice, only what it costs to reach.
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="eyebrow">Best nearby nodes</h3>
+            <div role="tablist" className="inline-flex rounded-md border border-line bg-surface p-0.5 text-[11px]">
+              {(['damage', 'ehp'] as const).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={upgradeList === key}
+                  onClick={() => {
+                    setUpgradeList(key)
+                    setRouteIndex(null)
+                  }}
+                  className={`rounded px-2.5 py-1 font-medium transition-colors ${
+                    upgradeList === key ? 'bg-accent-soft text-accent' : 'text-ink-dim hover:text-ink'
+                  }`}
+                >
+                  {key === 'damage' ? 'Damage' : 'EHP'}
+                  <span className="tabular ml-1 text-ink-mute">{upgrades[key].length}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-ink-mute">
+            {upgradeList === 'damage'
+              ? `Increased damage that applies to ${skill?.name ?? 'your main skill'}, summed over every node on the way, per point spent. A type-specific line counts only for that type's share of the hit. The real DPS gain is smaller — it adds to the increases you already have.`
+              : 'Closing a resistance gap first, then life + energy shield, then armour/evasion — each per point spent, counting every node on the way. Percent nodes use your current life/ES, so they read slightly high.'}{' '}
+            Within {upgrades.maxCost} points. Tap a row to show its path.
           </p>
 
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {routable.map((s) => (
-              <button
-                key={s.key}
-                type="button"
-                onClick={() => {
-                  setRouteStat(routeStat === s.key ? null : s.key)
-                  setRouteIndex(0)
-                }}
-                className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
-                  routeStat === s.key
-                    ? 'border-[var(--dmg-cold)] text-[var(--dmg-cold)]'
-                    : 'border-line text-ink-dim hover:text-ink'
-                }`}
-              >
-                {s.label} <span className="text-ink-mute">{s.shortfall}</span>
-              </button>
-            ))}
-          </div>
-
-          {routeStat && !routes.length ? (
-            <p className="mt-2 text-[11px] leading-relaxed text-warn">
-              No unallocated node granting that stat is within 4 passive points of the current tree. Widening the
-              search would return routes too expensive to be useful advice.
-            </p>
-          ) : null}
-
           {routes.length ? (
-            <ul className="mt-2 space-y-1">
+            <ol className="mt-2 space-y-1">
               {routes.map((r, i) => (
                 <li key={r.node.id}>
                   <button
                     type="button"
-                    onClick={() => setRouteIndex(i)}
-                    className={`flex w-full items-baseline justify-between gap-3 rounded-md px-2 py-1.5 text-left text-xs transition-colors ${
-                      i === routeIndex ? 'bg-surface-raised text-ink' : 'text-ink-dim hover:text-ink'
+                    onClick={() => setRouteIndex(routeIndex === i ? null : i)}
+                    aria-pressed={routeIndex === i}
+                    className={`grid w-full grid-cols-[1.25rem_1fr_auto] items-baseline gap-x-2 rounded-md px-2 py-1.5 text-left transition-colors ${
+                      routeIndex === i ? 'bg-surface-raised ring-1 ring-accent-line' : 'hover:bg-surface-raised/60'
                     }`}
                   >
-                    <span className="min-w-0 flex-1 truncate">
-                      {r.node.name}
-                      <span className="ml-1.5 text-[11px] text-ink-mute">{r.matchedStat}</span>
+                    <span className="tabular text-[11px] text-ink-mute">{i + 1}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-xs font-medium text-ink">{r.node.name}</span>
+                      <span className="block text-[11px] text-good">{r.parts.join(' · ')}</span>
                     </span>
-                    <span className="tabular shrink-0 text-[11px] text-accent">
-                      {r.cost} {r.cost === 1 ? 'point' : 'points'}
+                    <span className="tabular text-right text-[11px] text-accent">
+                      {r.cost} pt{r.cost === 1 ? '' : 's'}
                     </span>
                   </button>
                 </li>
               ))}
-            </ul>
-          ) : null}
+            </ol>
+          ) : (
+            <p className="mt-2 text-[11px] text-ink-mute">
+              {upgradeList === 'damage' && !skill
+                ? 'No main skill was found in the character data, so damage nodes cannot be matched to it.'
+                : `Nothing within ${upgrades.maxCost} points adds to this.`}
+            </p>
+          )}
         </div>
       ) : null}
 

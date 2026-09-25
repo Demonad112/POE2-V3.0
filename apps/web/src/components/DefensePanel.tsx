@@ -16,82 +16,102 @@ function cap(s: string) {
 }
 
 /**
- * Max-hit bars.
- *
- * Form: magnitude by category -> horizontal bars, sorted thinnest-first so the
- * killing vector is the first thing read. Every bar is directly labelled, so
- * identity never rests on colour alone.
+ * A small ring: how full a resistance is against its cap, or how much physical
+ * damage armour takes off. The number sits inside; the arc only restates it.
  */
-function MaxHitBars({ d }: { d: DefenseSummary }) {
-  if (!d.maxHits.length) return null
-  const max = Math.max(...d.maxHits.map((m) => m.value))
-
+function Gauge({ fraction, text, color, alert }: { fraction: number; text: string; color: string; alert: boolean }) {
+  const r = 17
+  const c = 2 * Math.PI * r
+  const f = Math.max(0, Math.min(1, fraction))
   return (
-    <div>
-      <div className="mb-2 flex items-baseline justify-between">
-        <h3 className="text-xs font-medium tracking-wide text-ink-dim uppercase">Maximum survivable hit</h3>
-        <span className="text-[11px] text-ink-mute">by damage type</span>
-      </div>
-      <ul className="space-y-2">
-        {d.maxHits.map((m) => (
-          <li key={m.type}>
-            <div className="mb-1 flex items-baseline justify-between gap-2">
-              <span className="flex items-center gap-1.5 text-xs text-ink">
-                <span
-                  aria-hidden
-                  className="inline-block size-2 shrink-0 rounded-[2px]"
-                  style={{ background: DMG_VAR[m.type] }}
-                />
-                {cap(m.type)}
-                {m.isLowest ? <Tag tone="danger">kills first</Tag> : null}
-              </span>
-              <span className="tabular text-xs font-semibold text-ink">{fmt(m.value)}</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-sm bg-surface-sunken">
-              <div
-                className="h-full rounded-r-[4px]"
-                style={{ width: `${Math.max(1.5, (m.value / max) * 100)}%`, background: DMG_VAR[m.type] }}
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <span className="relative inline-flex size-11 shrink-0 items-center justify-center">
+      <svg viewBox="0 0 44 44" className="absolute inset-0 -rotate-90" aria-hidden>
+        <circle cx="22" cy="22" r={r} fill="none" stroke="var(--line)" strokeWidth="3.5" />
+        <circle
+          cx="22"
+          cy="22"
+          r={r}
+          fill="none"
+          stroke={alert ? 'var(--danger)' : color}
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeDasharray={`${f * c} ${c}`}
+        />
+      </svg>
+      <span className={`tabular text-[11px] font-semibold ${alert ? 'text-danger' : 'text-ink'}`}>{text}</span>
+    </span>
   )
 }
 
-function Resistances({ d }: { d: DefenseSummary }) {
+/**
+ * One row per damage type: its resistance (or armour, for physical) as a ring,
+ * the largest hit of that type the character survives, and a bar against the
+ * safest type. Sorted thinnest-first, so the killing vector leads. Every row is
+ * labelled in words — colour never carries identity alone.
+ */
+function DamageTypes({ d }: { d: DefenseSummary }) {
+  const hits = new Map<string, DefenseSummary['maxHits'][number]>(d.maxHits.map((m) => [m.type, m]))
+  const res = new Map<string, DefenseSummary['resistances'][number]>(d.resistances.map((r) => [r.type, r]))
+  const order: string[] = [...d.maxHits.map((m) => m.type), ...d.resistances.map((r) => r.type).filter((t) => !hits.has(t))]
+  const max = Math.max(1, ...d.maxHits.map((m) => m.value))
+  if (!order.length) return null
+
   return (
     <div>
-      <h3 className="mb-2 text-xs font-medium tracking-wide text-ink-dim uppercase">Resistances</h3>
-      <ul className="space-y-2">
-        {d.resistances.map((r) => {
-          const pct = Math.max(0, Math.min(100, (r.value / r.max) * 100))
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <h3 className="eyebrow">By damage type</h3>
+        <span className="text-[11px] text-ink-mute">largest hit you survive</span>
+      </div>
+      <ul className="space-y-1.5">
+        {order.map((type) => {
+          const hit = hits.get(type)
+          const r = res.get(type)
+          const color = DMG_VAR[type] ?? 'var(--ink-dim)'
+          const physical = type === 'physical'
+          const gauge = r ? (
+            <Gauge fraction={r.value / r.max} text={`${r.value}`} color={color} alert={!r.capped} />
+          ) : physical && d.physicalDamageReduction !== null ? (
+            <Gauge fraction={d.physicalDamageReduction / 100} text={`${d.physicalDamageReduction}`} color={color} alert={false} />
+          ) : (
+            <Gauge fraction={0} text="—" color={color} alert={false} />
+          )
+          const note = r
+            ? r.underCap > 0
+              ? <span className="text-danger">{r.value}/{r.max}% · {r.underCap} under cap</span>
+              : <>
+                  {r.value}/{r.max}% resist{r.overCap > 0 ? <span className="text-ink-mute"> · {r.overCap} over cap</span> : null}
+                </>
+            : physical
+              ? d.physicalDamageReduction !== null
+                ? `${d.physicalDamageReduction}% reduction from armour`
+                : 'no resistance — armour only'
+              : null
           return (
-            <li key={r.type}>
-              <div className="mb-1 flex items-baseline justify-between gap-2 text-xs">
-                <span className="flex items-center gap-1.5 text-ink">
-                  <span
-                    aria-hidden
-                    className="inline-block size-2 shrink-0 rounded-[2px]"
-                    style={{ background: DMG_VAR[r.type] }}
-                  />
-                  {cap(r.type)}
-                </span>
-                <span className="tabular flex items-center gap-1.5">
-                  <span className={r.capped ? 'text-ink' : 'text-danger font-semibold'}>
-                    {r.value}
-                    <span className="text-ink-mute">/{r.max}</span>
+            <li
+              key={type}
+              className={`flex items-center gap-3 rounded-lg border bg-surface-sunken/60 py-2 pr-3 pl-2.5 ${
+                hit?.isLowest ? 'border-danger/35' : 'border-line/70'
+              }`}
+            >
+              {gauge}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-ink">
+                    <span aria-hidden className="inline-block size-2 shrink-0 rounded-[2px]" style={{ background: color }} />
+                    {cap(type)}
+                    {hit?.isLowest ? <Tag tone="danger">kills first</Tag> : null}
                   </span>
-                  {r.overCap > 0 ? <Tag tone="warn">+{r.overCap} wasted</Tag> : null}
-                  {r.underCap > 0 ? <Tag tone="danger">−{r.underCap}</Tag> : null}
-                </span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-sm bg-surface-sunken">
-                <div
-                  className="h-full rounded-r-[4px]"
-                  style={{ width: `${Math.max(1.5, pct)}%`, background: DMG_VAR[r.type] }}
-                />
+                  <span className="tabular text-sm font-semibold text-ink">{hit ? fmt(hit.value) : '—'}</span>
+                </div>
+                <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-surface">
+                  {hit ? (
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${Math.max(2, (hit.value / max) * 100)}%`, background: color }}
+                    />
+                  ) : null}
+                </div>
+                {note ? <div className="tabular mt-1 text-[11px] text-ink-dim">{note}</div> : null}
               </div>
             </li>
           )
@@ -149,8 +169,7 @@ export function DefensePanel({ d, bare = false }: { d: DefenseSummary; bare?: bo
           />
         </div>
 
-        <MaxHitBars d={d} />
-        <Resistances d={d} />
+        <DamageTypes d={d} />
 
         <p className="text-[11px] leading-relaxed text-ink-mute">
           Chaos removes twice as much energy shield as it deals, so the raw chaos pool is{' '}

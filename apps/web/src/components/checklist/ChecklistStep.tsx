@@ -94,8 +94,8 @@ export function ChecklistStep({
         </summary>
 
         <div className="space-y-3 border-t border-line px-3 pt-3 pb-3.5 sm:pl-[4.25rem]">
-          <div className="flex flex-wrap items-start gap-2">
-            <p className="min-w-0 flex-1 text-sm leading-relaxed text-ink-dim">{step.description}</p>
+          <p className="text-sm leading-relaxed text-ink-dim">{step.description}</p>
+          <div className="flex flex-wrap items-center gap-1.5 empty:hidden">
             <SourceFlag source={step.source} />
           </div>
 

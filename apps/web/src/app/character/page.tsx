@@ -1,7 +1,15 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { analyzeCharacter, analyzeFromPob, type Analysis, type PobAnalysis } from '@poe2/core'
+import {
+  analyzeCharacter,
+  analyzeFromPob,
+  upgradeSkillFrom,
+  type Analysis,
+  type PobAnalysis,
+  type UpgradeCharacter,
+  type UpgradeSkill,
+} from '@poe2/core'
 import { Accordion } from '@/components/shared/Accordion'
 import { PanelControls } from '@/components/shared/PanelControls'
 import { NumberReadout, ResistancePips, StatusChip } from '@/components/shared/Instruments'
@@ -10,12 +18,10 @@ import { BuildScore } from '@/components/BuildScore'
 import { DefensePanel } from '@/components/DefensePanel'
 import { DpsMatrix } from '@/components/DpsMatrix'
 import { DamageReview } from '@/components/DamageReview'
-import { GearDetail } from '@/components/GearDetail'
-import { ReplaceFirstPanel } from '@/components/ReplaceFirstPanel'
+import { GearWorkbench } from '@/components/GearWorkbench'
 import { CharacterHero } from '@/components/character/CharacterHero'
 import { useShoppingList } from '@/hooks/useShoppingList'
 import { attributesFrom } from '@/lib/attributes'
-import { GearPanel } from '@/components/GearPanel'
 import { Headroom } from '@/components/Headroom'
 import { AuditPanel } from '@/components/AuditPanel'
 import { Chat } from '@/components/Chat'
@@ -33,32 +39,19 @@ import { useModTiers } from '@/lib/useModTiers'
 import { useSupportCatalog } from '@/lib/useSupportCatalog'
 import { usePassiveTree } from '@/lib/usePassiveTree'
 
-/**
- * Stats the analysis found the build short on, worst first.
- *
- * Only genuine shortfalls: a resistance below its cap, and the damage type with
- * the lowest maximum hit when it is meaningfully thinner than the rest. Offering
- * routes for a stat that is already fine would be noise dressed as advice.
- */
-function weakStatsFrom(analysis: Analysis) {
-  const out: Array<{ key: string; label: string; shortfall: string }> = []
-
-  for (const res of analysis.defense.resistances) {
-    if (res.underCap <= 0) continue
-    out.push({
-      key: `${res.type}Resistance`,
-      label: `${res.type[0]!.toUpperCase()}${res.type.slice(1)} res`,
-      shortfall: `−${res.underCap}%`,
-    })
+/** What the tree's best-nearby-nodes lists need from the analysis. */
+function upgradeInputs(analysis: Analysis): { skill: UpgradeSkill | null; character: UpgradeCharacter } {
+  const d = analysis.defense
+  return {
+    skill: analysis.dps.primary ? upgradeSkillFrom(analysis.dps.primary) : null,
+    character: {
+      life: d.life ?? 0,
+      energyShield: d.energyShield ?? 0,
+      armour: d.armour ?? 0,
+      evasion: d.evasion ?? 0,
+      underCap: Object.fromEntries(d.resistances.map((r) => [r.type, r.underCap])),
+    },
   }
-  // Largest gap first.
-  out.sort((a, b) => Number(b.shortfall.replace(/\D/g, '')) - Number(a.shortfall.replace(/\D/g, '')))
-
-  const lowest = analysis.defense.maxHits[0]
-  if (lowest && lowest.ratioToHighest >= 1.5 && analysis.defense.life > 0) {
-    out.push({ key: 'life', label: 'Life', shortfall: `${lowest.type} is thinnest` })
-  }
-  return out
 }
 
 interface WorkspacePanel {
@@ -164,7 +157,6 @@ export default function Home() {
     const uncappedCount = a.defense.resistances.filter((r) => !r.capped).length
     const primary = a.dps.primary
     const overcapped = a.attribution.stats.filter((s) => s.overcap > 0)
-    const activeItems = a.items.filter((i) => i.active)
 
     const panels: WorkspacePanel[] = [
       {
@@ -177,12 +169,6 @@ export default function Home() {
         badge: uncappedCount > 0 ? <StatusChip tone="danger">{uncappedCount} uncapped</StatusChip> : undefined,
         instrument: <ResistancePips resistances={a.defense.resistances} />,
         content: <DefensePanel d={a.defense} bare />,
-      },
-      {
-        id: 'gear-tree',
-        title: 'Gear & tree',
-        summary: `${activeItems.length} item${activeItems.length === 1 ? '' : 's'} equipped · set ${a.passives.activeSet} live`,
-        content: <GearPanel items={a.items} passives={a.passives} bare />,
       },
       {
         id: 'headroom',
@@ -255,35 +241,18 @@ export default function Home() {
         content: <Attribution report={a.attribution} bare />,
       },
       {
-        id: 'replace-first',
-        title: 'Replace first',
-        summary: 'Your gear ranked by what a replacement would recover',
+        id: 'gear',
+        title: 'Gear workbench',
+        summary:
+          tiersState.status === 'error'
+            ? 'Affix tier data unavailable'
+            : 'Replace-first ranking · remove, re-tier or swap affixes and watch your resistances',
         badge: (() => {
           const open = shopping.entries.filter((e) => e.characterName === a.identity.name && !e.done).length
           return open ? <StatusChip tone="good">{open} on shopping list</StatusChip> : undefined
         })(),
         content: (
-          <ReplaceFirstPanel
-            items={a.items}
-            defense={a.defense}
-            state={tiersState}
-            characterName={a.identity.name}
-            {...(attributes ? { attributes } : {})}
-            bare
-          />
-        ),
-      },
-      {
-        id: 'gear-modifiers',
-        title: 'Gear modifiers',
-        summary:
-          tiersState.status === 'ready'
-            ? 'Graded against the best tier each item level allows'
-            : tiersState.status === 'error'
-              ? 'Affix tier data unavailable'
-              : 'Loading affix tiers…',
-        content: (
-          <GearDetail
+          <GearWorkbench
             items={a.items}
             defense={a.defense}
             state={tiersState}
@@ -298,7 +267,7 @@ export default function Home() {
         title: 'Passive tree',
         summary: `${a.passives.counts.passives} points allocated`,
         instrument: <NumberReadout value={String(a.passives.counts.passives)} />,
-        content: <TreePanel allocation={a.passives} state={treeState} weakStats={weakStatsFrom(a)} bare />,
+        content: <TreePanel allocation={a.passives} state={treeState} {...upgradeInputs(a)} bare />,
       },
       {
         id: 'detail-checks',
