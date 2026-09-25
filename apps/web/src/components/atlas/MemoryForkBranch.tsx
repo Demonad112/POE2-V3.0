@@ -3,6 +3,7 @@
 import type { MemoryFork } from "@/lib/types";
 import { SourceFlag } from "@/components/shared/SourceFlag";
 import { useAtlasProgress } from "@/hooks/useAtlasProgress";
+import { ShowOnTreeButton } from "./AtlasMapContext";
 
 export function MemoryForkBranch({ fork }: { fork: MemoryFork }) {
   const { isForkAllocated, toggleFork } = useAtlasProgress();
@@ -11,23 +12,25 @@ export function MemoryForkBranch({ fork }: { fork: MemoryFork }) {
   return (
     <div
       id={fork.id}
-      className={`scroll-mt-24 flex-1 rounded-lg border p-4 transition-all hover:-translate-y-0.5 ${
-        allocated
-          ? "border-good/30 bg-good/5"
-          : "border-chaos/30 bg-chaos/[0.06] hover:border-chaos/50 hover:shadow-[0_8px_24px_-10px_rgba(129,140,248,0.35)]"
+      className={`scroll-mt-40 flex-1 rounded-lg border p-3.5 transition-colors ${
+        allocated ? "border-good/30 bg-good/5" : "card hover:border-line-strong"
       }`}
     >
-      <label className="flex cursor-pointer items-center gap-2">
+      <div className="flex items-center gap-2">
         <input
           type="checkbox"
           checked={allocated}
           onChange={() => toggleFork(fork.id)}
-          className="size-3.5 accent-emerald-500"
+          aria-label={`Allocated ${fork.title}`}
+          className="size-4 accent-emerald-500"
         />
-        <h4 className="font-semibold text-chaos">{fork.title}</h4>
+        <h4 className="font-semibold text-ink">{fork.title}</h4>
         <SourceFlag source={fork.source} />
-      </label>
-      <ul className="mt-2 ml-6 list-disc space-y-1 text-sm text-ink-dim">
+        <span className="ml-auto">
+          <ShowOnTreeButton names={fork.treeNodes} label={fork.title} />
+        </span>
+      </div>
+      <ul className="mt-2 ml-6 list-disc space-y-0.5 text-sm text-ink-dim marker:text-accent">
         {fork.nodes.map((node) => (
           <li key={node}>{node}</li>
         ))}

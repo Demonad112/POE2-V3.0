@@ -50,3 +50,10 @@ Checklist progress is stored in localStorage by step `id`, and action items by
    and flip matching `unverified` records to `confirmed` with citations.
 6. Check `KNOWN_CONFLICTS` still describes live disagreements.
 7. `npm run typecheck && npm run lint && npm test && npm run build -w @poe2/web`.
+
+## Atlas node names
+
+- **Names come from the tree data.** Guide entries that refer to specific Atlas nodes list them in `treeNodes`, with names exactly as they appear in `packages/data/generated/atlas-tree.json`. `apps/web/test/atlasTree.test.ts` fails on any name that isn't in the tree.
+- **The tree beats captions.** When a video's auto-captions spell a node differently (e.g. "From Distance Untold" for **From Distances Untold**, "Reborn / Shadow from the Mists" for **Reborn in Shadow** and **From the Mists**), use the tree's name.
+- **What the tree does and doesn't confirm.** It confirms that a node exists and what its stats are. It doesn't confirm the guide's advice about it, so a claim sourced only from the web digest stays flagged unverified even when its node is in the tree.
+- **Entries with no single node.** Descriptive groupings like "Generic quantity/rarity/pack-size" get no `treeNodes` and no Map button.

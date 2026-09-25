@@ -9,6 +9,7 @@ import { digestSource, videoSource } from "./sourceMeta";
 export const atlasTrapNodes: AtlasTrapNode[] = [
   {
     id: "trap-man-trap",
+    treeNodes: ["Man Trap"],
     node: "Man Trap",
     affects: "Essences",
     problem:
@@ -19,6 +20,7 @@ export const atlasTrapNodes: AtlasTrapNode[] = [
   },
   {
     id: "trap-survival-of-the-fittest",
+    treeNodes: ["Survival of the Fittest"],
     node: "Survival of the Fittest",
     affects: "Desert rares / Abyss",
     problem:
@@ -51,62 +53,68 @@ export const atlasTrapNodes: AtlasTrapNode[] = [
   },
   {
     id: "trap-lost-architect",
+    treeNodes: ["The Lost Architect"],
     node: "The Lost Architect",
     affects: "Vaal Temple",
     problem:
       "Adds another medallion to the Temple medallion pool, diluting the drops you need for straight temple routing.",
     avoidIf: "You run the Vaal Temple",
     severity: "situational",
-    source: digestSource("Only the web digest (a Reddit 'soft brick nodes' thread) lists this; no creator video covers it."),
+    source: digestSource("Only the web digest (a Reddit 'soft brick nodes' thread) lists this; no creator video covers it. The node and its effect exist in the Atlas tree data — calling it a trap is the digest's judgement."),
   },
   {
     id: "trap-escalating-rivalry",
+    treeNodes: ["Escalating Rivalry"],
     node: "Escalating Rivalry",
     affects: "Rogue Exiles",
     problem:
       "Rogue Exiles can flee to an adjacent map, taking whatever they'd accumulated with them.",
     avoidIf: "You rely on Rogue Exile loot",
     severity: "situational",
-    source: digestSource("Only the web digest lists this; no creator video covers it."),
+    source: digestSource("Only the web digest lists this; no creator video covers it. The node and its effect exist in the Atlas tree data — calling it a trap is the digest's judgement."),
   },
   {
     id: "trap-hunt-the-apex",
+    treeNodes: ["Hunt the Apex"],
     node: "Hunt the Apex",
     affects: "Azmeri Spirits / map bosses",
     problem:
       "Azmeri Spirits can possess map bosses, making high-tier bosses much deadlier.",
     avoidIf: "Your build struggles with T14+ bosses",
     severity: "situational",
-    source: digestSource("Only the web digest lists this; no creator video covers it."),
+    source: digestSource("Only the web digest lists this; no creator video covers it. The node and its effect exist in the Atlas tree data — calling it a trap is the digest's judgement."),
   },
   {
     id: "trap-bring-me-your-leader",
+    treeNodes: ["Bring Me Your Leader"],
     node: "Bring Me Your Leader",
     affects: "Ritual",
     problem:
       "Chance for Ritual circles to spawn a Citadel boss inside the circle — dangerous for most builds.",
     avoidIf: "Your build can't handle Citadel bosses in a confined space",
     severity: "situational",
-    source: digestSource("Only the web digest lists this; no creator video covers it."),
+    source: digestSource("Only the web digest lists this; no creator video covers it. The node and its effect exist in the Atlas tree data — calling it a trap is the digest's judgement."),
   },
   {
     id: "trap-armaments-of-evil",
+    treeNodes: ["Armaments of Evil"],
     node: "Armaments of Evil",
     affects: "Abyss",
     problem:
       "Rare equipment from Abyssal monsters drops with Desecrated modifiers, which limits normal crafting on it.",
     avoidIf: "You sell or craft Abyss gear drops",
     severity: "situational",
-    source: digestSource("Only the web digest lists this; no creator video covers it."),
+    source: digestSource("Only the web digest lists this; no creator video covers it. The node and its effect exist in the Atlas tree data — calling it a trap is the digest's judgement."),
   },
   {
     id: "trap-living-metal",
+    treeNodes: ["Living Metal"],
     node: "Living Metal",
     affects: "Azmeri Spirits",
     problem:
       "Spirits possess Strongboxes instead of monsters, pulling them away from packs and bosses.",
     avoidIf: "You want Spirits on monsters",
     severity: "situational",
-    source: digestSource("Only the web digest lists this; no creator video covers it."),
+    source: digestSource("Only the web digest lists this; no creator video covers it. The node and its effect exist in the Atlas tree data — calling it a trap is the digest's judgement."),
   },
 ];

@@ -94,6 +94,8 @@ export interface AtlasCluster {
   parentClusterId?: string;
   pointCost?: number;
   killGated?: boolean;
+  /** Exact node names in the Atlas tree data (atlas-tree.json), for "show on tree". */
+  treeNodes?: string[];
   source: SourceRef;
 }
 
@@ -104,6 +106,8 @@ export interface MemoryFork {
   branch: MemoryForkBranchId;
   title: string;
   nodes: string[];
+  /** Exact node names in the Atlas tree data (atlas-tree.json), for "show on tree". */
+  treeNodes?: string[];
   description: string;
   source: SourceRef;
 }
@@ -165,6 +169,8 @@ export interface AtlasTrapNode {
   /** When to skip it — "always" when there's no build it helps. */
   avoidIf: string;
   severity: "avoid" | "situational" | "optional";
+  /** Exact node names in the Atlas tree data (atlas-tree.json), for "show on tree". */
+  treeNodes?: string[];
   source: SourceRef;
 }
 

@@ -91,7 +91,7 @@ export default function Home() {
           <span className="rounded-full border border-[var(--accent)]/25 bg-accent-soft px-3 py-1 text-xs font-medium tracking-wide text-[var(--accent)] uppercase backdrop-blur-sm">
             Patch {CURRENT_PATCH} · {LEAGUE_LABEL}
           </span>
-          <h1 className="font-display text-4xl font-bold text-balance sm:text-6xl">
+          <h1 className="font-display text-4xl font-bold tracking-[0.04em] text-balance uppercase sm:text-6xl">
             <span className="text-gradient-gold">Path of Exile 2</span>
             <br />
             <span className="text-ink">Endgame Companion</span>

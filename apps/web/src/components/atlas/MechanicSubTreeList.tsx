@@ -13,11 +13,11 @@ function isMechanic(value: string | null): value is Mechanic {
   return !!value && (MECHANICS as string[]).includes(value);
 }
 
-export function MechanicSubTreeList({ clusters }: { clusters: AtlasCluster[] }) {
+export function MechanicSubTreeList({ clusters, initial }: { clusters: AtlasCluster[]; initial?: Mechanic }) {
   const searchParams = useSearchParams();
   const mechanicParam = searchParams.get("mechanic");
   const [active, setActive] = useState<Mechanic>(
-    isMechanic(mechanicParam) ? mechanicParam : "abyss"
+    isMechanic(mechanicParam) ? mechanicParam : initial ?? "abyss"
   );
 
   // Search results for a mechanic sub-tree cluster carry ?mechanic=<x> since
@@ -38,12 +38,12 @@ export function MechanicSubTreeList({ clusters }: { clusters: AtlasCluster[] }) 
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap gap-1.5 rounded-lg border border-[color-mix(in oklab, var(--line) 55%, transparent)] bg-[var(--surface-sunken)] p-1.5">
+      <div className="mb-3 flex gap-1.5 overflow-x-auto rounded-lg border border-line bg-surface-sunken p-1.5">
         {MECHANICS.map((mechanic) => (
           <button
             key={mechanic}
             onClick={() => setActive(mechanic)}
-            className={`rounded-md px-1 py-1 transition-all ${
+            className={`shrink-0 rounded-md px-1 py-1 transition-all ${
               active === mechanic
                 ? "bg-surface-sunken ring-1 ring-line"
                 : "opacity-50 hover:opacity-80"
@@ -53,7 +53,7 @@ export function MechanicSubTreeList({ clusters }: { clusters: AtlasCluster[] }) 
           </button>
         ))}
       </div>
-      <p className="mb-3 rounded-md border border-line bg-surface-sunken px-3 py-2 text-xs text-ink-mute">
+      <p className="mb-3 text-xs leading-relaxed text-ink-mute">
         Priority order for {MECHANIC_LABELS[active]}. Guide-wide rule: don&apos;t
         run this mechanic&apos;s own tablets while questing it — it slows down
         finishing the quest.

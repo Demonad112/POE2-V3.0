@@ -13,7 +13,7 @@ export function ChecklistPhaseNav() {
   return (
     <nav
       aria-label="Checklist phases"
-      className="sticky top-14 z-10 -mx-1 flex flex-wrap items-center gap-1.5 rounded-lg border border-line bg-[var(--surface)]/90 px-2 py-2 backdrop-blur-md"
+      className="sticky top-14 z-10 -mx-4 flex items-center gap-1.5 overflow-x-auto border-b border-line bg-surface/85 px-4 py-2 backdrop-blur-md sm:mx-0 sm:flex-wrap sm:rounded-xl sm:border"
     >
       {stepsByPhase.map(({ phase, steps }, i) => {
         const count = steps.filter((s) => done.has(s.id)).length;
@@ -24,7 +24,7 @@ export function ChecklistPhaseNav() {
             key={phase}
             href={`#${phaseAnchor(phase)}`}
             title={ROADMAP_PHASE_LABELS[phase]}
-            className={`flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors ${
+            className={`flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors ${
               complete
                 ? "border-good/30 bg-good/10 text-[var(--good)]"
                 : current
@@ -42,7 +42,7 @@ export function ChecklistPhaseNav() {
           </a>
         );
       })}
-      <label className="ml-auto flex cursor-pointer items-center gap-1.5 px-1 text-xs text-ink-mute">
+      <label className="ml-auto flex shrink-0 cursor-pointer items-center gap-1.5 px-1 text-xs whitespace-nowrap text-ink-mute">
         <input
           type="checkbox"
           checked={hideCompleted}

@@ -34,9 +34,9 @@
   --color-lightning: var(--dmg-lightning);
   --color-chaos: var(--dmg-chaos);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-display: var(--font-cinzel), ui-serif, Georgia, serif;
+  --font-display: var(--font-garamond), ui-serif, Georgia, serif;
 }
 
 :root {
@@ -44,18 +44,18 @@
 
   /* Warm charcoal, stepped far enough apart that a card reads as raised off
      the page and a well reads as cut into the card. */
-  --surface: #111014;
-  --surface-raised: #1a181e;
-  --surface-sunken: #0c0b0e;
-  --surface-overlay: #221f27;
-  --line: #2f2a33;
-  --line-strong: #3f3845;
+  --surface: #0d0d10;
+  --surface-raised: #151519;
+  --surface-sunken: #09090b;
+  --surface-overlay: #1c1b21;
+  --line: #27262c;
+  --line-strong: #36343c;
   --ink: #f3eee4;
   --ink-dim: #b1aca3;
   --ink-mute: #8f897f;
   --accent: #e3b341;
   --accent-dim: #8a6d22;
-  --accent-soft: rgb(227 179 65 / 0.12);
+  --accent-soft: rgb(227 179 65 / 0.1);
   --accent-line: rgb(227 179 65 / 0.35);
 
   --danger: #e66767;
@@ -172,8 +172,7 @@ html {
  */
 :root {
   --atmosphere:
-    radial-gradient(ellipse 80% 55% at 50% -12%, rgb(227 179 65 / 0.11), transparent 70%),
-    radial-gradient(ellipse 60% 40% at 100% 0%, rgb(160 90 40 / 0.07), transparent 70%),
+    radial-gradient(ellipse 80% 55% at 50% -12%, rgb(227 179 65 / 0.075), transparent 70%),
     radial-gradient(ellipse 120% 90% at 50% 120%, rgb(0 0 0 / 0.55), transparent 60%);
 }
 @media (prefers-color-scheme: light) {
@@ -201,6 +200,8 @@ body {
   background: var(--surface);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  /* Inter's straight-sided l and open digits keep it close to Geist. */
+  font-feature-settings: 'cv11', 'ss01';
   /* Wide content scrolls inside its own container; the page never does. */
   overflow-x: hidden;
 }
@@ -285,9 +286,10 @@ body {
 
   /* Display type: brand, page titles, the character name. Never data. */
   .font-display {
-    /* --font-cinzel directly: @theme inline doesn't emit --font-display at runtime. */
-    font-family: var(--font-cinzel), ui-serif, Georgia, serif;
-    letter-spacing: 0.02em;
+    /* --font-garamond directly: @theme inline doesn't emit --font-display at runtime. */
+    font-family: var(--font-garamond), ui-serif, Georgia, serif;
+    font-weight: 600;
+    letter-spacing: 0.01em;
   }
 
   /* A gold hairline that fades out at both ends. */
