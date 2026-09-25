@@ -120,6 +120,9 @@ export function NavBar() {
       </div>
       <button
         onClick={() => window.dispatchEvent(new Event(OPEN_SEARCH_EVENT))}
+        // Warm the lazily loaded dialog before the click lands.
+        onPointerEnter={() => void import("./SearchDialog")}
+        onFocus={() => void import("./SearchDialog")}
         aria-label="Search"
         className="ml-auto flex shrink-0 items-center gap-2 rounded-md border border-line bg-surface-sunken/60 px-2.5 py-2.5 text-xs text-ink-mute transition-colors hover:border-line-strong hover:text-ink-dim sm:py-1.5"
       >

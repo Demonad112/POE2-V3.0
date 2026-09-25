@@ -380,6 +380,7 @@ export default function Home() {
                     summary={panel.summary}
                     badge={panel.badge}
                     instrument={panel.instrument}
+                    lazy
                   >
                     {panel.content}
                   </Accordion>
