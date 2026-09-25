@@ -98,6 +98,23 @@ Once a character is loaded, the page leads with `CharacterHero`: name, level, cl
 
 Every tile reads a value the analysis already has. A value the data lacks drops its tile rather than showing a zero. The verdict stays in the Assessment panel below instead of appearing twice. The import box collapses to "Load another character".
 
+Below the hero:
+
+- **Findings** is a plain section heading over full-width cards, not a panel wrapping cards. Nesting a card in a card squeezed it and indented every line. The rank is a small gold badge in the tag row.
+- **Defence** shows one row per damage type. Each row carries the resistance as a ring gauge (armour reduction for physical), the largest hit of that type the character survives, and a thin bar against the safest type. The rows are sorted thinnest-first. Max hit and resistance used to be two stacked lists that repeated every type.
+- **Gear workbench** merges "Replace first" and "Gear modifiers":
+  - Items appear in replace-first order.
+  - Each affix can be removed, set to another tier, or swapped for a ranked candidate. Open slots can be filled.
+  - One draft covers all items. A sticky strip shows the resulting resistances, counting changed lines at the bottom of their range.
+  - Candidates are ordered, never scored: first a line that closes a draft shortfall, then item rarity, then defences, then damage, then attributes, then the rest.
+  - "Plan a full replacement" still opens the planner and the shopping list.
+- **Passive tree** replaces the route picker with two lists, Damage and EHP: the best nearby nodes within 6 points, ranked by gain per point over the whole path.
+  - **Damage** counts only "% increased … Damage" lines whose qualifiers apply to the main skill. A type-specific line is scaled by that type's share of the hit.
+  - **EHP** ranks closing a resistance gap first, then life + energy shield, then armour/evasion rating. Those units are never blended.
+- The "Gear & tree" panel is gone. Everything it listed is in the workbench and the tree.
+
+Checklist steps put their source-video chips on their own row under the description, so the chips never squeeze the text column on mobile.
+
 ## Colour
 
 The damage-type palette is **validated, not chosen by eye**. It was run through

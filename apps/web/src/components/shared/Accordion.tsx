@@ -39,7 +39,7 @@ export function Accordion({
     <details
       id={id}
       open={defaultOpen}
-      className="card group overflow-hidden rounded-xl transition-[border-color,box-shadow] hover:border-line-strong open:border-accent-line open:shadow-[var(--lift-raised)]"
+      className="card group overflow-clip rounded-xl transition-[border-color,box-shadow] hover:border-line-strong open:border-accent-line open:shadow-[var(--lift-raised)]"
     >
       <summary className="relative flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 transition-colors group-open:bg-surface-overlay/70 before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-accent before:opacity-0 before:transition-opacity group-open:before:opacity-100 hover:bg-surface-overlay/50 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--accent)]/60 [&::-webkit-details-marker]:hidden">
         <svg
