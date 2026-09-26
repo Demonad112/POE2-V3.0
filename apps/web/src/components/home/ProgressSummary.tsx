@@ -1,13 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useChecklistState } from "@/hooks/useChecklistState";
-import { useAtlasProgress } from "@/hooks/useAtlasProgress";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { ProgressBar } from "@/components/shared/ProgressBar";
 
-export function ProgressSummary() {
-  const { completionPercent } = useChecklistState();
-  const { allocationPercent } = useAtlasProgress();
+const percent = (done: number, total: number) =>
+  total === 0 ? 0 : Math.round((done / total) * 100);
+
+/**
+ * Totals come in as props (see `progressTotals`) rather than from the progress
+ * hooks, which import the full guide data to count it.
+ */
+export function ProgressSummary({ stepIds, atlasTotal }: { stepIds: string[]; atlasTotal: number }) {
+  const { state } = usePersistedState();
+  const { completedStepIds } = state.checklist;
+  const { allocatedClusterIds, allocatedForkIds } = state.atlas;
+  // Count only ids that still exist, as the checklist does.
+  const completionPercent = percent(
+    stepIds.filter((id) => completedStepIds.includes(id)).length,
+    stepIds.length
+  );
+  const allocationPercent = percent(
+    allocatedClusterIds.length + allocatedForkIds.length,
+    atlasTotal
+  );
   const started = completionPercent > 0 || allocationPercent > 0;
 
   return (

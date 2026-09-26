@@ -3,14 +3,54 @@
 import { useState } from 'react'
 import { NinjaClient, NinjaError, looksLikePobCode, parseProfileUrl } from '@poe2/core'
 import { PROXY_BASE } from '@/lib/proxy'
+import { useLocalStore } from '@/lib/localStore'
+import { recentCharacters } from '@/lib/recentCharacters'
 
 const EXAMPLE = 'https://poe.ninja/poe2/profile/Demonad112-2589/runesofaldur/character/Athrynas'
 
 export type ImportResult =
-  | { ok: true; kind: 'ninja'; data: unknown }
+  /** `url` is set when it came from a poe.ninja profile URL, so it can be re-imported. */
+  | { ok: true; kind: 'ninja'; data: unknown; url?: string }
   /** A Path of Building export code. Fewer stats, all of them real. */
   | { ok: true; kind: 'pob'; code: string }
   | { ok: false; error: string; canPaste: boolean }
+
+/** Why `target` can't be imported, or null when it looks like a full profile URL. */
+export function checkProfileUrl(target: string): string | null {
+  const ref = parseProfileUrl(target)
+  if (!ref) return 'That does not look like a poe.ninja PoE2 character URL. Expected something like the example below.'
+  if (!ref.leagueSlug) return 'That URL has no league in it. Use the full profile URL, which includes the league.'
+  return null
+}
+
+/**
+ * Fetch a character by its poe.ninja profile URL. Shared by the import bar and
+ * the character page's `?import=` handling, which must live on the page: the
+ * bar is mounted in two places that swap as an analysis appears, and a bar
+ * that read the parameter itself re-imported on every swap.
+ */
+export async function importProfile(target: string): Promise<ImportResult> {
+  const ref = parseProfileUrl(target)
+  if (!ref?.leagueSlug) return { ok: false, error: checkProfileUrl(target) ?? 'Invalid URL.', canPaste: false }
+  try {
+    const client = new NinjaClient({ fetch: (i, init) => fetch(i, init), proxyBaseUrl: PROXY_BASE })
+    const data = await client.fetchCharacter(ref.account, ref.leagueSlug, ref.character)
+    // Put the profile in the address bar, so a reload or a shared link
+    // re-imports the same character instead of landing on an empty page.
+    try {
+      const next = new URL(window.location.href)
+      next.searchParams.set('import', target)
+      window.history.replaceState(window.history.state, '', next)
+    } catch {
+      // Cosmetic only.
+    }
+    return { ok: true, kind: 'ninja', data, url: target }
+  } catch (err) {
+    const message =
+      err instanceof NinjaError ? err.message : `Import failed: ${(err as Error).message ?? 'unknown error'}`
+    return { ok: false, error: message, canPaste: true }
+  }
+}
 
 export function ImportBar({
   onResult,
@@ -25,32 +65,27 @@ export function ImportBar({
   const [url, setUrl] = useState('')
   const [paste, setPaste] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const recents = useLocalStore(recentCharacters)
 
   async function importUrl(e: React.FormEvent) {
     e.preventDefault()
-    setError(null)
+    await runImport(url)
+  }
 
-    const ref = parseProfileUrl(url)
-    if (!ref) {
-      setError('That does not look like a poe.ninja PoE2 character URL. Expected something like the example below.')
-      return
-    }
-    if (!ref.leagueSlug) {
-      setError('That URL has no league in it. Use the full profile URL, which includes the league.')
+  async function runImport(target: string) {
+    setError(null)
+    setMode('url')
+    setUrl(target)
+    const invalid = checkProfileUrl(target)
+    if (invalid) {
+      setError(invalid)
       return
     }
     setBusy(true)
     try {
-      const client = new NinjaClient({ fetch: (i, init) => fetch(i, init), proxyBaseUrl: PROXY_BASE })
-      const data = await client.fetchCharacter(ref.account, ref.leagueSlug, ref.character)
-      onResult({ ok: true, kind: 'ninja', data })
-    } catch (err) {
-      const message =
-        err instanceof NinjaError
-          ? err.message
-          : `Import failed: ${(err as Error).message ?? 'unknown error'}`
-      setError(message)
-      onResult({ ok: false, error: message, canPaste: true })
+      const result = await importProfile(target)
+      if (!result.ok) setError(result.error)
+      onResult(result)
     } finally {
       setBusy(false)
     }
@@ -146,6 +181,25 @@ export function ImportBar({
           </button>
         </form>
       )}
+
+      {mode === 'url' && recents.length > 0 ? (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+          <span className="text-ink-mute">Recent:</span>
+          {recents.map((r) => (
+            <button
+              key={r.url}
+              type="button"
+              disabled={busy}
+              onClick={() => void runImport(r.url)}
+              title={r.url}
+              className="rounded-full border border-line px-2 py-0.5 text-ink-dim transition-colors hover:border-accent-line hover:text-ink disabled:opacity-50"
+            >
+              {r.name}
+              {r.level ? <span className="text-ink-mute"> · {r.level}</span> : null}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {error ? (
         <p role="alert" className="mt-2 text-xs leading-relaxed text-danger">

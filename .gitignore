@@ -25,3 +25,7 @@ apps/web/public/atlas-tree.json
 # Downloaded source data for the build scripts. Regenerate with:
 #   node packages/data/scripts/build-mod-tiers.mjs
 packages/data/generated/.cache/
+
+# Playwright
+apps/web/test-results/
+apps/web/playwright-report/

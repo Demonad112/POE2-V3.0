@@ -11,6 +11,7 @@ import { NextStepCard } from "@/components/checklist/NextStepCard";
 import { ChecklistTools } from "@/components/checklist/ChecklistTools";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { stepsByPhase } from "@/lib/roadmapOrder";
+import { stepSummaries } from "@/lib/stepSummary";
 
 export const metadata: Metadata = {
   title: "Progression Checklist — PoE2 Endgame Companion",
@@ -25,7 +26,7 @@ export default function ChecklistPage() {
       />
 
       <ChecklistProgressHeader />
-      <NextStepCard onChecklistPage />
+      <NextStepCard steps={stepSummaries()} onChecklistPage />
 
       <ChecklistTools />
 

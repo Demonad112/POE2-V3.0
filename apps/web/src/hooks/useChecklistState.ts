@@ -2,17 +2,16 @@
 
 import { useCallback, useMemo } from "react";
 import { usePersistedState } from "./usePersistedState";
+import { useChecklistActions } from "./useChecklistActions";
 import { roadmapSteps } from "@/data/roadmap";
 
-export function actionItemKey(stepId: string, index: number) {
-  return `${stepId}::${index}`;
-}
+export { actionItemKey } from "./useChecklistActions";
 
 export function useChecklistState() {
   const { state, setState } = usePersistedState();
+  const { completedStepIds, toggleStep, toggleActionItem, isActionItemComplete } =
+    useChecklistActions();
   const {
-    completedStepIds,
-    completedActionItemKeys,
     hideCompleted = false,
     highestTier = 0,
   } = state.checklist;
@@ -37,47 +36,9 @@ export function useChecklistState() {
     [setState]
   );
 
-  const toggleStep = useCallback(
-    (stepId: string) => {
-      setState((prev) => {
-        const set = new Set(prev.checklist.completedStepIds);
-        if (set.has(stepId)) set.delete(stepId);
-        else set.add(stepId);
-        return {
-          ...prev,
-          checklist: { ...prev.checklist, completedStepIds: Array.from(set) },
-        };
-      });
-    },
-    [setState]
-  );
-
-  const toggleActionItem = useCallback(
-    (key: string) => {
-      setState((prev) => {
-        const set = new Set(prev.checklist.completedActionItemKeys);
-        if (set.has(key)) set.delete(key);
-        else set.add(key);
-        return {
-          ...prev,
-          checklist: {
-            ...prev.checklist,
-            completedActionItemKeys: Array.from(set),
-          },
-        };
-      });
-    },
-    [setState]
-  );
-
   const isStepComplete = useCallback(
     (stepId: string) => completedStepIds.includes(stepId),
     [completedStepIds]
-  );
-
-  const isActionItemComplete = useCallback(
-    (key: string) => completedActionItemKeys.includes(key),
-    [completedActionItemKeys]
   );
 
   // Count only ids that still exist: a renamed or removed step must not keep

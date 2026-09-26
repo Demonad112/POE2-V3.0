@@ -258,3 +258,68 @@ export function openSlots(item: ItemAnalysis, draft: GearDraft, tiers: ModTiers)
 export function draftSize(draft: GearDraft): number {
   return Object.keys(draft.edits).length + draft.added.length
 }
+
+// --- saving a draft ---------------------------------------------------------------
+
+/**
+ * A draft plus what each edit was made against, so it can be restored onto a
+ * later import. Line keys are positional (`slot:index`), so after the gear
+ * changes in game the same key can point at a different mod. Anchoring each
+ * edit to the text it was made on lets a restore drop exactly the edits whose
+ * line changed, instead of silently re-aiming them at whatever moved into place.
+ */
+export interface SavedDraft {
+  draft: GearDraft
+  /** lineKey → mod text the edit was made on; `item:slotId` → the item's name and base. */
+  anchors: Record<string, string>
+}
+
+const itemAnchor = (item: ItemAnalysis) => `${item.name}|${item.baseType}`
+
+export function anchorDraft(items: ItemAnalysis[], draft: GearDraft): SavedDraft {
+  const anchors: Record<string, string> = {}
+  const bySlot = new Map(items.map((i) => [i.slotId, i]))
+  for (const key of Object.keys(draft.edits)) {
+    const [slot, index] = key.split(':').map(Number)
+    const mod = bySlot.get(slot!)?.mods[index!]
+    if (mod) anchors[key] = mod.text
+  }
+  for (const a of draft.added) {
+    const item = bySlot.get(a.slotId)
+    if (item) anchors[`item:${a.slotId}`] = itemAnchor(item)
+  }
+  return { draft, anchors }
+}
+
+/**
+ * Restore a saved draft onto the current gear. An edit survives only if its
+ * line still reads the same; an added line only if the same item is still in
+ * the slot and it still has room for it. `dropped` counts what did not survive.
+ */
+export function restoreDraft(
+  items: ItemAnalysis[],
+  saved: SavedDraft,
+  tiers: ModTiers,
+): { draft: GearDraft; dropped: number } {
+  const bySlot = new Map(items.map((i) => [i.slotId, i]))
+  const edits: Record<string, LineEdit> = {}
+  let dropped = 0
+  for (const [key, edit] of Object.entries(saved.draft.edits)) {
+    const [slot, index] = key.split(':').map(Number)
+    const mod = bySlot.get(slot!)?.mods[index!]
+    const known = edit.kind === 'remove' || tiers.raw(edit.modId) !== null
+    if (mod && known && saved.anchors[key] === mod.text) edits[key] = edit
+    else dropped++
+  }
+  let draft: GearDraft = { edits, added: [] }
+  for (const a of saved.draft.added) {
+    const item = bySlot.get(a.slotId)
+    const t = tiers.raw(a.modId)?.t
+    const room = item && t ? openSlots(item, draft, tiers) : null
+    const fits =
+      item && room && saved.anchors[`item:${a.slotId}`] === itemAnchor(item) && room[t === 'p' ? 'prefix' : 'suffix'] > 0
+    if (fits) draft = { edits, added: [...draft.added, a] }
+    else dropped++
+  }
+  return { draft, dropped }
+}

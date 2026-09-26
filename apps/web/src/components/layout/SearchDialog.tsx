@@ -55,18 +55,19 @@ export default function SearchDialog({ onClose }: { onClose: () => void }) {
   const goTo = (entry: SearchEntry) => {
     onClose();
     const samePage = window.location.pathname.replace(/\/$/, "").endsWith(entry.href);
-    router.push(`${entry.href}#${entry.id}`);
-    // A same-page push changes the hash through history.pushState, which
-    // fires no hashchange — so tabs and the highlighter never hear of it.
-    // router.push commits the URL asynchronously, so wait for the new hash.
-    if (samePage) {
-      let tries = 0;
-      const announce = () => {
-        if (decodeURIComponent(window.location.hash.slice(1)) === entry.id)
-          window.dispatchEvent(new HashChangeEvent("hashchange"));
-        else if (++tries < 60) requestAnimationFrame(announce);
-      };
-      requestAnimationFrame(announce);
+    if (!samePage) {
+      router.push(`${entry.href}#${entry.id}`);
+      return;
+    }
+    // Same page: set the hash directly. That fires a real hashchange, which
+    // the tabs and the highlighter listen for. router.push changes it through
+    // history.pushState, which fires none, and waiting for its asynchronous
+    // commit before announcing one raced under load.
+    if (decodeURIComponent(window.location.hash.slice(1)) === entry.id) {
+      // Unchanged hash fires nothing; re-announce so it scrolls back to it.
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    } else {
+      window.location.hash = entry.id;
     }
   };
 
@@ -76,11 +77,15 @@ export default function SearchDialog({ onClose }: { onClose: () => void }) {
       onClick={() => onClose()}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search"
         className="w-full max-w-xl overflow-hidden card rounded-xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <input
           ref={inputRef}
+          aria-label="Search the guide"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);

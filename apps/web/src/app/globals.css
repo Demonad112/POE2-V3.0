@@ -57,6 +57,9 @@
   --accent-dim: #8a6d22;
   --accent-soft: rgb(227 179 65 / 0.1);
   --accent-line: rgb(227 179 65 / 0.35);
+  /* Home hero: the art is dark, so a light page shows less of it and no black scrim. */
+  --hero-image-opacity: 0.55;
+  --hero-scrim: rgb(0 0 0 / 0.1);
 
   --danger: #e66767;
   --warn: #c98500;
@@ -87,6 +90,8 @@
     --accent-dim: #d8c48a;
     --accent-soft: rgb(154 116 18 / 0.09);
     --accent-line: rgb(154 116 18 / 0.32);
+    --hero-image-opacity: 0.2;
+    --hero-scrim: transparent;
 
     --danger: #c4302f;
     --warn: #8a5c00;
@@ -118,6 +123,8 @@
   --accent-dim: #d8c48a;
   --accent-soft: rgb(154 116 18 / 0.09);
   --accent-line: rgb(154 116 18 / 0.32);
+  --hero-image-opacity: 0.2;
+  --hero-scrim: transparent;
 
   --danger: #c4302f;
   --warn: #8a5c00;

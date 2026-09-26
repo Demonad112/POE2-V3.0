@@ -4,6 +4,8 @@ import { CURRENT_PATCH, LEAGUE_LABEL } from "@/lib/constants";
 import { BASE_PATH } from "@/lib/basePath";
 import { ProgressSummary } from "@/components/home/ProgressSummary";
 import { NextStepCard } from "@/components/checklist/NextStepCard";
+import { LastCharacterCard } from "@/components/home/LastCharacterCard";
+import { progressTotals, stepSummaries } from "@/lib/stepSummary";
 
 const CARDS = [
   {
@@ -73,6 +75,7 @@ const CARDS = [
 ];
 
 export default function Home() {
+  const totals = progressTotals();
   return (
     <div className="flex flex-col gap-14">
       <div className="relative overflow-hidden rounded-2xl border border-line">
@@ -83,10 +86,10 @@ export default function Home() {
           fill
           priority
           sizes="(min-width: 1152px) 1152px, 100vw"
-          className="object-cover opacity-[0.55]"
-          style={{ objectPosition: "50% 38%" }}
+          className="object-cover"
+          style={{ objectPosition: "50% 38%", opacity: "var(--hero-image-opacity)" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[var(--surface)]/55 to-[var(--surface)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--hero-scrim)] via-[var(--surface)]/55 to-[var(--surface)]" />
         <div className="relative z-10 flex flex-col items-start gap-4 px-6 py-16 sm:px-10 sm:py-24">
           <span className="rounded-full border border-[var(--accent)]/25 bg-accent-soft px-3 py-1 text-xs font-medium tracking-wide text-[var(--accent)] uppercase backdrop-blur-sm">
             Patch {CURRENT_PATCH} · {LEAGUE_LABEL}
@@ -105,8 +108,9 @@ export default function Home() {
       </div>
 
       <div className="flex flex-col gap-4">
-        <NextStepCard />
-        <ProgressSummary />
+        <NextStepCard steps={stepSummaries()} />
+        <LastCharacterCard />
+        <ProgressSummary stepIds={totals.stepIds} atlasTotal={totals.atlasTotal} />
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
