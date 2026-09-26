@@ -1,22 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { benchmarkGates } from "@/data/benchmarks";
-import { commonMistakes } from "@/data/commonMistakes";
-import { ROADMAP_PHASE_LABELS } from "@/lib/constants";
-import { nextIncompleteStep, orderedSteps } from "@/lib/roadmapOrder";
-import { actionItemKey, useChecklistState } from "@/hooks/useChecklistState";
+import type { StepSummary } from "@/lib/stepSummary";
+import { actionItemKey, useChecklistActions } from "@/hooks/useChecklistActions";
 
 /**
  * "What do I do now?" — the first unticked step, with its remaining sub-steps
  * checkable in place. On the checklist it links down to the step; elsewhere it
  * links to the checklist.
  */
-export function NextStepCard({ onChecklistPage = false }: { onChecklistPage?: boolean }) {
+export function NextStepCard({
+  steps,
+  onChecklistPage = false,
+}: {
+  /** Every step in play order, from `stepSummaries()`. */
+  steps: StepSummary[];
+  onChecklistPage?: boolean;
+}) {
   const { completedStepIds, toggleStep, isActionItemComplete, toggleActionItem } =
-    useChecklistState();
-  const step = nextIncompleteStep(completedStepIds);
-  const doneCount = orderedSteps.filter((s) => completedStepIds.includes(s.id)).length;
+    useChecklistActions();
+  const done = new Set(completedStepIds);
+  const step = steps.find((s) => !done.has(s.id)) ?? null;
+  const doneCount = steps.filter((s) => done.has(s.id)).length;
 
   if (!step) {
     return (
@@ -33,9 +38,8 @@ export function NextStepCard({ onChecklistPage = false }: { onChecklistPage?: bo
     );
   }
 
-  const position = orderedSteps.indexOf(step) + 1;
-  const gates = benchmarkGates.filter((g) => step.benchmarkGateIds?.includes(g.id));
-  const avoid = commonMistakes.filter((m) => step.relatedMistakeIds?.includes(m.id));
+  const position = steps.indexOf(step) + 1;
+  const { gates, avoid } = step;
   const href = onChecklistPage ? `#${step.id}` : `/checklist#${step.id}`;
 
   return (
@@ -46,10 +50,10 @@ export function NextStepCard({ onChecklistPage = false }: { onChecklistPage?: bo
       <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-[var(--accent)]" />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs font-semibold tracking-wide text-[var(--accent)] uppercase">
-          Up next · {ROADMAP_PHASE_LABELS[step.phase] ?? step.phase}
+          Up next · {step.phaseLabel}
         </span>
         <span className="text-xs text-ink-mute">
-          Step {position} of {orderedSteps.length} · {doneCount} done
+          Step {position} of {steps.length} · {doneCount} done
         </span>
       </div>
 
@@ -58,7 +62,7 @@ export function NextStepCard({ onChecklistPage = false }: { onChecklistPage?: bo
       </h2>
       <p className="mt-1 text-sm text-ink-dim">{step.description}</p>
 
-      {step.actionItems && step.actionItems.length > 0 && (
+      {step.actionItems.length > 0 && (
         <ul className="mt-3 space-y-1">
           {step.actionItems.map((item, index) => {
             const key = actionItemKey(step.id, index);
@@ -87,7 +91,7 @@ export function NextStepCard({ onChecklistPage = false }: { onChecklistPage?: bo
           {gates.map((g) => (
             <li key={g.id} className="text-[var(--warn)]">
               <span className="font-semibold">
-                {g.severity === "hard-gate" ? "Gate:" : "Guideline:"}
+                {g.hard ? "Gate:" : "Guideline:"}
               </span>{" "}
               {g.label}
             </li>

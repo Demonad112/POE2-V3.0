@@ -16,11 +16,13 @@ import { ModTiers, type ModTierData } from '../src/gear/tiers.js'
 import { RESIST_STAT, analyzeItem } from '../src/gear/analyze.js'
 import {
   EMPTY_DRAFT,
+  anchorDraft,
   draftResistances,
   draftStatDelta,
   lineKey,
   openSlots,
   rankAffixCandidates,
+  restoreDraft,
   tierOptions,
   type GearDraft,
 } from '../src/gear/workbench.js'
@@ -111,5 +113,44 @@ describe('rankAffixCandidates', () => {
     const before = openSlots(helmet, EMPTY_DRAFT, tiers)
     const after = openSlots(helmet, { edits: { [lineKey(helmet.slotId, fireIndex)]: { kind: 'remove' } }, added: [] }, tiers)
     if (before && after) expect(after.suffix).toBe(before.suffix + 1)
+  })
+})
+
+describe('saving and restoring a draft', () => {
+  const fireKey = lineKey(helmet.slotId, fireIndex)
+  const removeFire: GearDraft = { edits: { [fireKey]: { kind: 'remove' } }, added: [] }
+
+  it('restores unchanged onto the same gear', () => {
+    const saved = JSON.parse(JSON.stringify(anchorDraft(analysed, removeFire)))
+    expect(restoreDraft(analysed, saved, tiers)).toEqual({ draft: removeFire, dropped: 0 })
+  })
+
+  it('drops an edit whose line now reads differently, instead of re-aiming it', () => {
+    const saved = anchorDraft(analysed, removeFire)
+    const changed = analysed.map((item) =>
+      item.slotId !== helmet.slotId
+        ? item
+        : { ...item, mods: item.mods.map((m, i) => (i === fireIndex ? { ...m, text: '+12% to Fire Resistance' } : m)) },
+    )
+    expect(restoreDraft(changed, saved, tiers)).toEqual({ draft: EMPTY_DRAFT, dropped: 1 })
+  })
+
+  it('drops an edit whose item is gone', () => {
+    const saved = anchorDraft(analysed, removeFire)
+    const without = analysed.filter((i) => i.slotId !== helmet.slotId)
+    expect(restoreDraft(without, saved, tiers).dropped).toBe(1)
+  })
+
+  it('drops an added line when a different item now sits in the slot', () => {
+    // Remove the fire line, then put a fire line back into the slot it opened.
+    const fire = tierOptions(tiers, helmet, helmet.mods[fireIndex]!.id!).at(-1)!.entry
+    const draft: GearDraft = {
+      edits: { [fireKey]: { kind: 'remove' } },
+      added: [{ key: 'a1', slotId: helmet.slotId, modId: fire.id }],
+    }
+    const saved = anchorDraft(analysed, draft)
+    expect(restoreDraft(analysed, saved, tiers).dropped).toBe(0)
+    const swapped = analysed.map((i) => (i.slotId === helmet.slotId ? { ...i, name: 'Another Helmet' } : i))
+    expect(restoreDraft(swapped, saved, tiers).draft.added).toEqual([])
   })
 })

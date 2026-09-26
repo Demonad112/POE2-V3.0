@@ -16,6 +16,7 @@
  */
 
 import { useMemo, useState } from 'react'
+import { useGearDraft } from '@/lib/useGearDraft'
 import {
   CANDIDATE_GROUP_LABEL,
   EMPTY_DRAFT,
@@ -525,7 +526,6 @@ export function GearWorkbench({
   bare?: boolean
 }) {
   const shopping = useShoppingList()
-  const [draft, setDraft] = useState<GearDraft>(EMPTY_DRAFT)
 
   const base = useMemo(() => {
     if (state.status !== 'ready') return null
@@ -533,6 +533,12 @@ export function GearWorkbench({
     const analysed = active.map((i) => analyzeItem(i, state.tiers, defense))
     return { active, analysed, ranking: rankReplacements(analysed, defense) }
   }, [state, items, defense])
+
+  const { draft, setDraft, dropped } = useGearDraft(
+    characterName,
+    base?.analysed ?? null,
+    state.status === 'ready' ? state.tiers : null,
+  )
 
   const resistances = useMemo(
     () => (base && state.status === 'ready' ? draftResistances(defense, draftStatDelta(base.analysed, draft, state.tiers)) : []),
@@ -586,9 +592,15 @@ export function GearWorkbench({
     >
       <div className="space-y-3">
         <ResistanceStrip rows={resistances} changes={draftSize(draft)} onReset={() => setDraft(EMPTY_DRAFT)} />
+        {dropped > 0 ? (
+          <p role="status" className="rounded-md border border-warn/40 px-2.5 py-1.5 text-[11px] leading-relaxed text-warn">
+            {dropped} saved change{dropped === 1 ? '' : 's'} no longer matched your gear and {dropped === 1 ? 'was' : 'were'}{' '}
+            dropped — the line or item changed since you drafted it.
+          </p>
+        ) : null}
         <p className="text-[11px] leading-relaxed text-ink-mute">
           {base.ranking.orderedBy} Uniques are listed last, unranked — their value is the unique effect. Changed lines
-          count at the bottom of their range.
+          count at the bottom of their range. Your changes are saved in this browser for {characterName}.
         </p>
         <ol className="space-y-1.5">
           {rows.map((row) => {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import {
   analyzeCharacter,
   analyzeFromPob,
+  snapshotKey,
   upgradeSkillFrom,
   type Analysis,
   type PobAnalysis,
@@ -26,7 +27,7 @@ import { Headroom } from '@/components/Headroom'
 import { AuditPanel } from '@/components/AuditPanel'
 import { Chat } from '@/components/Chat'
 import { PobAnalysisView } from '@/components/PobAnalysisView'
-import { ImportBar, type ImportResult } from '@/components/ImportBar'
+import { ImportBar, importProfile, type ImportResult } from '@/components/ImportBar'
 import { Progress } from '@/components/Progress'
 import { Reconciliation } from '@/components/Reconciliation'
 import { Recommendations } from '@/components/Recommendations'
@@ -34,6 +35,7 @@ import { Skeleton } from '@/components/Skeleton'
 import { TreePanel } from '@/components/tree/TreePanel'
 import { fmtCompact } from '@/components/ui'
 import { useCharacterHistory } from '@/lib/useCharacterHistory'
+import { recordRecent } from '@/lib/recentCharacters'
 import { useLadder } from '@/lib/useLadder'
 import { useModTiers } from '@/lib/useModTiers'
 import { useSupportCatalog } from '@/lib/useSupportCatalog'
@@ -75,6 +77,8 @@ export default function Home() {
   const [raw, setRaw] = useState<unknown>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // The profile URL of the current import, when it came from one.
+  const [sourceUrl, setSourceUrl] = useState<string | null>(null)
 
   // One fetch each, for the whole page. The gear panel and the findings list
   // must agree about what is wasted and what would fix it; the tree drawing and
@@ -121,6 +125,22 @@ export default function Home() {
   const treeSettled = treeState.status === 'ready' || treeState.status === 'error'
   const history = useCharacterHistory(treeSettled ? analysis : null)
 
+  // Unlike the history snapshot, a recent-characters row carries no figures
+  // the tree could correct, so it need not wait for the tree.
+  useEffect(() => {
+    if (!sourceUrl || !analysis) return
+    const { identity } = analysis
+    if (!identity.account || !identity.name) return
+    recordRecent({
+      url: sourceUrl,
+      key: snapshotKey(identity),
+      name: identity.name,
+      className: identity.className ?? null,
+      level: identity.level ?? null,
+      at: new Date().toISOString(),
+    })
+  }, [sourceUrl, analysis])
+
   const handleResult = useCallback(async (r: ImportResult) => {
     if (!r.ok) {
       setError(r.error)
@@ -128,6 +148,7 @@ export default function Home() {
     }
     setError(null)
     setBusy(true)
+    setSourceUrl(r.kind === 'ninja' ? (r.url ?? null) : null)
     try {
       if (r.kind === 'pob') {
         setAnalysis(null)
@@ -147,6 +168,25 @@ export default function Home() {
       setBusy(false)
     }
   }, [])
+
+  // `?import=<poe.ninja URL>` — from the home page's "Re-import" link, a
+  // reload, or a shared link. Read here, once per visit to the page.
+  useEffect(() => {
+    const target = new URLSearchParams(window.location.search).get('import')
+    if (!target) return
+    let cancelled = false
+    // The effect starts a fetch; the page has to show it is busy for its length.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBusy(true)
+    void importProfile(target).then((r) => {
+      if (cancelled) return
+      setBusy(false)
+      void handleResult(r)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [handleResult])
 
   // Declared as data so the accordion list can be reordered or re-themed in
   // one place, without touching how any individual panel is built. Each

@@ -29,6 +29,20 @@ jobs:
         working-directory: services/ninja-proxy
       - name: Build web
         run: npm run build --workspace @poe2/web
+      - name: Install Chromium for the smoke tests
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Smoke-test the built site
+        # Serves apps/web/out under the same base path Pages uses and drives
+        # it offline with the captured fixture character.
+        run: npm run e2e --workspace @poe2/web
+      - name: Upload the smoke-test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
       - name: Build MCP server
         run: npm run build --workspace @poe2/mcp
       - name: Verify MCP server over stdio
