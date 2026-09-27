@@ -108,9 +108,7 @@ Below the hero:
   - One draft covers all items. A sticky strip shows the resulting resistances, counting changed lines at the bottom of their range.
   - Candidates are ordered, never scored: first a line that closes a draft shortfall, then item rarity, then defences, then damage, then attributes, then the rest.
   - "Plan a full replacement" still opens the planner and the shopping list.
-- **Passive tree** replaces the route picker with two lists, Damage and EHP: the best nearby nodes within 6 points, ranked by gain per point over the whole path.
-  - **Damage** counts only "% increased … Damage" lines whose qualifiers apply to the main skill. A type-specific line is scaled by that type's share of the hit.
-  - **EHP** ranks closing a resistance gap first, then life + energy shield, then armour/evasion rating. Those units are never blended.
+- **Passive tree** shows the allocated tree only. The Damage/EHP "best nearby nodes" lists that briefly sat under it were removed: their ranking was wrong.
 - The "Gear & tree" panel is gone. Everything it listed is in the workbench and the tree.
 
 **Dashboard** follows the Atlas page: the quiz and the mistakes panel stay on top, and the reference material sits under a sticky tab bar (Strategies · Pinnacle bosses · Meta builds · Milestones). On mobile this took the page from about 7,300px to 2,050px.

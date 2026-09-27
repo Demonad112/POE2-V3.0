@@ -1,6 +1,6 @@
 'use client'
 
-import type { PassiveAllocation, UpgradeCharacter, UpgradeSkill } from '@poe2/core'
+import type { PassiveAllocation } from '@poe2/core'
 import type { PassiveTreeState } from '@/lib/usePassiveTree'
 import { Panel } from '../ui'
 import { PassiveTreeView } from './PassiveTreeView'
@@ -15,16 +15,11 @@ import { PassiveTreeView } from './PassiveTreeView'
 export function TreePanel({
   allocation,
   state,
-  skill = null,
-  character = null,
   bare = false,
 }: {
   allocation: PassiveAllocation
   /** Loaded once at page level, so the drawing and the analysis agree. */
   state: PassiveTreeState
-  /** Drive the best-nearby-nodes lists — see PassiveTreeView. */
-  skill?: UpgradeSkill | null
-  character?: UpgradeCharacter | null
   bare?: boolean
 }) {
   const tree = state.status === 'ready' ? state.tree : null
@@ -42,7 +37,7 @@ export function TreePanel({
           page is unaffected.
         </p>
       ) : tree ? (
-        <PassiveTreeView tree={tree} allocation={allocation} skill={skill} character={character} />
+        <PassiveTreeView tree={tree} allocation={allocation} />
       ) : (
         <div className="skeleton h-[26rem] w-full rounded-lg sm:h-[34rem]" aria-busy="true">
           <span className="sr-only">Loading passive tree…</span>

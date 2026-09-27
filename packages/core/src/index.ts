@@ -36,6 +36,5 @@ export * from './gems/index.js'
 export * from './mods/index.js'
 export * from './tree/index.js'
 export * from './tree/suggest.js'
-export * from './tree/upgrades.js'
 
 export * from './analyze.js'

@@ -7,6 +7,8 @@
 
 export {
   ATTRIBUTABLE_STATS,
+  CANDIDATE_GROUP_LABEL,
+  EMPTY_DRAFT,
   NODE_KIND,
   analyzeContent,
   analyzeItem,
@@ -17,12 +19,17 @@ export {
   PobBridgeError,
   decodePobExport,
   describePobConfig,
+  draftResistances,
+  draftStatDelta,
   editPobTree,
   pobDpsAgreement,
+  rankAffixCandidates,
   findResistanceSwaps,
   findTierUpgrades,
   itemsCarrying,
+  lineKey,
   normalizeItems,
+  openSlots,
   parseProfileUrl,
   pathToNode,
   readPlayerStats,
@@ -37,6 +44,7 @@ export {
   validateByName,
   validateSetup,
   type AttributableStat,
+  type GearDraft,
 } from '@poe2/core'
 
 import { findMechanic, type Mechanic } from './mechanics.js'

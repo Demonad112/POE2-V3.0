@@ -13,6 +13,8 @@
 import { z } from 'zod'
 import {
   ATTRIBUTABLE_STATS,
+  CANDIDATE_GROUP_LABEL,
+  EMPTY_DRAFT,
   NODE_KIND,
   analyzeContent,
   analyzeItem,
@@ -21,16 +23,21 @@ import {
   auditCharacter,
   decodePobExport,
   describePobConfig,
+  draftResistances,
+  draftStatDelta,
   editPobTree,
   findMechanicSafe,
   findResistanceSwaps,
   findTierUpgrades,
   itemsCarrying,
+  lineKey,
   normalizeItems,
+  openSlots,
   summarizeSwaps,
   parseProfileUrl,
   pathToNode,
   pobDpsAgreement,
+  rankAffixCandidates,
   readPlayerStats,
   rankNodesByMeasuredGain,
   resolveAllocation,
@@ -42,6 +49,7 @@ import {
   validateByName,
   validateSetup,
   type AttributableStat,
+  type GearDraft,
 } from './deps.js'
 import {
   client,
@@ -881,6 +889,96 @@ export const TOOLS: ToolDef[] = [
         note:
           'Only measurable waste is reported. Resistance above the cap is provably doing nothing; whether a damage ' +
           'modifier suits a build depends on where that build is heading, which is not judged here.',
+      }
+    },
+  },
+
+  {
+    name: 'poe2_rank_affix_candidates',
+    title: 'Rank affixes that could go in a gear slot',
+    description:
+      'The affixes that could go into one prefix or suffix slot of an equipped item, in the same order the site’s ' +
+      'gear workbench uses. Ordered, never scored: first lines that close a resistance left under cap, then item ' +
+      'rarity, then life, energy shield and other defences, then damage, then attributes, then the rest — and within ' +
+      'each group the best tier this item level can roll first. Groups already on the item are excluded, since an ' +
+      'item cannot hold two. Pass `replacing` to ask what could take the place of an existing line: that line is ' +
+      'treated as removed, so the resistances and the shortfall ranking reflect losing it. Every candidate counts at ' +
+      'the bottom of its roll range, so a plan that caps here caps in game.',
+    inputSchema: {
+      slot: z.number().int().describe('Slot id of the item (see poe2_analyze_gear).'),
+      kind: z.enum(['prefix', 'suffix']).describe('Which affix slot to fill.'),
+      replacing: z
+        .number()
+        .int()
+        .min(0)
+        .optional()
+        .describe('Index of the line to replace, in the item’s mod list from poe2_analyze_gear. Must be the same kind.'),
+      limit: z.number().int().min(1).max(30).optional().describe('Maximum candidates. Default 10.'),
+    },
+    annotations: READ_ONLY,
+    handler: (args) => {
+      const { model, analysis } = requireCharacter()
+      const tiers = modTiers()
+      const slot = Number(args.slot)
+      const kind = args.kind === 'prefix' ? 'prefix' : 'suffix'
+      const limit = Number(args.limit ?? 10)
+      const analysed = normalizeItems(model)
+        .filter((i) => i.active)
+        .map((i) => analyzeItem(i, tiers, analysis.defense))
+      const item = analysed.find((i) => i.slotId === slot)
+      if (!item) throw new Error(`Nothing equipped in slot ${slot}. Use poe2_analyze_gear for the slot ids.`)
+
+      let replacing: number | null = null
+      let draft: GearDraft = EMPTY_DRAFT
+      if (args.replacing !== undefined) {
+        replacing = Number(args.replacing)
+        const mod = item.mods[replacing]
+        if (!mod) throw new Error(`${item.name} has no line ${replacing}; it has ${item.mods.length} (0-based).`)
+        if (mod.kind !== kind) {
+          throw new Error(`Line ${replacing} ("${mod.text}") is ${mod.kind ? `a ${mod.kind}` : 'not a prefix or suffix'}, not a ${kind}.`)
+        }
+        draft = { edits: { [lineKey(item.slotId, replacing)]: { kind: 'remove' } }, added: [] }
+      }
+
+      const summary = { slot: item.slotId, slotLabel: item.slotLabel, name: item.name, baseType: item.baseType, itemLevel: item.itemLevel, rarity: item.rarity }
+      const slots = openSlots(item, draft, tiers)
+      if (!slots) {
+        return {
+          item: summary,
+          candidates: [],
+          note: item.corrupted
+            ? 'This item is corrupted, so its affixes cannot be changed.'
+            : `A ${item.rarity.toLowerCase()} item has no editable affix budget — its value is what it already has.`,
+        }
+      }
+
+      const resistances = draftResistances(analysis.defense, draftStatDelta(analysed, draft, tiers))
+      const ranked = rankAffixCandidates({ tiers, item, kind, draft, resistances, replacing })
+      const notes = [
+        'Ordered, not scored: closes a resistance shortfall → item rarity → defence → damage → attribute → other; best tier first within a group.',
+        'Every candidate is counted at the bottom of its roll range.',
+      ]
+      if (replacing === null && slots[kind] === 0) {
+        notes.push(`No ${kind} slot is free on this item: these are what would fit after removing a ${kind}. Pass replacing to pick which.`)
+      }
+
+      return {
+        item: summary,
+        replacing:
+          replacing === null ? null : { index: replacing, text: item.mods[replacing]!.text, tier: item.mods[replacing]!.tier, ofTiers: item.mods[replacing]!.tiers },
+        openSlots: slots,
+        resistances: resistances.map((r) => ({ type: r.type, after: r.after, max: r.maxAfter, underCap: r.underCapAfter, changed: r.changed })),
+        candidates: ranked.slice(0, limit).map((c) => ({
+          modId: c.entry.id,
+          text: c.entry.text,
+          tier: c.entry.tier,
+          ofTiers: c.ladderLength,
+          itemLevel: c.entry.ilvl,
+          group: CANDIDATE_GROUP_LABEL[c.group],
+          closes: c.closes,
+        })),
+        total: ranked.length,
+        notes,
       }
     },
   },
