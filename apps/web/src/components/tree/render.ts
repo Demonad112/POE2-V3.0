@@ -6,7 +6,7 @@
  * visible bounds.
  *
  * Draw order matters — later layers must read as "on top":
- *   dim edges -> dim nodes -> allocated edges -> allocated nodes -> highlights
+ *   dim edges -> dim nodes -> allocated edges -> allocated nodes
  */
 
 import type { PassiveTree, TreeNode } from '@poe2/core'
@@ -23,7 +23,6 @@ export interface TreePalette {
   jewel: string
   start: string
   ascendancy: string
-  highlight: string
   surface: string
   text: string
 }
@@ -38,8 +37,6 @@ export interface RenderOptions {
   allocated: Set<number>
   /** Allocated on the inactive weapon set — drawn distinctly, never as live. */
   inactive: Set<number>
-  /** Route the engine suggests, drawn glowing on top. */
-  highlighted: Set<number>
   hovered: number | null
   /** Hide the peripheral ascendancy wheels of other classes. */
   visibleAscendancy: string | null
@@ -111,7 +108,6 @@ export function renderTree(ctx: CanvasRenderingContext2D, opts: RenderOptions): 
 
   // --- edges ----------------------------------------------------------------
   const liveEdges: Array<[TreeNode, TreeNode]> = []
-  const highlightEdges: Array<[TreeNode, TreeNode]> = []
 
   ctx.lineWidth = Math.max(0.6, 1.2 * Math.min(1.8, vp.scale / 0.03))
   ctx.strokeStyle = palette.dimEdge
@@ -124,11 +120,6 @@ export function renderTree(ctx: CanvasRenderingContext2D, opts: RenderOptions): 
     if (!isVisible(na, opts) || !isVisible(nb, opts)) continue
 
     const bothAllocated = opts.allocated.has(a) && opts.allocated.has(b)
-    const bothHighlighted = opts.highlighted.has(a) && opts.highlighted.has(b)
-    if (bothHighlighted) {
-      highlightEdges.push([na, nb])
-      continue
-    }
     if (bothAllocated) {
       liveEdges.push([na, nb])
       continue
@@ -144,7 +135,7 @@ export function renderTree(ctx: CanvasRenderingContext2D, opts: RenderOptions): 
   // --- unallocated nodes ----------------------------------------------------
   ctx.fillStyle = palette.dimNode
   for (const node of tree.allNodes()) {
-    if (opts.allocated.has(node.id) || opts.highlighted.has(node.id)) continue
+    if (opts.allocated.has(node.id)) continue
     if (!inView(node) || !isVisible(node, opts)) continue
 
     const p = treeToScreen(node.x, node.y, vp, width, height)
@@ -211,34 +202,6 @@ export function renderTree(ctx: CanvasRenderingContext2D, opts: RenderOptions): 
       ctx.arc(p.x, p.y, r * 0.42, 0, Math.PI * 2)
       ctx.fill()
     }
-  }
-
-  // --- suggested route ------------------------------------------------------
-  if (opts.highlighted.size) {
-    ctx.save()
-    ctx.strokeStyle = palette.highlight
-    ctx.shadowColor = palette.highlight
-    ctx.shadowBlur = 12
-    ctx.lineWidth = Math.max(2, 3 * Math.min(1.8, vp.scale / 0.03))
-    ctx.beginPath()
-    for (const [na, nb] of highlightEdges) {
-      const pa = treeToScreen(na.x, na.y, vp, width, height)
-      const pb = treeToScreen(nb.x, nb.y, vp, width, height)
-      ctx.moveTo(pa.x, pa.y)
-      ctx.lineTo(pb.x, pb.y)
-    }
-    ctx.stroke()
-
-    ctx.fillStyle = palette.highlight
-    for (const id of opts.highlighted) {
-      const node = tree.node(id)
-      if (!node || !inView(node)) continue
-      const p = treeToScreen(node.x, node.y, vp, width, height)
-      ctx.beginPath()
-      ctx.arc(p.x, p.y, radiusFor(node.kind, true, vp.scale) + 1, 0, Math.PI * 2)
-      ctx.fill()
-    }
-    ctx.restore()
   }
 
   // --- hover ----------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PassiveAllocation, PassiveTree, TreeNode } from '@poe2/core'
-import { resolveAllocation, suggestTreeUpgrades, type UpgradeCharacter, type UpgradeSkill } from '@poe2/core'
+import { resolveAllocation } from '@poe2/core'
 import { Tag } from '../ui'
 import { extentOf, fitExtent, zoomAt, type Viewport } from './geometry'
 import { hitTest, renderTree, type TreePalette } from './render'
@@ -20,7 +20,6 @@ function readPalette(el: HTMLElement): TreePalette {
     jewel: v('--dmg-cold', '#3987e5'),
     start: v('--good', '#199e70'),
     ascendancy: v('--dmg-fire', '#d95926'),
-    highlight: v('--dmg-cold', '#3987e5'),
     surface: v('--surface-raised', '#141417'),
     text: v('--ink', '#f2ede4'),
   }
@@ -29,14 +28,10 @@ function readPalette(el: HTMLElement): TreePalette {
 export interface PassiveTreeViewProps {
   tree: PassiveTree
   allocation: PassiveAllocation
-  /** The main skill, for the damage list. Null leaves that list empty. */
-  skill?: UpgradeSkill | null
-  /** Life, ES, ratings and resistance gaps, for the EHP list. */
-  character?: UpgradeCharacter | null
   className?: string
 }
 
-export function PassiveTreeView({ tree, allocation, skill = null, character = null, className = '' }: PassiveTreeViewProps) {
+export function PassiveTreeView({ tree, allocation, className = '' }: PassiveTreeViewProps) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -53,24 +48,6 @@ export function PassiveTreeView({ tree, allocation, skill = null, character = nu
     const inactive = allocation.activeSet === 2 ? allocation.set1 : allocation.set2
     return new Set(inactive.filter((id) => !activeIds.has(id)))
   }, [allocation, activeIds])
-  /**
-   * The best nearby nodes for damage and for effective health. One walk of the
-   * tree covers both lists.
-   */
-  const upgrades = useMemo(
-    () => (character ? suggestTreeUpgrades(tree, allocation.live, skill, character, { maxCost: 6, limit: 8 }) : null),
-    [tree, allocation.live, skill, character],
-  )
-  const [upgradeList, setUpgradeList] = useState<'damage' | 'ehp'>('damage')
-  const [routeIndex, setRouteIndex] = useState<number | null>(null)
-  const routes = upgrades ? upgrades[upgradeList] : []
-
-  const activeRoute = routeIndex !== null ? (routes[routeIndex] ?? null) : null
-  const highlightIds = useMemo(
-    () => new Set(activeRoute ? activeRoute.path.map((n) => n.id) : []),
-    [activeRoute],
-  )
-
   /** The character's own ascendancy, so other classes' wheels stay hidden. */
   const ownAscendancy = resolved.ascendancy[0]?.ascendancy ?? null
 
@@ -99,14 +76,6 @@ export function PassiveTreeView({ tree, allocation, skill = null, character = nu
     if (viewport === null) fitToAllocation()
   }, [viewport, fitToAllocation])
 
-  // Frame a chosen route: a glowing path off-screen helps nobody.
-  useEffect(() => {
-    if (!activeRoute || !size.width || !size.height) return
-    const extent = extentOf(activeRoute.path, 1400)
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- framing depends on size measured via ResizeObserver, an external system
-    if (extent) setViewport(fitExtent(extent, size.width, size.height))
-  }, [activeRoute, size.width, size.height])
-
   // --- painting -------------------------------------------------------------
   useEffect(() => {
     const canvas = canvasRef.current
@@ -131,7 +100,6 @@ export function PassiveTreeView({ tree, allocation, skill = null, character = nu
       palette: readPalette(wrap),
       allocated: activeIds,
       inactive: showSwapSet ? swapIds : new Set(),
-      highlighted: highlightIds,
       hovered: hovered?.id ?? null,
       visibleAscendancy: ownAscendancy,
       showAllAscendancies,
@@ -143,7 +111,6 @@ export function PassiveTreeView({ tree, allocation, skill = null, character = nu
     activeIds,
     swapIds,
     showSwapSet,
-    highlightIds,
     hovered,
     ownAscendancy,
     showAllAscendancies,
@@ -347,72 +314,6 @@ export function PassiveTreeView({ tree, allocation, skill = null, character = nu
           </div>
         ) : null}
       </div>
-
-      {upgrades ? (
-        <div className="mt-3 rounded-lg border border-line bg-surface-sunken p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="eyebrow">Best nearby nodes</h3>
-            <div role="tablist" className="inline-flex rounded-md border border-line bg-surface p-0.5 text-[11px]">
-              {(['damage', 'ehp'] as const).map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  role="tab"
-                  aria-selected={upgradeList === key}
-                  onClick={() => {
-                    setUpgradeList(key)
-                    setRouteIndex(null)
-                  }}
-                  className={`rounded px-2.5 py-1 font-medium transition-colors ${
-                    upgradeList === key ? 'bg-accent-soft text-accent' : 'text-ink-dim hover:text-ink'
-                  }`}
-                >
-                  {key === 'damage' ? 'Damage' : 'EHP'}
-                  <span className="tabular ml-1 text-ink-mute">{upgrades[key].length}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          <p className="mt-1.5 text-[11px] leading-relaxed text-ink-mute">
-            {upgradeList === 'damage'
-              ? `Increased damage that applies to ${skill?.name ?? 'your main skill'}, summed over every node on the way, per point spent. A type-specific line counts only for that type's share of the hit. The real DPS gain is smaller — it adds to the increases you already have.`
-              : 'Closing a resistance gap first, then life + energy shield, then armour/evasion — each per point spent, counting every node on the way. Percent nodes use your current life/ES, so they read slightly high.'}{' '}
-            Within {upgrades.maxCost} points. Tap a row to show its path.
-          </p>
-
-          {routes.length ? (
-            <ol className="mt-2 space-y-1">
-              {routes.map((r, i) => (
-                <li key={r.node.id}>
-                  <button
-                    type="button"
-                    onClick={() => setRouteIndex(routeIndex === i ? null : i)}
-                    aria-pressed={routeIndex === i}
-                    className={`grid w-full grid-cols-[1.25rem_1fr_auto] items-baseline gap-x-2 rounded-md px-2 py-1.5 text-left transition-colors ${
-                      routeIndex === i ? 'bg-surface-raised ring-1 ring-accent-line' : 'hover:bg-surface-raised/60'
-                    }`}
-                  >
-                    <span className="tabular text-[11px] text-ink-mute">{i + 1}</span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-xs font-medium text-ink">{r.node.name}</span>
-                      <span className="block text-[11px] text-good">{r.parts.join(' · ')}</span>
-                    </span>
-                    <span className="tabular text-right text-[11px] text-accent">
-                      {r.cost} pt{r.cost === 1 ? '' : 's'}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="mt-2 text-[11px] text-ink-mute">
-              {upgradeList === 'damage' && !skill
-                ? 'No main skill was found in the character data, so damage nodes cannot be matched to it.'
-                : `Nothing within ${upgrades.maxCost} points adds to this.`}
-            </p>
-          )}
-        </div>
-      ) : null}
 
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
         <label className="flex items-center gap-1.5 text-[11px] text-ink-dim">

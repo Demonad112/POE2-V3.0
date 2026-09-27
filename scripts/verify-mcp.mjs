@@ -407,6 +407,35 @@ console.log(
   `gear swaps: ${improve.totals?.resistanceSwaps} found — replace "${swap?.replace?.text}" with T${swap?.candidates?.[0]?.tier} '${swap?.candidates?.[0]?.affix}'`,
 )
 
+// --- affix candidates (the gear workbench's ranking) --------------------------
+// Cold sits 1 under cap and chaos 57, so a suffix that closes a gap must lead.
+const helmetSlot = (await callTool('poe2_analyze_gear')).items?.find((i) => i.slotLabel === 'Helmet')
+const affix = await callTool('poe2_rank_affix_candidates', { slot: helmetSlot?.slotId, kind: 'suffix' })
+const topAffix = affix.candidates?.[0]
+if (topAffix?.group !== 'fixes a resistance' || !topAffix?.closes?.length) {
+  failures.push(`first suffix candidate should close a resistance gap: ${JSON.stringify(topAffix).slice(0, 200)}`)
+}
+if (affix.candidates?.some((c, i) => i > 0 && c.group === 'fixes a resistance' && affix.candidates[i - 1].group !== 'fixes a resistance')) {
+  failures.push('shortfall-closing candidates must all come first')
+}
+// Replacing the helmet's fire line (40 of fire's 24 over cap) leaves fire short,
+// so fire-closing lines must now appear in the shortfall group.
+const fireIndex = helmetSlot?.mods?.findIndex((m) => m.rolled?.some((r) => r.id === 'base_fire_damage_resistance_%'))
+const swapFire = await callTool('poe2_rank_affix_candidates', { slot: helmetSlot?.slotId, kind: 'suffix', replacing: fireIndex, limit: 30 })
+const fireAfter = swapFire.resistances?.find((r) => r.type === 'fire')
+if (!fireAfter?.changed || !(fireAfter.underCap > 0)) {
+  failures.push(`removing the helmet's fire line should leave fire under cap: ${JSON.stringify(fireAfter)}`)
+}
+if (!swapFire.candidates?.some((c) => c.closes?.some((x) => x.type === 'fire'))) {
+  failures.push('with the fire line removed, a fire-closing suffix should be offered')
+}
+const badSlot = await callTool('poe2_rank_affix_candidates', { slot: 999, kind: 'prefix' })
+if (!badSlot.error?.includes('Nothing equipped')) failures.push('unknown slot should be an error')
+console.log(
+  `affixes: ${affix.total} suffixes for the helmet — first "${topAffix?.text}" (${topAffix?.group}); ` +
+    `without its fire line, fire is ${fireAfter?.underCap} under cap`,
+)
+
 const headroom = await callTool('poe2_survivability_headroom')
 if (headroom.lowestMaximumHit !== 3808 || headroom.tiers?.length !== 16) {
   failures.push(`headroom wrong: ${JSON.stringify(headroom).slice(0, 220)}`)

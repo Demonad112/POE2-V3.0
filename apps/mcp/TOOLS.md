@@ -5,7 +5,7 @@
 
 # Tools
 
-30 tools. 26 are read-only; 4 marked ⚠️ act on a running Path of Building on this machine (`poe2_pob_load_character`, `poe2_pob_simulate_node`, `poe2_pob_simulate_mods`, `poe2_pob_rank_nodes`). Nothing here ever writes to a game account, a file, or poe.ninja.
+31 tools. 27 are read-only; 4 marked ⚠️ act on a running Path of Building on this machine (`poe2_pob_load_character`, `poe2_pob_simulate_node`, `poe2_pob_simulate_mods`, `poe2_pob_rank_nodes`). Nothing here ever writes to a game account, a file, or poe.ninja.
 
 | Tool | Purpose | Parameters |
 |---|---|---|
@@ -30,6 +30,7 @@
 | `poe2_export_pob_with_tree` | Apply passive tree changes to the loaded character’s Path of Building export and return a new code, ready to paste into Path of Building. | `allocate`, `deallocate`, `replace` |
 | `poe2_analyze_gear` | Every modifier on every equipped item, with its affix tier, the roll inside that tier’s range, and what better tiers exist. | `slot`, `includeInactive` |
 | `poe2_find_gear_improvements` | Two kinds of concrete gear change, both grounded in the affix data rather than opinion. | `limit` |
+| `poe2_rank_affix_candidates` | The affixes that could go into one prefix or suffix slot of an equipped item, in the same order the site’s gear workbench uses. | `slot`, `kind`, `replacing`, `limit` |
 | `poe2_audit_character` | Six checks over parts of the character payload the other tools never read. | — |
 | `poe2_survivability_headroom` | How the character’s smallest fatal hit compares to base monster damage at every waystone tier (1-16) and at the boss levels Path of Building itself uses — 82, the pinnacle boss floor, and 85, the ceiling for all enemies. | — |
 | `poe2_pob_status` | Report whether a live Path of Building instance is reachable, which build it has open, and what its engine currently computes. | `includeCalcs` |
@@ -231,6 +232,17 @@ Every modifier on every equipped item, with its affix tier, the roll inside that
 Two kinds of concrete gear change, both grounded in the affix data rather than opinion. First, resistance rebalancing: modifiers granting resistance the character is already over cap on are provably wasted, and this names the item, the modifier, and the specific affixes that could replace it to cover what is short — ranked by how much of the gap each closes. Second, tier upgrades: modifiers sitting below the best tier their item could hold. Corrupted items are excluded from recrafting advice because their affixes cannot change.
 
 - `limit` *(optional)* — Cap each list. Default 8.
+
+### `poe2_rank_affix_candidates`
+
+**Rank affixes that could go in a gear slot**
+
+The affixes that could go into one prefix or suffix slot of an equipped item, in the same order the site’s gear workbench uses. Ordered, never scored: first lines that close a resistance left under cap, then item rarity, then life, energy shield and other defences, then damage, then attributes, then the rest — and within each group the best tier this item level can roll first. Groups already on the item are excluded, since an item cannot hold two. Pass `replacing` to ask what could take the place of an existing line: that line is treated as removed, so the resistances and the shortfall ranking reflect losing it. Every candidate counts at the bottom of its roll range, so a plan that caps here caps in game.
+
+- `slot` — Slot id of the item (see poe2_analyze_gear).
+- `kind` — Which affix slot to fill.
+- `replacing` *(optional)* — Index of the line to replace, in the item’s mod list from poe2_analyze_gear. Must be the same kind.
+- `limit` *(optional)* — Maximum candidates. Default 10.
 
 ### `poe2_audit_character`
 

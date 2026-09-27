@@ -5,11 +5,8 @@ import {
   analyzeCharacter,
   analyzeFromPob,
   snapshotKey,
-  upgradeSkillFrom,
   type Analysis,
   type PobAnalysis,
-  type UpgradeCharacter,
-  type UpgradeSkill,
 } from '@poe2/core'
 import { Accordion } from '@/components/shared/Accordion'
 import { PanelControls } from '@/components/shared/PanelControls'
@@ -40,21 +37,6 @@ import { useLadder } from '@/lib/useLadder'
 import { useModTiers } from '@/lib/useModTiers'
 import { useSupportCatalog } from '@/lib/useSupportCatalog'
 import { usePassiveTree } from '@/lib/usePassiveTree'
-
-/** What the tree's best-nearby-nodes lists need from the analysis. */
-function upgradeInputs(analysis: Analysis): { skill: UpgradeSkill | null; character: UpgradeCharacter } {
-  const d = analysis.defense
-  return {
-    skill: analysis.dps.primary ? upgradeSkillFrom(analysis.dps.primary) : null,
-    character: {
-      life: d.life ?? 0,
-      energyShield: d.energyShield ?? 0,
-      armour: d.armour ?? 0,
-      evasion: d.evasion ?? 0,
-      underCap: Object.fromEntries(d.resistances.map((r) => [r.type, r.underCap])),
-    },
-  }
-}
 
 interface WorkspacePanel {
   id: string
@@ -307,7 +289,7 @@ export default function Home() {
         title: 'Passive tree',
         summary: `${a.passives.counts.passives} points allocated`,
         instrument: <NumberReadout value={String(a.passives.counts.passives)} />,
-        content: <TreePanel allocation={a.passives} state={treeState} {...upgradeInputs(a)} bare />,
+        content: <TreePanel allocation={a.passives} state={treeState} bare />,
       },
       {
         id: 'detail-checks',
