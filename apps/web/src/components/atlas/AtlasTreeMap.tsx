@@ -361,7 +361,7 @@ function AtlasMapCanvas({ atlas }: { atlas: AtlasTree }) {
         {request ? (
           <div className="absolute top-2 left-2 flex max-w-[70%] items-center gap-2 rounded-md border border-accent-line bg-surface-raised/90 px-2.5 py-1 text-xs text-ink backdrop-blur">
             <span className="truncate">Showing {request.label}</span>
-            <button type="button" onClick={clear} aria-label="Clear" className="text-ink-mute hover:text-ink">
+            <button type="button" onClick={clear} aria-label="Clear" className="hit-area text-ink-mute hover:text-ink">
               ✕
             </button>
           </div>

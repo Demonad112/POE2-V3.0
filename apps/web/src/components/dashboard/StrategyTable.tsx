@@ -75,7 +75,7 @@ export function StrategyTable({ strategies }: { strategies: FarmingStrategy[] })
             type="button"
             aria-pressed={sortKey === key}
             onClick={() => setSortKey(key)}
-            className={`rounded-full border px-2.5 py-0.5 transition-colors ${
+            className={`hit-area rounded-full border px-2.5 py-0.5 transition-colors ${
               sortKey === key
                 ? "border-accent-line bg-accent-soft text-accent"
                 : "border-line text-ink-dim hover:text-ink"

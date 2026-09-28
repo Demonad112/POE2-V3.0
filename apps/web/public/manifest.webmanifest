@@ -1,12 +1,12 @@
 {
-  "name": "PoE2 Build Analyzer",
-  "short_name": "PoE2 Analyzer",
-  "description": "Path of Exile 2 character analysis grounded in poe.ninja's own computed data.",
+  "name": "PoE2 Endgame Companion",
+  "short_name": "Endgame",
+  "description": "Path of Exile 2 endgame companion: character analysis grounded in poe.ninja's own computed data, plus a progression checklist, Atlas planner and farming dashboard.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
-  "background_color": "#0b0b0d",
-  "theme_color": "#0b0b0d",
+  "background_color": "#0d0d10",
+  "theme_color": "#0d0d10",
   "orientation": "any",
   "icons": [
     {

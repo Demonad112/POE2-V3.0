@@ -106,7 +106,7 @@ function Card({ r, rank }: { r: Recommendation; rank: number }) {
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="text-[11px] text-accent transition-opacity hover:opacity-80"
+          className="hit-area text-[11px] text-accent transition-opacity hover:opacity-80"
         >
           {open ? 'Hide evidence' : `Evidence (${r.evidence.length})`}
         </button>

@@ -52,7 +52,7 @@ export function ClusterNode({ cluster }: { cluster: AtlasCluster }) {
             <button
               type="button"
               onClick={() => setExpanded((v) => !v)}
-              className="mt-0.5 text-[11px] text-accent hover:underline"
+              className="hit-area mt-0.5 text-[11px] text-accent hover:underline"
             >
               {expanded ? "Less" : "More"}
             </button>

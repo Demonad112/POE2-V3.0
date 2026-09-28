@@ -27,13 +27,13 @@ export function Footer() {
             href="https://github.com/Demonad112/Poe2-endgame"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-ink-dim"
+            className="hit-area hover:text-ink-dim"
           >
             View source
           </a>
           <button
             onClick={handleReset}
-            className="hover:text-danger"
+            className="hit-area hover:text-danger"
           >
             Reset all progress
           </button>

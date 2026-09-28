@@ -35,7 +35,7 @@ export function SourceFlag({ source }: { source: SourceRef }) {
           target="_blank"
           rel="noopener noreferrer"
           title={`Watch the source video at ${link.label}${source.note ? ` — ${source.note}` : ""}`}
-          className="inline-flex items-center gap-0.5 rounded border border-line px-1.5 py-0.5 font-mono text-[10px] text-ink-mute transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--accent)]"
+          className="hit-area inline-flex items-center gap-0.5 rounded border border-line px-1.5 py-0.5 font-mono text-[10px] text-ink-mute transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--accent)]"
         >
           ▶ {link.label}
         </a>

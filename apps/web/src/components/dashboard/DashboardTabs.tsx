@@ -1,5 +1,7 @@
 "use client";
 
+import { ScrollFade } from "@/components/shared/ScrollFade";
+
 /**
  * The dashboard's reference sections, one at a time: Strategies · Bosses ·
  * Builds · Milestones. Stacked, they ran to ~7,300px on a phone.
@@ -61,11 +63,8 @@ export function DashboardTabs() {
 
   return (
     <div>
-      <div
-        role="tablist"
-        aria-label="Dashboard sections"
-        className="sticky top-14 z-10 -mx-4 mb-4 flex gap-1 overflow-x-auto border-b border-line bg-surface/95 px-4 py-2 backdrop-blur-md sm:mx-0 sm:rounded-xl sm:border sm:px-1.5 sm:py-1.5"
-      >
+      <div className="sticky top-14 z-10 -mx-4 mb-4 border-b border-line bg-surface/95 px-4 py-2 backdrop-blur-md sm:mx-0 sm:rounded-xl sm:border sm:px-1.5 sm:py-1.5">
+      <ScrollFade role="tablist" aria-label="Dashboard sections" className="flex gap-1">
         {TABS.map((t) => {
           const active = tab === t.id;
           return (
@@ -84,6 +83,7 @@ export function DashboardTabs() {
             </button>
           );
         })}
+      </ScrollFade>
       </div>
 
       <div role="tabpanel">

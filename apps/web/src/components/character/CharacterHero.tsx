@@ -107,7 +107,7 @@ export function CharacterHero({ analysis }: { analysis: Analysis }) {
                   {r.value}
                 </div>
                 <div className={`mt-1 h-1 rounded-full ${r.capped ? RES_COLOR[r.type] : 'bg-danger'}`} />
-                <div className="mt-1 truncate text-[10px] text-ink-mute">{RES_LABEL[r.type] ?? r.type}</div>
+                <div className="mt-1 text-[10px] whitespace-nowrap text-ink-mute">{RES_LABEL[r.type] ?? r.type}</div>
               </div>
             ))}
           </div>

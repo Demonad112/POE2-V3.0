@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import type { AtlasCluster, Mechanic } from "@/lib/types";
 import { MECHANIC_LABELS } from "@/lib/constants";
 import { Tag } from "@/components/shared/Tag";
+import { ScrollFade } from "@/components/shared/ScrollFade";
 import { ClusterNode } from "./ClusterNode";
 
 const MECHANICS: Mechanic[] = ["abyss", "breach", "expedition", "ritual", "delirium"];
@@ -38,12 +39,12 @@ export function MechanicSubTreeList({ clusters, initial }: { clusters: AtlasClus
 
   return (
     <div>
-      <div className="mb-3 flex gap-1.5 overflow-x-auto rounded-lg border border-line bg-surface-sunken p-1.5">
+      <ScrollFade className="mb-3 flex gap-1.5 rounded-lg border border-line bg-surface-sunken p-1.5">
         {MECHANICS.map((mechanic) => (
           <button
             key={mechanic}
             onClick={() => setActive(mechanic)}
-            className={`shrink-0 rounded-md px-1 py-1 transition-all ${
+            className={`hit-area shrink-0 rounded-md px-1 py-1 transition-all ${
               active === mechanic
                 ? "bg-surface-sunken ring-1 ring-line"
                 : "opacity-50 hover:opacity-80"
@@ -52,7 +53,7 @@ export function MechanicSubTreeList({ clusters, initial }: { clusters: AtlasClus
             <Tag mechanic={mechanic} />
           </button>
         ))}
-      </div>
+      </ScrollFade>
       <p className="mb-3 text-xs leading-relaxed text-ink-mute">
         Priority order for {MECHANIC_LABELS[active]}. Guide-wide rule: don&apos;t
         run this mechanic&apos;s own tablets while questing it — it slows down
