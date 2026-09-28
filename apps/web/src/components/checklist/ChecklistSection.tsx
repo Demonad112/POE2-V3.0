@@ -46,7 +46,7 @@ export function ChecklistSection({
           {complete ? "✓" : index + 1}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-semibold text-ink">{ROADMAP_PHASE_LABELS[phase] ?? phase}</span>
+          <span className="block font-semibold text-balance text-ink">{ROADMAP_PHASE_LABELS[phase] ?? phase}</span>
           <span className="mt-1.5 flex items-center gap-2">
             <span className="h-1 flex-1 overflow-hidden rounded-full bg-surface-sunken">
               <span

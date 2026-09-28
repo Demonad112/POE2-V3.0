@@ -1,5 +1,7 @@
 "use client";
 
+import { ScrollFade } from "@/components/shared/ScrollFade";
+
 /**
  * The Atlas guide, one section at a time: Path · Forks · Mechanics · Late game
  * · Traps. On a phone the old single column was ~7,800px of scrolling; a tab
@@ -77,11 +79,8 @@ export function AtlasGuideTabs() {
 
   return (
     <div>
-      <div
-        role="tablist"
-        aria-label="Atlas guide sections"
-        className="sticky top-14 z-10 -mx-4 mb-4 flex gap-1 overflow-x-auto border-b border-line bg-surface/95 px-4 py-2 backdrop-blur-md sm:mx-0 sm:rounded-xl sm:border sm:px-1.5 sm:py-1.5"
-      >
+      <div className="sticky top-14 z-10 -mx-4 mb-4 border-b border-line bg-surface/95 px-4 py-2 backdrop-blur-md sm:mx-0 sm:rounded-xl sm:border sm:px-1.5 sm:py-1.5">
+      <ScrollFade role="tablist" aria-label="Atlas guide sections" className="flex gap-1">
         {TABS.map((t) => {
           const active = tab === t.id;
           const n = count(t.id);
@@ -103,6 +102,7 @@ export function AtlasGuideTabs() {
             </button>
           );
         })}
+      </ScrollFade>
       </div>
 
       <div role="tabpanel">

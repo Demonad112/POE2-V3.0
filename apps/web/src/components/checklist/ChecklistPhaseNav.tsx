@@ -3,6 +3,7 @@
 import { ROADMAP_PHASE_LABELS } from "@/lib/constants";
 import { phaseAnchor, stepsByPhase } from "@/lib/roadmapOrder";
 import { useChecklistState } from "@/hooks/useChecklistState";
+import { ScrollFade } from "@/components/shared/ScrollFade";
 
 /** Sticky phase jump bar with per-phase counts and the hide-completed toggle. */
 export function ChecklistPhaseNav() {
@@ -13,8 +14,9 @@ export function ChecklistPhaseNav() {
   return (
     <nav
       aria-label="Checklist phases"
-      className="sticky top-14 z-10 -mx-4 flex items-center gap-1.5 overflow-x-auto border-b border-line bg-surface/95 px-4 py-2 backdrop-blur-md sm:mx-0 sm:flex-wrap sm:rounded-xl sm:border"
+      className="sticky top-14 z-10 -mx-4 flex items-center gap-1.5 border-b border-line bg-surface/95 px-4 py-2 backdrop-blur-md sm:mx-0 sm:rounded-xl sm:border"
     >
+      <ScrollFade className="flex min-w-0 flex-1 items-center gap-1.5 sm:flex-wrap">
       {stepsByPhase.map(({ phase, steps }, i) => {
         const count = steps.filter((s) => done.has(s.id)).length;
         const complete = count === steps.length;
@@ -33,7 +35,7 @@ export function ChecklistPhaseNav() {
             }`}
           >
             <span className="font-mono">{complete ? "✓" : i + 1}</span>
-            <span className="hidden max-w-[9rem] truncate md:inline">
+            <span className="hidden whitespace-nowrap md:inline">
               {(ROADMAP_PHASE_LABELS[phase] ?? phase).split(" — ")[0]}
             </span>
             <span className="font-mono text-[10px] opacity-80">
@@ -42,6 +44,7 @@ export function ChecklistPhaseNav() {
           </a>
         );
       })}
+      </ScrollFade>
       <label className="ml-auto flex shrink-0 cursor-pointer items-center gap-1.5 px-1 text-xs whitespace-nowrap text-ink-mute">
         <input
           type="checkbox"

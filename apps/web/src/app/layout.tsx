@@ -8,6 +8,8 @@ import { PatchVersionBanner } from '@/components/layout/PatchVersionBanner'
 import { CommandPalette } from '@/components/layout/CommandPalette'
 import { HashHighlight } from '@/components/layout/HashHighlight'
 import { PersistedStateProvider } from '@/hooks/usePersistedState'
+import { bannerBootstrap } from '@/lib/bannerDismiss'
+import { CURRENT_PATCH } from '@/lib/constants'
 
 // Inter for everything read: close to Geist in feel, and the usual partner
 // for a Garamond. Geist Mono stays for code-like figures.
@@ -49,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
+        <script dangerouslySetInnerHTML={{ __html: bannerBootstrap(CURRENT_PATCH) }} />
       </head>
       <body className={`${inter.variable} ${geistMono.variable} ${garamond.variable} font-sans antialiased`}>
         <ServiceWorker />

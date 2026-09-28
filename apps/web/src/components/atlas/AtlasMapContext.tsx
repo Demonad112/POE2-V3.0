@@ -54,7 +54,7 @@ export function ShowOnTreeButton({ names, label }: { names?: string[]; label: st
       }}
       title="Show on the Atlas tree"
       aria-label={`Show ${label} on the Atlas tree`}
-      className="inline-flex shrink-0 items-center gap-1 rounded-md border border-accent-line/60 bg-accent-soft px-1.5 py-0.5 text-[10px] font-medium text-accent transition-colors hover:bg-accent/20"
+      className="hit-area inline-flex shrink-0 items-center gap-1 rounded-md border border-accent-line/60 bg-accent-soft px-1.5 py-0.5 text-[10px] font-medium text-accent transition-colors hover:bg-accent/20"
     >
       <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="size-3">
         <path

@@ -327,3 +327,39 @@ body {
     }
   }
 }
+
+/* --- Touch targets --------------------------------------------------------
+   Grows the tappable area of a small control to at least 24×24 (WCAG 2.5.8)
+   without changing how it looks: an invisible pseudo-element, centred on the
+   control, receives the taps. */
+@utility hit-area {
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 24px);
+    height: max(100%, 24px);
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Set before paint by the banner bootstrap in layout.tsx, so a dismissed
+   patch banner never flashes. */
+:root[data-banner-dismissed] .patch-banner {
+  display: none;
+}
+
+/* --- Scroll hints ---------------------------------------------------------
+   A strip that scrolls sideways fades out at whichever edge has more to
+   show. ScrollFade sets the attributes. */
+[data-scroll-fade][data-overflow-end] {
+  mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+}
+[data-scroll-fade][data-overflow-start] {
+  mask-image: linear-gradient(90deg, transparent, #000 2rem);
+}
+[data-scroll-fade][data-overflow-start][data-overflow-end] {
+  mask-image: linear-gradient(90deg, transparent, #000 2rem, #000 calc(100% - 2rem), transparent);
+}

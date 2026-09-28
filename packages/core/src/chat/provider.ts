@@ -72,21 +72,21 @@ export const PROVIDERS: Readonly<Record<ProviderId, ProviderSpec>> = Object.free
   gemini: {
     id: 'gemini',
     label: 'Google Gemini',
-    defaultModel: 'gemini-2.0-flash',
+    defaultModel: 'gemini-3.8-flash',
     keyUrl: 'https://aistudio.google.com/apikey',
     hasFreeTier: true,
   },
   openai: {
     id: 'openai',
     label: 'OpenAI',
-    defaultModel: 'gpt-4o-mini',
+    defaultModel: 'gpt-6-luna',
     keyUrl: 'https://platform.openai.com/api-keys',
     hasFreeTier: false,
   },
   anthropic: {
     id: 'anthropic',
     label: 'Anthropic',
-    defaultModel: 'claude-sonnet-4-5',
+    defaultModel: 'claude-sonnet-5',
     keyUrl: 'https://console.anthropic.com/settings/keys',
     hasFreeTier: false,
   },
@@ -180,7 +180,6 @@ export async function chat(request: ChatRequest, config: ChatConfig): Promise<st
               role: m.role === 'assistant' ? 'model' : 'user',
               parts: [{ text: m.content }],
             })),
-            generationConfig: { temperature: 0.2 },
           }),
         }),
         timeoutMs,
@@ -202,7 +201,9 @@ export async function chat(request: ChatRequest, config: ChatConfig): Promise<st
           headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
           body: JSON.stringify({
             model,
-            temperature: 0.2,
+            // Current OpenAI models reason; low effort suits short, grounded
+            // answers and keeps latency inside the timeout.
+            reasoning_effort: 'low',
             messages: [{ role: 'system', content: request.system }, ...messages],
           }),
         }),
@@ -227,7 +228,16 @@ export async function chat(request: ChatRequest, config: ChatConfig): Promise<st
             // Required for a browser to call the API directly at all.
             'anthropic-dangerous-direct-browser-access': 'true',
           },
-          body: JSON.stringify({ model, max_tokens: 2048, temperature: 0.2, system: request.system, messages }),
+          // No temperature: current Claude models reject sampling parameters.
+          // Thinking is on by default and spends from max_tokens, so the cap
+          // leaves room for it, and low effort keeps short answers quick.
+          body: JSON.stringify({
+            model,
+            max_tokens: 8192,
+            output_config: { effort: 'low' },
+            system: request.system,
+            messages,
+          }),
         }),
         timeoutMs,
         'Anthropic',
