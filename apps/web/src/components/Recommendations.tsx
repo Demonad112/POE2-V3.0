@@ -137,7 +137,7 @@ export function Recommendations({ report }: { report: RecommendationReport }) {
       {report.buildIsSound ? (
         <p className="card rounded-xl px-4 py-5 text-sm leading-relaxed text-good">{report.summary}</p>
       ) : (
-        <ul className="space-y-2.5">
+        <ul className="grid gap-2.5 lg:grid-cols-2 lg:items-start">
           {actionable.map((r, i) => (
             <Card key={r.id} r={r} rank={i + 1} />
           ))}
@@ -147,7 +147,7 @@ export function Recommendations({ report }: { report: RecommendationReport }) {
       {questions.length ? (
         <div className="mt-5">
           <h3 className="mb-2 text-xs font-medium tracking-wide text-ink-dim uppercase">Worth checking</h3>
-          <ul className="space-y-3">
+          <ul className="grid gap-2.5 lg:grid-cols-2 lg:items-start">
             {questions.map((r) => (
               <Card key={r.id} r={r} rank={0} />
             ))}

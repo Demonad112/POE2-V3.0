@@ -21,13 +21,21 @@ interface AtlasMapContextValue {
   clear: () => void
 }
 
+/** True when at least 60% of the element's height is on screen (the sticky desktop map). */
+function mostlyInView(el: HTMLElement): boolean {
+  const r = el.getBoundingClientRect()
+  const visible = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0)
+  return r.height > 0 && visible / r.height >= 0.6
+}
+
 const Ctx = createContext<AtlasMapContextValue | null>(null)
 
 export function AtlasMapProvider({ children }: { children: ReactNode }) {
   const [request, setRequest] = useState<FocusRequest | null>(null)
   const focus = useCallback((names: string[], label?: string) => {
     setRequest({ names, label: label ?? names.join(', '), nonce: Date.now() })
-    document.getElementById('atlas-map')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const map = document.getElementById('atlas-map')
+    if (map && !mostlyInView(map)) map.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [])
   const clear = useCallback(() => setRequest(null), [])
   const value = useMemo(() => ({ request, focus, clear }), [request, focus, clear])
