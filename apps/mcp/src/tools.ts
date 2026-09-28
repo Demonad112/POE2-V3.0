@@ -704,63 +704,12 @@ export const TOOLS: ToolDef[] = [
   },
 
   {
-    name: 'poe2_suggest_tree_routes',
-    title: 'Suggest passive routes for a stat',
-    description:
-      'Find the cheapest unallocated passive nodes granting a stat, with the real point cost and the exact route from ' +
-      'the character’s current tree. Ranked by value per point. This reports what a node costs and what it prints — ' +
-      'it does not claim a node is the right choice, since that depends on where the build is heading.',
-    inputSchema: {
-      stat: z.string().describe('Stat key, e.g. chaosResistance, coldResistance, life, energyShield, armour, evasionRating.'),
-      maxCost: z.number().int().min(1).max(10).optional().describe('Maximum passive points to spend. Default 4.'),
-      notablesOnly: z.boolean().optional().describe('Only notables and keystones. Default false.'),
-      limit: z.number().int().min(1).max(20).optional().describe('Maximum routes. Default 5.'),
-    },
-    annotations: READ_ONLY,
-    handler: (args) => {
-      const { analysis } = requireCharacter()
-      const stat = String(args.stat)
-
-      const options: { maxCost: number; limit: number; notablesOnly?: boolean } = {
-        maxCost: Number(args.maxCost ?? 4),
-        limit: Number(args.limit ?? 5),
-      }
-      if (typeof args.notablesOnly === 'boolean') options.notablesOnly = args.notablesOnly
-
-      const routes = suggestNodesForStat(passiveTree(), analysis.passives.live, stat, options)
-
-      if (!routes.length) {
-        const supported = supportedStats()
-        if (!supported.includes(stat)) {
-          throw new Error(`"${stat}" is not a stat this can search for. Supported: ${supported.join(', ')}.`)
-        }
-        return {
-          stat,
-          routes: [],
-          note: `No unallocated node granting ${stat} is within ${options.maxCost} passive points. Raise maxCost to widen the search, bearing in mind that a distant route is rarely good advice.`,
-        }
-      }
-
-      return {
-        stat,
-        routes: routes.map((r) => ({
-          node: { id: r.node.id, name: r.node.name, stats: r.node.stats },
-          cost: r.cost,
-          grants: r.matchedStat,
-          valuePerPoint: r.valuePerPoint,
-          path: r.path.map((n) => ({ id: n.id, name: n.name })),
-        })),
-      }
-    },
-  },
-
-  {
     name: 'poe2_export_pob_with_tree',
     title: 'Export a Path of Building code with a modified tree',
     description:
       'Apply passive tree changes to the loaded character’s Path of Building export and return a new code, ready to ' +
       'paste into Path of Building. Only the tree is rewritten; items, gems, config and calc settings are preserved ' +
-      'byte-for-byte, because this project does not model them. Combine with poe2_suggest_tree_routes to try a route ' +
+      'byte-for-byte, because this project does not model them. Use it to try a tree change ' +
       'out in Path of Building’s own engine.',
     inputSchema: {
       allocate: z.array(z.number().int()).optional().describe('Node ids to allocate, on top of the current tree.'),
@@ -1142,7 +1091,7 @@ export const TOOLS: ToolDef[] = [
       'the shortest route. Says explicitly whether the tree was restored — a failed restore leaves your Path of ' +
       'Building window modified.',
     inputSchema: {
-      nodeId: z.number().int().describe('Passive node id to test. Get candidates from poe2_suggest_tree_routes.'),
+      nodeId: z.number().int().describe('Passive node id to test. Get candidates from poe2_pob_rank_nodes with forStat, or from the tree itself.'),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     handler: async (args) => {
@@ -1183,8 +1132,8 @@ export const TOOLS: ToolDef[] = [
     title: 'Rank passive nodes by measured value',
     description:
       'Simulate each candidate passive node in the running Path of Building and rank them by the measured change per ' +
-      'point spent. This is the difference between a suggestion and an answer: poe2_suggest_tree_routes ranks by what ' +
-      'a node’s text says it grants, which cannot know what that is worth on this particular build. Rank by any stat ' +
+      'point spent. A node’s text says what it grants, not what that is worth on this ' +
+      'particular build; the simulation measures it. Rank by any stat ' +
       'Path of Building reports — TotalDPS by default, or Life, Armour, EnergyShield and so on. Candidates come ' +
       'either from explicit node ids, or from a stat to search the tree for. The tree is restored after each node, ' +
       'and the run stops rather than continue measuring against a build it could not restore.',
@@ -1193,7 +1142,7 @@ export const TOOLS: ToolDef[] = [
       forStat: z
         .string()
         .optional()
-        .describe('Find candidates granting this stat, e.g. "chaosResistance". Uses the same search as poe2_suggest_tree_routes.'),
+        .describe('Find candidates granting this stat, e.g. "chaosResistance". Candidates are the cheapest reachable nodes whose text grants it.'),
       metric: z.string().optional().describe('Path of Building stat to rank by. Default TotalDPS.'),
       maxCandidates: z.number().int().optional().describe('Cap the number simulated. Default 6; each one costs a round trip.'),
       maxCost: z.number().int().optional().describe('With forStat: the most passive points a candidate may cost to reach. Default 4.'),
@@ -1214,8 +1163,8 @@ export const TOOLS: ToolDef[] = [
         })
         if (!suggestions.length) {
           throw new Error(
-            `No reachable nodes grant "${args.forStat}" within the cost limit. Try a higher maxCost, or check the ` +
-              'stat name against poe2_suggest_tree_routes.',
+            `No reachable nodes grant "${args.forStat}" within the cost limit. Try a higher maxCost, or one of: ` +
+              `${supportedStats().join(', ')}.`,
           )
         }
         candidates = suggestions.map((s) => ({ id: s.node.id, name: s.node.name }))

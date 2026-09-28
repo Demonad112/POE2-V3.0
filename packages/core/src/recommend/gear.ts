@@ -284,7 +284,7 @@ export function gearRecommendations({ items, defense, tiers }: GearRecommendatio
       rationale:
         `${best.replace.reason} ` +
         (needed !== null
-          ? `${needed} swap${needed === 1 ? '' : 's'} of this kind covers the ${shortfall.shortfall}% ${shortfall.type} shortfall; ${usable.length} are available.`
+          ? `${needed} swap${needed === 1 ? '' : 's'} of this kind ${needed === 1 ? 'covers' : 'cover'} the ${shortfall.shortfall}% ${shortfall.type} shortfall; ${usable.length} are available.`
           : `All ${usable.length} available swaps together fall short of the ${shortfall.shortfall}% needed, so ${shortfall.type} also wants a source outside these items.`),
       impact: {
         stat: `${shortfall.type}Resistance`,

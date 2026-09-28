@@ -3,8 +3,18 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import { OPEN_SEARCH_EVENT } from "./CommandPalette";
+
+const noSubscribe = () => () => {};
+/** "⌘K" on Apple devices, "Ctrl K" elsewhere. The static HTML says "Ctrl K". */
+function useShortcutLabel() {
+  return useSyncExternalStore(
+    noSubscribe,
+    () => (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? "⌘K" : "Ctrl K"),
+    () => "Ctrl K"
+  );
+}
 
 function ChecklistIcon() {
   return (
@@ -72,6 +82,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
 
 export function NavBar() {
   const pathname = usePathname();
+  const shortcut = useShortcutLabel();
 
   return (
     <nav className="sticky top-0 z-20 flex items-center gap-1 border-b border-accent-line/40 bg-surface/75 px-3 py-2.5 shadow-[0_8px_24px_-16px_rgb(0_0_0/0.6)] backdrop-blur-xl sm:px-4">
@@ -133,7 +144,7 @@ export function NavBar() {
         <span className="hidden sm:inline">Search</span>
         {/* Keyboard hint is noise on touch devices. */}
         <kbd className="hidden rounded border border-line px-1 py-0.5 font-mono text-[10px] text-ink-mute sm:inline">
-          ⌘K
+          {shortcut}
         </kbd>
       </button>
       <ThemeToggle />

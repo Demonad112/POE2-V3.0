@@ -15,6 +15,8 @@
 import { useEffect } from 'react'
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
+/** Changes whenever the cached data files do — see next.config.ts. */
+const DATA_VERSION = process.env.NEXT_PUBLIC_DATA_VERSION ?? 'dev'
 
 export function ServiceWorker() {
   useEffect(() => {
@@ -22,7 +24,7 @@ export function ServiceWorker() {
     if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return
 
     navigator.serviceWorker
-      .register(`${BASE}/sw.js`, { scope: `${BASE}/` })
+      .register(`${BASE}/sw.js?v=${DATA_VERSION}`, { scope: `${BASE}/` })
       .catch((err: Error) => console.warn('Offline support unavailable:', err.message))
   }, [])
 

@@ -5,7 +5,7 @@
 
 # Tools
 
-31 tools. 27 are read-only; 4 marked ⚠️ act on a running Path of Building on this machine (`poe2_pob_load_character`, `poe2_pob_simulate_node`, `poe2_pob_simulate_mods`, `poe2_pob_rank_nodes`). Nothing here ever writes to a game account, a file, or poe.ninja.
+30 tools. 26 are read-only; 4 marked ⚠️ act on a running Path of Building on this machine (`poe2_pob_load_character`, `poe2_pob_simulate_node`, `poe2_pob_simulate_mods`, `poe2_pob_rank_nodes`). Nothing here ever writes to a game account, a file, or poe.ninja.
 
 | Tool | Purpose | Parameters |
 |---|---|---|
@@ -26,7 +26,6 @@
 | `poe2_cross_validate` | Compare poe.ninja’s computed stats against Path of Building’s own engine and against poe.ninja’s own breakdown arithmetic. | — |
 | `poe2_search_mods` | Search the game’s item modifier table by stat text or affix name, returning tiers with their real roll ranges, affix names, level requirements and the item classes each modifier can appear on. | `query`, `kind`, `limit` |
 | `poe2_analyze_item_mods` | Place each of an item’s modifier rolls in its tier, show how far each sits from the best possible roll, and check every line against the modifier pool for that item’s class. | `slot`, `mods`, `baseType` |
-| `poe2_suggest_tree_routes` | Find the cheapest unallocated passive nodes granting a stat, with the real point cost and the exact route from the character’s current tree. | `stat`, `maxCost`, `notablesOnly`, `limit` |
 | `poe2_export_pob_with_tree` | Apply passive tree changes to the loaded character’s Path of Building export and return a new code, ready to paste into Path of Building. | `allocate`, `deallocate`, `replace` |
 | `poe2_analyze_gear` | Every modifier on every equipped item, with its affix tier, the roll inside that tier’s range, and what better tiers exist. | `slot`, `includeInactive` |
 | `poe2_find_gear_improvements` | Two kinds of concrete gear change, both grounded in the affix data rather than opinion. | `limit` |
@@ -195,22 +194,11 @@ Place each of an item’s modifier rolls in its tier, show how far each sits fro
 - `mods` *(optional)* — Modifier lines to analyse directly, instead of an equipped item.
 - `baseType` *(optional)* — Base item name for the provided lines, e.g. "Militant Bow". Enables the item-class compatibility check.
 
-### `poe2_suggest_tree_routes`
-
-**Suggest passive routes for a stat**
-
-Find the cheapest unallocated passive nodes granting a stat, with the real point cost and the exact route from the character’s current tree. Ranked by value per point. This reports what a node costs and what it prints — it does not claim a node is the right choice, since that depends on where the build is heading.
-
-- `stat` — Stat key, e.g. chaosResistance, coldResistance, life, energyShield, armour, evasionRating.
-- `maxCost` *(optional)* — Maximum passive points to spend. Default 4.
-- `notablesOnly` *(optional)* — Only notables and keystones. Default false.
-- `limit` *(optional)* — Maximum routes. Default 5.
-
 ### `poe2_export_pob_with_tree`
 
 **Export a Path of Building code with a modified tree**
 
-Apply passive tree changes to the loaded character’s Path of Building export and return a new code, ready to paste into Path of Building. Only the tree is rewritten; items, gems, config and calc settings are preserved byte-for-byte, because this project does not model them. Combine with poe2_suggest_tree_routes to try a route out in Path of Building’s own engine.
+Apply passive tree changes to the loaded character’s Path of Building export and return a new code, ready to paste into Path of Building. Only the tree is rewritten; items, gems, config and calc settings are preserved byte-for-byte, because this project does not model them. Use it to try a tree change out in Path of Building’s own engine.
 
 - `allocate` *(optional)* — Node ids to allocate, on top of the current tree.
 - `deallocate` *(optional)* — Node ids to remove.
@@ -283,7 +271,7 @@ Push the loaded character’s Path of Building export into the running Path of B
 
 Allocate a passive node in the running Path of Building, measure every stat that moved, then put the tree back. The number comes from Path of Building’s own damage engine, so it is measured rather than estimated. Reports the real point cost, which is often more than one: Path of Building auto-paths, taking every node on the shortest route. Says explicitly whether the tree was restored — a failed restore leaves your Path of Building window modified.
 
-- `nodeId` — Passive node id to test. Get candidates from poe2_suggest_tree_routes.
+- `nodeId` — Passive node id to test. Get candidates from poe2_pob_rank_nodes with forStat, or from the tree itself.
 
 ### `poe2_pob_simulate_mods`
 
@@ -297,10 +285,10 @@ Apply modifiers to the running Path of Building as if they came from gear, measu
 
 **Rank passive nodes by measured value**
 
-Simulate each candidate passive node in the running Path of Building and rank them by the measured change per point spent. This is the difference between a suggestion and an answer: poe2_suggest_tree_routes ranks by what a node’s text says it grants, which cannot know what that is worth on this particular build. Rank by any stat Path of Building reports — TotalDPS by default, or Life, Armour, EnergyShield and so on. Candidates come either from explicit node ids, or from a stat to search the tree for. The tree is restored after each node, and the run stops rather than continue measuring against a build it could not restore.
+Simulate each candidate passive node in the running Path of Building and rank them by the measured change per point spent. A node’s text says what it grants, not what that is worth on this particular build; the simulation measures it. Rank by any stat Path of Building reports — TotalDPS by default, or Life, Armour, EnergyShield and so on. Candidates come either from explicit node ids, or from a stat to search the tree for. The tree is restored after each node, and the run stops rather than continue measuring against a build it could not restore.
 
 - `nodeIds` *(optional)* — Node ids to test. Use this or forStat.
-- `forStat` *(optional)* — Find candidates granting this stat, e.g. "chaosResistance". Uses the same search as poe2_suggest_tree_routes.
+- `forStat` *(optional)* — Find candidates granting this stat, e.g. "chaosResistance". Candidates are the cheapest reachable nodes whose text grants it.
 - `metric` *(optional)* — Path of Building stat to rank by. Default TotalDPS.
 - `maxCandidates` *(optional)* — Cap the number simulated. Default 6; each one costs a round trip.
 - `maxCost` *(optional)* — With forStat: the most passive points a candidate may cost to reach. Default 4.
