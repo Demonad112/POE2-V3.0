@@ -52,7 +52,7 @@ const subtreeLabel = (t: string | undefined) =>
 export function AtlasTreeMap() {
   const state = useAtlasTree()
   if (state.status === 'loading') {
-    return <div className="skeleton h-[22rem] rounded-xl sm:h-[29rem]" aria-label="Loading the Atlas tree" />
+    return <div className="skeleton h-[22rem] rounded-xl sm:h-[29rem] lg:h-[calc(100dvh-12rem)] lg:min-h-[24rem]" aria-label="Loading the Atlas tree" />
   }
   if (state.status === 'error') {
     return (
@@ -316,7 +316,7 @@ function AtlasMapCanvas({ atlas }: { atlas: AtlasTree }) {
       <div
         id="atlas-map"
         ref={wrapRef}
-        className="relative h-[22rem] w-full scroll-mt-32 touch-none overflow-hidden rounded-xl border border-line bg-surface-sunken select-none sm:h-[29rem]"
+        className="relative h-[22rem] w-full scroll-mt-32 touch-none overflow-hidden rounded-xl border border-line bg-surface-sunken select-none sm:h-[29rem] lg:h-[calc(100dvh-12rem)] lg:min-h-[24rem]"
       >
         <canvas
           ref={canvasRef}
