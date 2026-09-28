@@ -1,5 +1,6 @@
 'use client'
 
+import { BASE_PATH } from './basePath'
 import { createLocalStore } from './localStore'
 
 /** A character imported from a poe.ninja URL, so it can be re-imported in one tap. */
@@ -14,6 +15,20 @@ export interface RecentCharacter {
 }
 
 const MAX_RECENT = 5
+
+/**
+ * The in-app path that re-imports a poe.ninja character. Without the base
+ * path: Next's <Link> adds that itself. Use `importUrl` for a link that leaves
+ * the app.
+ */
+export function importPath(url: string): string {
+  return `/character/?import=${encodeURIComponent(url)}`
+}
+
+/** The absolute, shareable form of `importPath`, base path included. */
+export function importUrl(url: string, origin: string): string {
+  return `${origin}${BASE_PATH}${importPath(url)}`
+}
 
 export const recentCharacters = createLocalStore<RecentCharacter[]>(
   'poe2-endgame-companion:recent-characters:v1',

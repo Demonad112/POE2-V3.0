@@ -263,4 +263,51 @@ export function latestDiff(
   if (mine.length < 2) return null
   return diffSnapshots(mine[mine.length - 2]!, mine[mine.length - 1]!, resistanceMax)
 }
+/** One figure, side by side for two characters. */
+export interface ComparedMetric {
+  metric: 'level' | 'life' | 'energyShield' | 'pool' | 'fire' | 'cold' | 'lightning' | 'chaos' | 'dps' | 'weakestHit'
+  label: string
+  /** Null when that character's snapshot did not have the figure. */
+  a: number | null
+  b: number | null
+  /** b − a. Null when either side is missing. */
+  delta: number | null
+  /** Which side is ahead; every compared figure is better higher. Null when either side is missing. */
+  ahead: 'a' | 'b' | 'even' | null
+}
+
+// Figures a snapshot records as 0 when poe.ninja did not report them: 0 there
+// means "unknown", not "none", so it must not read as a character being behind.
+const ZERO_IS_UNKNOWN = new Set<ComparedMetric['metric']>(['dps', 'weakestHit', 'level'])
+
+const COMPARED: { metric: ComparedMetric['metric']; label: string }[] = [
+  { metric: 'level', label: 'Level' },
+  { metric: 'life', label: 'Life' },
+  { metric: 'energyShield', label: 'Energy shield' },
+  { metric: 'pool', label: 'Defensive pool' },
+  { metric: 'weakestHit', label: 'Hit that kills' },
+  { metric: 'fire', label: 'Fire resistance' },
+  { metric: 'cold', label: 'Cold resistance' },
+  { metric: 'lightning', label: 'Lightning resistance' },
+  { metric: 'chaos', label: 'Chaos resistance' },
+  { metric: 'dps', label: 'Main skill DPS' },
+]
+
+/**
+ * Two characters' latest snapshots, figure by figure. Raw values only: no
+ * blended score, and a figure one side is missing is shown as missing rather
+ * than as a loss.
+ */
+export function compareSnapshots(a: CharacterSnapshot, b: CharacterSnapshot): ComparedMetric[] {
+  return COMPARED.map(({ metric, label }) => {
+    const read = (s: CharacterSnapshot): number | null =>
+      ZERO_IS_UNKNOWN.has(metric) && s[metric] === 0 ? null : s[metric]
+    const av = read(a)
+    const bv = read(b)
+    const delta = av === null || bv === null ? null : bv - av
+    const ahead = delta === null ? null : delta > 0 ? 'b' : delta < 0 ? 'a' : 'even'
+    return { metric, label, a: av, b: bv, delta, ahead }
+  })
+}
+
 export * from './readiness.js'

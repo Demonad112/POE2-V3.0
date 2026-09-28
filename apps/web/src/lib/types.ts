@@ -281,4 +281,9 @@ export interface ShoppingEntry {
   followUps: string[];
   createdAt: string;
   done: boolean;
+  /**
+   * "draft": rework the item already worn, from a gear-workbench draft.
+   * Absent: a replacement plan (entries saved before drafts existed).
+   */
+  kind?: "draft";
 }
