@@ -9,7 +9,9 @@
  * ## Two different caching strategies, on purpose
  *
  * **Data artifacts — cache first.** They are immutable for a given deploy, so a
- * cache hit is always correct and always faster.
+ * cache hit is always correct and always faster. "For a given deploy" is
+ * enforced: the cache names carry a fingerprint of these files (VERSION below),
+ * so a deploy with new data starts from empty caches.
  *
  * **Everything else — network first, cache as fallback.** The app shell must not
  * go stale: a user on an old cached bundle would see old analysis code against
@@ -23,7 +25,9 @@
  * you loaded — not a stale character presented as fresh.
  */
 
-const VERSION = 'v3'
+// The data fingerprint the page registered this worker with (sw.js?v=…), so
+// new data files mean a new worker and fresh caches. 'v3' only if absent.
+const VERSION = new URL(self.location.href).searchParams.get('v') || 'v3'
 const SHELL_CACHE = `poe2-shell-${VERSION}`
 const DATA_CACHE = `poe2-data-${VERSION}`
 

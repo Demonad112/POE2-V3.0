@@ -255,12 +255,12 @@ function wasteFor(
     const amount = Math.min(overcap, stat.value)
     if (amount <= 0) continue
 
-    const label = isAllEle ? 'all elemental resistances' : `${type} resistance`
+    const label = isAllEle ? 'All elemental resistances' : `${type![0]!.toUpperCase()}${type!.slice(1)} resistance`
     return {
       amount,
       stat: stat.id,
       reason:
-        `${label} is ${overcap}% above the cap, and this mod grants ${stat.value}%. ` +
+        `${label} ${isAllEle ? 'are' : 'is'} ${overcap}% above the cap, and this mod grants ${stat.value}%. ` +
         `At least ${amount}% of it is doing nothing.`,
     }
   }

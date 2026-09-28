@@ -115,8 +115,8 @@ captured and restored, never cleared.
 
 ### Suggested versus measured
 
-`poe2_suggest_tree_routes` ranks nodes by what their text *says* they grant,
-divided by the points to reach them. That is honest, and it is shallow: a node
+A node's text says what it grants, and ranking by that divided by the points
+to reach it is honest but shallow: a node
 printing "+12% increased Physical Damage" can be worth more or less than one
 printing "+15%", depending on everything else on the character. Only the damage
 engine knows which.
@@ -155,7 +155,7 @@ Building runs in CI, so:
 poe2_pob_status
 poe2_load_character       url: <your poe.ninja profile URL>
 poe2_pob_load_character
-poe2_pob_simulate_node    nodeId: <an id from poe2_suggest_tree_routes>
+poe2_pob_simulate_node    nodeId: <a passive node id>
 poe2_pob_rank_nodes       forStat: chaosResistance   metric: ChaosResist
 ```
 
@@ -188,10 +188,10 @@ prove them:
   Whether flat damage in that slot would be worth more depends on where the
   build is heading, so it is stated as a measurement and the choice is left to
   you. The same reason tier upgrades are listed but never ranked.
-- **Whether a passive node is the *right* choice.**
-  `poe2_suggest_tree_routes` reports what a node costs and what it prints,
-  ranked by value per point. Which node suits a build depends on where that
-  build is heading, and that is not something this can measure.
+- **Whether a passive node is the *right* choice.** `poe2_pob_rank_nodes`
+  measures what a node changes in Path of Building, but which node suits a
+  build depends on where that build is heading, and that is not something this
+  can measure.
 - **Where a character ranks among players.** The ladder sample behind
   `poe2_assess_build` is one page of 100 rows, essentially all level 100 —
   poe.ninja's builds search ignores every pagination parameter tried. So it can

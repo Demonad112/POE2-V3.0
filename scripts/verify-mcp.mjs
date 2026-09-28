@@ -349,23 +349,10 @@ if (wrongClass.compatibility?.violations?.length) {
   failures.push('a bow-only mod on an amulet was neither rejected nor reported unknown')
 }
 
-// --- tree routes ------------------------------------------------------------
-const routes = await callTool('poe2_suggest_tree_routes', { stat: 'chaosResistance', maxCost: 4 })
-if (!routes.routes?.length) {
-  failures.push(`no chaos resistance routes found: ${JSON.stringify(routes).slice(0, 200)}`)
-} else {
-  const first = routes.routes[0]
-  if (first.path.length !== first.cost) failures.push('route path length disagrees with its stated cost')
-  if (!/chaos resistance/i.test(first.grants)) failures.push(`route grants wrong stat: ${first.grants}`)
-  console.log(`routes: "${first.node.name}" for ${first.cost} points — ${first.grants}`)
-}
-
-const badStat = await callTool('poe2_suggest_tree_routes', { stat: 'notAStat' })
-if (!badStat.error?.includes('Supported')) failures.push('unknown stat did not list supported stats')
-
 // --- PoB export with a modified tree ---------------------------------------
-const target = routes.routes?.[0]?.path?.[0]?.id
-if (typeof target === 'number') {
+// 51741 is an unallocated "Attribute" node next to this character's tree.
+const target = 51741
+{
   const exported = await callTool('poe2_export_pob_with_tree', { allocate: [target] })
   if (!exported.code || exported.nodeCount?.after !== exported.nodeCount?.before + 1) {
     failures.push(`pob export wrong: ${JSON.stringify(exported).slice(0, 200)}`)
