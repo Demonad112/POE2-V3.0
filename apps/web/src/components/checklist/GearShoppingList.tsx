@@ -41,14 +41,14 @@ export function GearShoppingList() {
                   checked={e.done}
                   onChange={() => toggle(e.id)}
                   className="mt-1 size-4 accent-emerald-500"
-                  aria-label={`Mark the ${e.slotLabel} replacement as found`}
+                  aria-label={`Mark the ${e.slotLabel} ${e.kind === "draft" ? "rework" : "replacement"} as ${e.kind === "draft" ? "done" : "found"}`}
                 />
                 <span className="min-w-0">
                   <span className={`font-medium text-ink ${e.done ? "line-through" : ""}`}>
-                    {e.slotLabel}: a {e.baseType}
+                    {e.kind === "draft" ? `${e.slotLabel}: rework ${e.itemName}` : `${e.slotLabel}: a ${e.baseType}`}
                   </span>
                   <span className="ml-2 text-xs text-ink-mute">
-                    replacing {e.itemName}
+                    {e.kind === "draft" ? e.baseType : `replacing ${e.itemName}`}
                     {e.characterName ? ` on ${e.characterName}` : ""}
                     {e.ilvlNeeded !== null ? ` · item level ${e.ilvlNeeded}+` : ""}
                   </span>
@@ -71,7 +71,7 @@ export function GearShoppingList() {
             ) : null}
             {e.followUps.length ? (
               <div className="mt-2 ml-6 text-xs text-ink-dim">
-                <p className="text-ink-mute">Then, to stay capped:</p>
+                <p className="text-ink-mute">{e.kind === "draft" ? "Changes to make:" : "Then, to stay capped:"}</p>
                 <ol className="list-decimal space-y-0.5 pl-5">
                   {e.followUps.map((f) => (
                     <li key={f}>{f}</li>

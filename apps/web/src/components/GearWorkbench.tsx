@@ -11,8 +11,9 @@
  * it climbs back.
  *
  * A changed or added line counts at the bottom of its range, so a draft that
- * caps here caps in game. The draft is a sketch — nothing is saved until
- * "Plan a full replacement" puts an item on the shopping list.
+ * caps here caps in game. The draft is kept in this browser; "Add draft to
+ * shopping list" snapshots one item's share of it as text, and "Plan a full
+ * replacement" does the same for a new base.
  */
 
 import { useMemo, useState } from 'react'
@@ -44,6 +45,7 @@ import {
 } from '@poe2/core'
 import type { ModTiersState } from '@/lib/useModTiers'
 import { useShoppingList } from '@/hooks/useShoppingList'
+import type { DraftAffix, SlotDraft } from '@/lib/shoppingList'
 import { ReplacementPlanner } from './ReplacementPlanner'
 import { Empty, Panel, Tag } from './ui'
 
@@ -59,6 +61,25 @@ const cap = (s: string) => s[0]!.toUpperCase() + s.slice(1)
 function modText(tiers: ModTiers, modId: string): string {
   const raw = tiers.raw(modId)
   return stripModMarkup(raw?.text ?? raw?.name ?? modId)
+}
+
+/** A drafted affix as the shopping list stores it: tier, the item level it needs, text. */
+function draftAffix(tiers: ModTiers, item: ItemAnalysis, modId: string): DraftAffix {
+  const at = tierOptions(tiers, item, modId).find((o) => o.entry.id === modId)
+  return { tier: at?.entry.tier ?? null, ilvl: at?.entry.ilvl ?? null, text: modText(tiers, modId) }
+}
+
+/** One item's share of the draft, resolved to text, for the shopping list. */
+function slotDraft(tiers: ModTiers, item: ItemAnalysis, draft: GearDraft): SlotDraft {
+  const shown = (m: ItemModAnalysis) => (m.tier !== null ? `T${m.tier} ${m.text}` : m.text)
+  const out: SlotDraft = { slotLabel: item.slotLabel, itemName: item.name, baseType: item.baseType, kept: [], changed: [], added: [] }
+  item.mods.forEach((mod, i) => {
+    const edit = draft.edits[lineKey(item.slotId, i)]
+    if (!edit) out.kept.push(shown(mod))
+    else out.changed.push({ from: shown(mod), to: edit.kind === 'set' ? draftAffix(tiers, item, edit.modId) : null })
+  })
+  for (const a of draft.added) if (a.slotId === item.slotId) out.added.push(draftAffix(tiers, item, a.modId))
+  return out
 }
 
 function tierLabel(tiers: ModTiers, item: ItemAnalysis, modId: string): string {
@@ -347,6 +368,8 @@ function ItemRow({ item, row, saved, shared }: { item: ItemAnalysis; row: Replac
   const [open, setOpen] = useState(false)
   const [picker, setPicker] = useState<{ kind: AffixKind; replacing: number | null } | null>(null)
   const [planning, setPlanning] = useState(false)
+  const [listed, setListed] = useState(false)
+  const shopping = useShoppingList()
 
   const edits = item.mods.filter((_, i) => draft.edits[lineKey(item.slotId, i)]).length
   const added = draft.added.filter((a) => a.slotId === item.slotId)
@@ -481,7 +504,19 @@ function ItemRow({ item, row, saved, shared }: { item: ItemAnalysis; row: Replac
             </p>
           ))}
 
-          <div className="px-1">
+          <div className="flex flex-wrap items-center gap-1.5 px-1">
+            {edits + added.length ? (
+              <button
+                type="button"
+                onClick={() => {
+                  shopping.saveDraft(slotDraft(tiers, item, draft), shared.characterName)
+                  setListed(true)
+                }}
+                className="rounded-md border border-good/50 bg-good/10 px-2.5 py-1 text-[11px] font-medium text-good transition-colors hover:bg-good/20"
+              >
+                {listed ? 'Draft saved — update it' : 'Add draft to shopping list'}
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => setPlanning((v) => !v)}
@@ -490,6 +525,8 @@ function ItemRow({ item, row, saved, shared }: { item: ItemAnalysis; row: Replac
             >
               {planning ? 'Hide replacement plan' : 'Plan a full replacement →'}
             </button>
+          </div>
+          <div className="px-1">
             {planning ? (
               <ReplacementPlanner
                 target={item}

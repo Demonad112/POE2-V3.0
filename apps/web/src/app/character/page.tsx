@@ -18,6 +18,8 @@ import { DpsMatrix } from '@/components/DpsMatrix'
 import { DamageReview } from '@/components/DamageReview'
 import { GearWorkbench } from '@/components/GearWorkbench'
 import { CharacterHero } from '@/components/character/CharacterHero'
+import { CompareCharacters } from '@/components/character/CompareCharacters'
+import { CopyLink } from '@/components/character/CopyLink'
 import { useShoppingList } from '@/hooks/useShoppingList'
 import { attributesFrom } from '@/lib/attributes'
 import { Headroom } from '@/components/Headroom'
@@ -251,6 +253,12 @@ export default function Home() {
         content: <Progress history={history} bare />,
       },
       {
+        id: 'compare',
+        title: 'Compare with another character',
+        summary: 'Side by side with a character you imported before, from saved snapshots',
+        content: <CompareCharacters currentKey={snapshotKey(a.identity)} currentName={a.identity.name} bare />,
+      },
+      {
         id: 'attribution',
         title: 'What each item is holding up',
         summary: `${a.attribution.items.length} item${a.attribution.items.length === 1 ? '' : 's'} attributed`,
@@ -377,6 +385,7 @@ export default function Home() {
         {!busy && analysis ? (
           <div className="space-y-4">
             <CharacterHero analysis={analysis} />
+            {sourceUrl ? <CopyLink url={sourceUrl} name={analysis.identity.name} /> : null}
 
             {analysis.warnings.map((w) => (
               <p key={w} className="rounded-lg border border-warn/40 px-4 py-3 text-xs leading-relaxed text-warn">

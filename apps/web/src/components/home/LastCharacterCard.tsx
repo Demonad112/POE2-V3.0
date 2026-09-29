@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { CharacterSnapshot } from "@poe2/core";
 import { usePersistedState } from "@/hooks/usePersistedState";
-import { recentCharacters } from "@/lib/recentCharacters";
+import { importPath, recentCharacters } from "@/lib/recentCharacters";
 import { useLocalStore } from "@/lib/localStore";
 
 const RES = [
@@ -57,7 +57,7 @@ export function LastCharacterCard() {
   );
   const recent = recents.find((r) => r.key === latest.key);
   const name = recent?.name ?? latest.key.split("/").pop() ?? latest.key;
-  const href = recent ? `/character?import=${encodeURIComponent(recent.url)}` : "/character";
+  const href = recent ? importPath(recent.url) : "/character";
 
   const figures: { label: string; value: number; before?: number; show: boolean }[] = [
     { label: "Life", value: latest.life, before: previous?.life, show: latest.life > 0 },
