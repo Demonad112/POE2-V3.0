@@ -8,7 +8,7 @@
  * the line, not a drop to zero.
  */
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { CharacterSnapshot } from '@poe2/core'
 import { sparkline } from '@/lib/sparkline'
 import { fmt, fmtCompact } from '../ui'
@@ -41,14 +41,27 @@ function Row({ metric, snapshots }: { metric: Metric; snapshots: CharacterSnapsh
   const shown = hover ?? lastIndex
   const delta = firstIndex !== lastIndex ? values[lastIndex]! - values[firstIndex]! : null
 
-  const pick = (e: React.PointerEvent<SVGSVGElement>) => {
+  const nearest = (e: React.PointerEvent<SVGSVGElement>) => {
     const box = e.currentTarget.getBoundingClientRect()
     const x = ((e.clientX - box.left) / box.width) * W
     let best: number | null = null
     spark.points.forEach((p, i) => {
       if (p && (best === null || Math.abs(p.x - x) < Math.abs(spark.points[best]!.x - x))) best = i
     })
-    setHover(best)
+    return best
+  }
+  // Set when a tap has just cleared the reading, so the moves that follow the
+  // same touch don't put it straight back.
+  const cleared = useRef(false)
+  const pick = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (!cleared.current) setHover(nearest(e))
+  }
+  // A finger lifting ends the pointer, so a touch reading would vanish the
+  // moment it could be read. A tap keeps its point; tapping it again clears it.
+  const tap = (e: React.PointerEvent<SVGSVGElement>) => {
+    const best = nearest(e)
+    cleared.current = e.pointerType !== 'mouse' && best === hover
+    setHover(cleared.current ? null : best)
   }
 
   const last = spark.points[lastIndex]
@@ -76,8 +89,14 @@ function Row({ metric, snapshots }: { metric: Metric; snapshots: CharacterSnapsh
         preserveAspectRatio="none"
         className="absolute inset-0 h-full w-full touch-none"
         onPointerMove={pick}
-        onPointerDown={pick}
-        onPointerLeave={() => setHover(null)}
+        onPointerDown={tap}
+        onPointerUp={() => {
+          cleared.current = false
+        }}
+        onPointerLeave={(e) => {
+          cleared.current = false
+          if (e.pointerType === 'mouse') setHover(null)
+        }}
       >
         {spark.segments.map((d) => (
           <path key={d} d={d} fill="none" stroke="var(--ink-mute)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />

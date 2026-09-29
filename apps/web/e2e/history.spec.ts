@@ -28,6 +28,21 @@ test('the Progress panel charts each figure across imports', async ({ page }) =>
   await expect(chart.locator('li')).toHaveCount(4)
   await expect(chart.getByText(/▲ \+400 since/)).toBeVisible()
 
+  if (test.info().project.name === 'mobile') {
+    // A tap reads the nearest import and keeps it after the finger lifts;
+    // tapping the same point again goes back to the latest figure.
+    const life = chart.locator('li').first()
+    const svg = life.locator('svg')
+    const box = (await svg.boundingBox())!
+    const first = new Date('2026-09-01T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    await svg.tap({ position: { x: 2, y: box.height / 2 } })
+    await expect(life.getByText(first, { exact: true })).toBeVisible()
+    await expect(life.getByText(/since/)).toHaveCount(0)
+    await svg.tap({ position: { x: 2, y: box.height / 2 } })
+    await expect(life.getByText(first, { exact: true })).toHaveCount(0)
+    await expect(life.getByText(/▲ \+400 since/)).toBeVisible()
+  }
+
   await panel.getByText('Show as a table').click()
   await expect(panel.getByRole('rowheader')).toHaveCount(3)
 })

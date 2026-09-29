@@ -17,6 +17,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      build-id: ${{ steps.build-id.outputs.id }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,6 +32,9 @@ jobs:
         env:
           NEXT_PUBLIC_NINJA_PROXY_BASE: ${{ vars.NEXT_PUBLIC_NINJA_PROXY_BASE }}
         run: npm run build --workspace @poe2/web
+      - id: build-id
+        # The smoke job waits for Pages to serve this build before testing it.
+        run: echo "id=$(cat apps/web/.next/BUILD_ID)" >> "$GITHUB_OUTPUT"
       - name: Disable Jekyll processing
         run: touch apps/web/out/.nojekyll
       - uses: actions/configure-pages@v5
@@ -46,9 +51,55 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  smoke:
+    # The same Playwright suite CI runs against a local build, pointed at the
+    # live site: catches what only the deployment can break (base path, the
+    # Pages CDN, the service worker, the proxy variable). It runs after the
+    # deploy, so a failure means the live site is already broken; it is a
+    # prompt to fix or revert, not a gate.
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      SITE: ${{ needs.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Wait for Pages to serve this build
+        # The Pages CDN can keep serving the previous HTML for a few minutes.
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "$SITE" | grep -q "${{ needs.build.outputs.build-id }}"; then
+              echo "Live after $i attempt(s)"; exit 0
+            fi
+            sleep 10
+          done
+          echo "Pages is still serving an older build after 5 minutes" && exit 1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Smoke-test the live site
+        env:
+          E2E_BASE_URL: ${{ env.SITE }}
+        run: npm run e2e --workspace @poe2/web
+      - name: Upload the smoke-test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7

@@ -107,13 +107,16 @@ export default function Home() {
   // before then carries an uncorrected pool, and would be followed by a
   // corrected one — two rows for one import, showing a change nobody made.
   const treeSettled = treeState.status === 'ready' || treeState.status === 'error'
-  const history = useCharacterHistory(treeSettled ? analysis : null)
+  const settled = treeSettled ? analysis : null
+  const history = useCharacterHistory(settled)
 
-  // Unlike the history snapshot, a recent-characters row carries no figures
-  // the tree could correct, so it need not wait for the tree.
+  // A recent-characters row carries no figures the tree could correct, but it
+  // is recorded in the same commit as the snapshot anyway: recorded earlier, a
+  // visitor who left in that gap got a recents chip (and a Compare candidate)
+  // with no snapshot behind it, and no "Last character" card on the home page.
   useEffect(() => {
-    if (!sourceUrl || !analysis) return
-    const { identity } = analysis
+    if (!sourceUrl || !settled) return
+    const { identity } = settled
     if (!identity.account || !identity.name) return
     recordRecent({
       url: sourceUrl,
@@ -123,7 +126,7 @@ export default function Home() {
       level: identity.level ?? null,
       at: new Date().toISOString(),
     })
-  }, [sourceUrl, analysis])
+  }, [sourceUrl, settled])
 
   const handleResult = useCallback(async (r: ImportResult) => {
     if (!r.ok) {

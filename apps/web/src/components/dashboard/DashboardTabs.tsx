@@ -11,7 +11,8 @@ import { ScrollFade } from "@/components/shared/ScrollFade";
  */
 
 import { useEffect, useState } from "react";
-import { farmingStrategies } from "@/data/strategies";
+import { TIER_LIST_PATCH, farmingStrategies } from "@/data/strategies";
+import { CURRENT_PATCH } from "@/lib/constants";
 import { pinnacleBosses } from "@/data/bosses";
 import { metaBuilds } from "@/data/metaBuilds";
 import { currencyMilestones } from "@/data/currencyMilestones";
@@ -89,7 +90,13 @@ export function DashboardTabs() {
       <div role="tabpanel">
         {tab === "strategies" ? (
           <>
-            <Intro>Ranked by the 0.5.5 creator tier list. Tap a strategy for its expected return, Atlas setup and source clips.</Intro>
+            <Intro>
+              Ranked by the {TIER_LIST_PATCH} creator tier list.
+              {TIER_LIST_PATCH !== CURRENT_PATCH
+                ? ` Not yet re-checked for ${CURRENT_PATCH}, so treat the ranks as a starting point.`
+                : ""}{" "}
+              Tap a strategy for its expected return, Atlas setup and source clips.
+            </Intro>
             <StrategyTable strategies={farmingStrategies} />
           </>
         ) : null}

@@ -1,6 +1,13 @@
 import type { FarmingStrategy } from "@/lib/types";
 import { patchSource, strategySource, videoSource } from "./sourceMeta";
 
+/**
+ * The patch the tier ranks below were sourced on. Deliberately not
+ * CURRENT_PATCH: bumping the game patch must not relabel an old ranking as
+ * current. Change it only when the tiers themselves are re-sourced.
+ */
+export const TIER_LIST_PATCH = "0.5.5";
+
 export const farmingStrategies: FarmingStrategy[] = [
   {
     id: "abyss-amanamu",
