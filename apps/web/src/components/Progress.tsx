@@ -15,6 +15,7 @@
 import type { CharacterHistory } from '@/lib/useCharacterHistory'
 import type { MetricDelta } from '@poe2/core'
 import { Panel, Tag, fmt } from './ui'
+import { HistoryChart } from './character/HistoryChart'
 
 function when(iso: string): string {
   const date = new Date(iso)
@@ -65,6 +66,7 @@ export function Progress({ history, bare = false }: { history: CharacterHistory;
       }
       bare={bare}
     >
+      <HistoryChart snapshots={snapshots} />
       {!diff ? (
         <p className="max-w-prose text-xs leading-relaxed text-ink-mute">
           {snapshots.length === 0
