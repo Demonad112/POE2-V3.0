@@ -102,10 +102,11 @@ unreachable, keep the current file and note that in PROVENANCE.md.
 These name the patch in text and are not driven by `CURRENT_PATCH`. Update or
 re-source them:
 
-- `apps/web/src/app/page.tsx`: "0.5.5 farming tier list" in the dashboard card.
-- `apps/web/src/components/dashboard/StrategyTable.tsx` and `DashboardTabs.tsx`:
-  "0.5.5 creator tier list". Change them only once the tier list itself is
-  re-sourced for the new patch.
+- `TIER_LIST_PATCH` in `apps/web/src/data/strategies.ts`: the patch the
+  farming tier ranks were sourced on. It labels the home card, the dashboard
+  intro and the tier badges. Change it only once the ranks themselves are
+  re-sourced; until then the dashboard says they are not yet re-checked for
+  the new patch.
 - `apps/web/src/components/AuditPanel.tsx` / `packages/core/src/gear/audit.ts`:
   the `patch-0.5.5` limit source.
 

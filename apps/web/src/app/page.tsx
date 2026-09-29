@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CURRENT_PATCH, LEAGUE_LABEL } from "@/lib/constants";
 import { BASE_PATH } from "@/lib/basePath";
+import { TIER_LIST_PATCH } from "@/data/strategies";
 import { ProgressSummary } from "@/components/home/ProgressSummary";
 import { NextStepCard } from "@/components/checklist/NextStepCard";
 import { LastCharacterCard } from "@/components/home/LastCharacterCard";
@@ -45,7 +46,7 @@ const CARDS = [
     href: "/dashboard",
     title: "Farming Dashboard",
     description:
-      "0.5.5 farming tier list, a quick strategy-picker quiz, pinnacle boss requirements, and current meta builds.",
+      `${TIER_LIST_PATCH} farming tier list, a quick strategy-picker quiz, pinnacle boss requirements, and current meta builds.`,
     icon: (
       <>
         <rect x="3.5" y="3.5" width="7" height="8" rx="1.2" stroke="currentColor" strokeWidth="1.4" />

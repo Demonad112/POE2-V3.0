@@ -6,11 +6,16 @@ import { defineConfig, devices } from '@playwright/test'
  *
  * The base path mirrors next.config.ts: CI builds under the repository name,
  * so the served site must live there too or every asset 404s.
+ *
+ * E2E_BASE_URL runs the same suite against a deployed site instead (the
+ * post-deploy smoke run in .github/workflows/deploy.yml): no local server, and
+ * the fixtures let that host through.
  */
 const isCI = process.env.GITHUB_ACTIONS === 'true'
 const repo = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? ''
 const basePath = isCI && repo ? `/${repo}` : ''
 const port = 4321
+const deployed = process.env.E2E_BASE_URL
 
 export default defineConfig({
   testDir: './e2e',
@@ -19,17 +24,19 @@ export default defineConfig({
   retries: 0,
   reporter: isCI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: `http://localhost:${port}${basePath}/`,
+    baseURL: deployed ?? `http://localhost:${port}${basePath}/`,
     trace: 'retain-on-failure',
   },
   projects: [
     { name: 'mobile', use: { ...devices['Pixel 7'], browserName: 'chromium' } },
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
   ],
-  webServer: {
-    command: 'node e2e/serve.mjs',
-    url: `http://localhost:${port}${basePath}/`,
-    reuseExistingServer: !isCI,
-    env: { E2E_BASE_PATH: basePath, E2E_PORT: String(port) },
-  },
+  webServer: deployed
+    ? undefined
+    : {
+        command: 'node e2e/serve.mjs',
+        url: `http://localhost:${port}${basePath}/`,
+        reuseExistingServer: !isCI,
+        env: { E2E_BASE_PATH: basePath, E2E_PORT: String(port) },
+      },
 })

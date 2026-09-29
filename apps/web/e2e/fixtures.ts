@@ -3,12 +3,18 @@ import { resolve } from 'node:path'
 import { test as base, expect } from '@playwright/test'
 
 /**
- * Every test runs offline: requests leaving localhost are refused, except the
- * character proxy, which answers with the captured fixture the core tests use.
+ * Every test runs offline: requests leaving the site under test are refused,
+ * except the character proxy, which answers with the captured fixture the core
+ * tests use. The site is localhost unless E2E_BASE_URL points the suite at a
+ * deployment (the post-deploy smoke run), whose host is then let through.
  * Console errors and uncaught exceptions fail the test.
  */
 // Playwright runs from apps/web (where its config lives).
 const character = readFileSync(resolve('../../packages/core/test/fixtures/athrynas-v43.json'))
+
+const siteHost = process.env.E2E_BASE_URL ? new URL(process.env.E2E_BASE_URL).host : 'localhost'
+const offsite = (url: URL) =>
+  (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname !== 'localhost' && url.host !== siteHost
 
 export const PROFILE_URL = 'https://poe.ninja/poe2/profile/Demonad112-2589/runesofaldur/character/Athrynas'
 
@@ -21,7 +27,7 @@ export const test = base.extend<{ errors: string[] }>({
         // Refused external requests log as failed loads; those are the test's doing.
         if (m.type() === 'error' && !/Failed to load resource|net::ERR_FAILED/.test(m.text())) errors.push(m.text())
       })
-      await page.route(/^https?:\/\/(?!localhost)/, async (route) => {
+      await page.route(offsite, async (route) => {
         const url = route.request().url()
         if (url.includes('/api/character')) {
           await route.fulfill({ status: 200, contentType: 'application/json', body: character })

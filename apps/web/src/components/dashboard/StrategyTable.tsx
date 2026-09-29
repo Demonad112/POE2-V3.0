@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { FarmingStrategy } from "@/lib/types";
 import { Tag } from "@/components/shared/Tag";
 import { SourceFlag } from "@/components/shared/SourceFlag";
+import { TIER_LIST_PATCH } from "@/data/strategies";
 
 type SortKey = "rank" | "investment" | "risk";
 const TIER_ORDINAL: Record<string, number> = { low: 0, medium: 1, high: 2 };
@@ -18,7 +19,7 @@ export const STRATEGY_TIER_STYLES: Record<string, string> = {
 export function StrategyTierBadge({ tier }: { tier?: string }) {
   return (
     <span
-      title={tier ? `${tier} tier on the 0.5.5 creator tier list` : "Not ranked by a 0.5.5 source"}
+      title={tier ? `${tier} tier on the ${TIER_LIST_PATCH} creator tier list` : `Not ranked by a ${TIER_LIST_PATCH} source`}
       className={`inline-flex size-6 shrink-0 items-center justify-center rounded border font-mono text-xs font-bold ${
         tier ? STRATEGY_TIER_STYLES[tier] : "border-line text-ink-mute"
       }`}

@@ -38,7 +38,7 @@ export function CompareCharacters({ currentKey, currentName, bare = false }: { c
       {!mine || !other || !theirs ? (
         <p className="max-w-prose text-xs leading-relaxed text-ink-mute">
           {others.length === 0
-            ? 'Import another character from poe.ninja and it can be compared here.'
+            ? 'Import another character from poe.ninja, or open a link someone shared, and it can be compared here.'
             : 'This character has no saved snapshot yet — it is recorded once the passive tree has loaded.'}
         </p>
       ) : (
