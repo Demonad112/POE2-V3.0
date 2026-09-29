@@ -1,6 +1,7 @@
 # Data provenance
 
-This file covers generated game data. The hand-written endgame guide content
+This file covers generated game data. For the step-by-step patch-day
+checklist, see [`docs/DATA-REFRESH.md`](../../docs/DATA-REFRESH.md). The hand-written endgame guide content
 (`apps/web/src/data`) and its source precedence are documented in
 [`docs/GUIDE_CONTENT.md`](../../docs/GUIDE_CONTENT.md).
 

@@ -29,16 +29,19 @@ const repo = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? ''
 const basePath = isCI && repo ? `/${repo}` : ''
 
 /**
- * A fingerprint of the data files the service worker caches cache-first.
+ * A fingerprint of every data file the site ships.
  *
- * The worker keys those caches on this, so a deploy that regenerates the tree
- * or the affix tiers installs a new worker and drops the old copies. With a
- * hand-set version, returning visitors kept stale data until someone
- * remembered to bump it.
+ * The service worker keys its caches on this, so a deploy that regenerates any
+ * of them installs a new worker and drops the old copies. With a hand-set
+ * version, returning visitors kept stale data until someone remembered to bump
+ * it. The atlas tree, bases and PoB skills are fetched network-first today, so
+ * they would refresh anyway; they are hashed too so that a later switch to
+ * cache-first can't quietly serve an old patch. Keep this list in step with
+ * scripts/sync-data.mjs.
  */
 const dataVersion = (() => {
   const hash = createHash('sha1')
-  for (const file of ['passive-tree.json', 'mod-tiers.json', 'monster-stats.json']) {
+  for (const file of ['passive-tree.json', 'mod-tiers.json', 'monster-stats.json', 'atlas-tree.json', 'bases.json', 'pob-skills.json']) {
     hash.update(readFileSync(join(__dirname, '..', '..', 'packages', 'data', 'generated', file)))
   }
   return hash.digest('hex').slice(0, 12)
