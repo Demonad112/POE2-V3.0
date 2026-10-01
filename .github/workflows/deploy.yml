@@ -37,16 +37,19 @@ jobs:
         run: echo "id=$(cat apps/web/.next/BUILD_ID)" >> "$GITHUB_OUTPUT"
       - name: Disable Jekyll processing
         run: touch apps/web/out/.nojekyll
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
         with:
           # This repository is new and has never had Pages turned on, so the
           # first deploy would otherwise fail with "Get Pages site failed".
           # `enablement` turns it on from the workflow instead of requiring a
           # manual visit to Settings first.
           enablement: true
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: apps/web/out
+          # v4+ drops dotfiles by default; keep .nojekyll so the artifact is
+          # the same as before.
+          include-hidden-files: true
 
   deploy:
     needs: build
@@ -58,7 +61,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   smoke:
     # The same Playwright suite CI runs against a local build, pointed at the
@@ -98,7 +101,7 @@ jobs:
         run: npm run e2e --workspace @poe2/web
       - name: Upload the smoke-test report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: live-playwright-report
           path: apps/web/playwright-report
