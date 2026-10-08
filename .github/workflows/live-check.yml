@@ -1,0 +1,28 @@
+name: Live site check
+
+# The post-deploy smoke job only runs when something deploys, so it can't notice
+# the site going away on its own (Pages unconfigured, deploy token revoked).
+# This is the cheap daily version: every page must answer 200.
+on:
+  schedule:
+    - cron: '17 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every page returns 200
+        run: |
+          base="https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}"
+          fail=0
+          for p in "" checklist/ atlas/ dashboard/ character/; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 5 "$base/$p")
+            echo "$code  $base/$p"
+            [ "$code" = 200 ] || fail=1
+          done
+          exit $fail
