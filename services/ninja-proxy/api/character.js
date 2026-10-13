@@ -13,8 +13,8 @@
  * All data handled here is public. There is no auth, no secret, and nothing is
  * stored. Deploy it once and point NEXT_PUBLIC_NINJA_PROXY_BASE at it.
  *
- * Runtime-agnostic: works as a Vercel serverless function as-is. See
- * ../README.md for the Cloudflare Workers variant.
+ * Runs as a Vercel serverless function. Cloudflare Workers is not viable: see
+ * ../README.md.
  */
 
 const NINJA = 'https://poe.ninja'

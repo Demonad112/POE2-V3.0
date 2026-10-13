@@ -85,16 +85,9 @@ Deploy it anywhere that runs a JS function, then point the web app at it.
 
 ### Cloudflare Workers
 
-The handler uses `req.query` / `res.status`. For Workers, wrap it:
-
-```js
-export default {
-  async fetch(request) {
-    const url = new URL(request.url)
-    // ...map url.searchParams to req.query and use Response instead of res
-  },
-}
-```
+Not supported. poe.ninja answers the character `model` and builds `search`
+endpoints with a Cloudflare managed challenge (403) when the request comes from
+Cloudflare Workers egress, so the proxy has to run elsewhere (Vercel here).
 
 ### Wiring it up
 
