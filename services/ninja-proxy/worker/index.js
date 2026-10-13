@@ -9,6 +9,10 @@
  * Vercel also caches on `s-maxage` automatically. Workers does not, so a
  * cacheable 200 is put in the edge cache here — without it every visitor asking
  * for the same ladder would decode a fresh poe.ninja protobuf.
+ *
+ * NOTE: Cloudflare documents the Cache API as a no-op on *.workers.dev. It only
+ * takes effect on a custom domain or zone route. Until one is attached, every
+ * request is served uncached; the code is still correct.
  */
 
 import character from '../api/character.js'
@@ -87,7 +91,15 @@ export async function handle(request, ctx) {
   }
 
   const { res, state } = makeRes()
-  await route({ method: request.method, query: Object.fromEntries(url.searchParams) }, res)
+  try {
+    await route({ method: request.method, query: Object.fromEntries(url.searchParams) }, res)
+  } catch (err) {
+    // Without this an unexpected throw surfaces as a Cloudflare error page with no CORS headers.
+    return new Response(JSON.stringify({ error: `Proxy error: ${err?.message}` }), {
+      status: 500,
+      headers: { ...CORS, 'Content-Type': 'application/json; charset=utf-8' },
+    })
+  }
 
   // A 204 must not carry a body, and every handler ends one with no body set.
   const response = new Response(state.status === 204 ? null : state.body, {
