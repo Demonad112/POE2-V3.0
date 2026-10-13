@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Server-side poe.ninja character fetch with CORS headers. Deployed separately from the monorepo workspaces.",
   "scripts": {
-    "test": "node --test test/ladder.test.mjs"
+    "test": "node --test test/ladder.test.mjs test/worker.test.mjs",
+    "worker:dev": "npx wrangler dev",
+    "worker:deploy": "npx wrangler deploy"
   },
   "engines": {
     "node": ">=20"
