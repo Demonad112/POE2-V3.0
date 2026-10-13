@@ -21,12 +21,29 @@ const garamond = EB_Garamond({ variable: '--font-garamond', subsets: ['latin'], 
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
 
+// Absolute base for the og/twitter image URLs, which crawlers will not resolve
+// relative to the page.
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://poe2-v3-0.pages.dev'
+const title = 'PoE2 Endgame Companion'
+const description =
+  'Path of Exile 2 character analysis grounded in poe.ninja’s own computed data — ranked, quantified, evidence-backed findings — plus an endgame progression checklist, Atlas planner and farming dashboard.'
+const ogImage = { url: `${basePath}/images/og-cover.jpg`, width: 1200, height: 630, alt: title }
+
 export const metadata: Metadata = {
-  title: 'PoE2 Endgame Companion',
-  description:
-    'Path of Exile 2 character analysis grounded in poe.ninja’s own computed data — ranked, quantified, evidence-backed findings — plus an endgame progression checklist, Atlas planner and farming dashboard.',
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
   manifest: `${basePath}/manifest.webmanifest`,
-  icons: { icon: [{ url: `${basePath}/icon.svg`, type: 'image/svg+xml' }] },
+  icons: {
+    icon: [
+      { url: `${basePath}/icon.svg`, type: 'image/svg+xml' },
+      { url: `${basePath}/icon-192.png`, sizes: '192x192', type: 'image/png' },
+      { url: `${basePath}/favicon.ico`, sizes: 'any' },
+    ],
+    apple: [{ url: `${basePath}/apple-touch-icon.png`, sizes: '180x180', type: 'image/png' }],
+  },
+  openGraph: { type: 'website', siteName: title, title, description, images: [ogImage] },
+  twitter: { card: 'summary_large_image', title, description, images: [ogImage.url] },
   applicationName: 'PoE2 Endgame Companion',
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'PoE2 Companion' },
 }
