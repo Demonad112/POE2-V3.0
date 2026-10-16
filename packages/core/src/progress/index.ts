@@ -317,5 +317,6 @@ export function compareSnapshots(a: CharacterSnapshot, b: CharacterSnapshot): Co
   })
 }
 
+export * from './changed.js'
 export * from './readiness.js'
 export * from './migrate.js'

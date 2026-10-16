@@ -64,3 +64,16 @@ Ranked by value per effort.
 3. Item 12 and item 10.
 4. Decide on a worker (item 19) using `pob-worker-design.md`; only then items 13 to 18, in this order: 17, 16, 13/15, 14, 18.
 5. Item 11 once the proxy decodes gear and skill columns.
+
+## D. Additive plan items 5-10 (appended)
+
+All additive: new optional fields or pure functions, unknown stays `null`/`unknown`, no existing output or golden changed. Items 1-4 of the same plan are in their own PR.
+
+| Plan # | Addition | Where | Status | Limits |
+|---|---|---|---|---|
+| 5 | Ailment immunity, freeze exposure | `defense/` | Merged (#39) | Not wired into defence output; no freeze exposure; field names unverified |
+| 6 | Main skill from the export, next to the current primary | `dps` summary | Merged (#40) | Matches skills by name only |
+| 7 | Skills/auras in the inactive weapon set | `model/slots.ts` | Open (#41) | Does not flag a primary skill in the inactive set; payload field unverified |
+| 8 | Mapping / Bossing focus view | `recommend/focus.ts`, `FOCUS_CATEGORY_WEIGHTS` in `thresholds.ts` | Core only | Weights are judgement; no web toggle yet; default order unchanged |
+| 9 | Changed since last report | `progress/changed.ts` over `latestDiff` | Core only | Needs two stored snapshots, else `available: false`; no web panel yet |
+| 10 | Duplicate-family note | `DamageReview.familyNotes` | Core only | Explains why a same-family support is not suggested; the existing filter is unchanged; not shown in the web yet |

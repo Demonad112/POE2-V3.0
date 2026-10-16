@@ -144,3 +144,12 @@ Top five for the PR: B-1, C-1, H-2, A-1/A-2, B-3.
 - Behaviour of a real Path of Building and its addon, including whether a config-input RPC exists.
 - Whether poe.ninja's per-skill `dps` already includes damage over time (B-4).
 - Full `npm audit` including dev dependencies.
+
+## Addendum: additive plan items 5-10
+
+Appended; nothing above is changed. None of these alters gem logic, damage logic, `upgrade/scoring.ts`, existing recommendations or goldens.
+
+- Items 5-7 (ailment immunity, main skill, inactive weapon set): merged or open as separate PRs; payload field names for immunities and weapon sets remain unverified against a live capture.
+- Item 8 `focusView`: re-orders a copy of the recommendations by declared per-category multipliers; the scores themselves are not modified.
+- Item 9 `changedSinceLastReport`: reuses `diffSnapshots` via `latestDiff`; one snapshot gives `available: false`, never an invented baseline.
+- Item 10 `familyNotes`: informational; supports of an already-used family are still excluded from candidates exactly as before.

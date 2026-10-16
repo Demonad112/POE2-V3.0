@@ -19,6 +19,7 @@
  */
 
 import type { ResistanceState } from './defense/index.js'
+import type { RecommendationCategory } from './recommend/types.js'
 
 /**
  * Chaos resistance has no cap-driven breakpoint in PoE2 the way the elements
@@ -121,3 +122,18 @@ export const LEVEL_THIRD_ASCENDANCY = 70
 export const LEVEL_PINNACLE_PUSH = 85
 /** The guide's "5,000+ life" pinnacle gate, read as the combined pool. */
 export const POOL_PINNACLE = 5000
+
+/** Optional view emphasis: which kind of content the reader is preparing for. */
+export type FocusMode = 'mapping' | 'bossing'
+
+/**
+ * Multipliers on a recommendation's own score, per category, for the optional
+ * Mapping / Bossing view. A judgement, not a measurement: bossing leans on
+ * survivability (one hit kills), mapping on damage and efficiency (clear speed).
+ * A category not listed keeps weight 1. The default view applies no focus.
+ */
+export const FOCUS_CATEGORY_WEIGHTS: Readonly<Record<FocusMode, Readonly<Partial<Record<RecommendationCategory, number>>>>> =
+  Object.freeze({
+    mapping: Object.freeze({ damage: 1.25, efficiency: 1.25, survivability: 0.85 }),
+    bossing: Object.freeze({ survivability: 1.25, damage: 1.1, efficiency: 0.85 }),
+  })
