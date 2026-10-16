@@ -17,7 +17,12 @@ export interface MainSkillNote {
   /** poe.ninja's total DPS for the export's main skill, null when it has no damage block. */
   exportMainTotalDps: number | null
   message: string
+  /** How the export's skill was matched to the analyzer's skills; by name only. */
+  basisNote: string
 }
+
+export const MAIN_SKILL_BASIS_NOTE =
+  'Matched by skill name only: the export and the payload share no skill id, so two skills with the same name cannot be told apart.'
 
 export function mainSkillNote(dps: Pick<DpsSummary, 'skills' | 'primary'>, exportMain: string | null): MainSkillNote | null {
   if (!exportMain) return null
@@ -31,5 +36,5 @@ export function mainSkillNote(dps: Pick<DpsSummary, 'skills' | 'primary'>, expor
       : agrees
         ? `The Path of Building export also marks ${exportMain} as the main skill.`
         : `The Path of Building export marks ${exportMain} as the main skill, but the highest-damage skill is ${primary}. The analysis is unchanged and still uses ${primary}.`
-  return { exportMain, primary, agrees, exportMainTotalDps: entry?.totalDps ?? null, message }
+  return { exportMain, primary, agrees, exportMainTotalDps: entry?.totalDps ?? null, message, basisNote: MAIN_SKILL_BASIS_NOTE }
 }
