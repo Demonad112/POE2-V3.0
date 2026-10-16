@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { Cost, Evidence, Recommendation, RecommendationReport } from '@poe2/core'
+import { axisOf, type Cost, type Evidence, type Recommendation, type RecommendationReport } from '@poe2/core'
 import { Tag, fmt } from './ui'
 
 const CATEGORY_TONE = {
@@ -67,6 +67,7 @@ function ImpactBar({ r }: { r: Recommendation }) {
 function Card({ r, rank }: { r: Recommendation; rank: number }) {
   const [open, setOpen] = useState(false)
   const isQuestion = r.category === 'question'
+  const axis = axisOf(r)
 
   return (
     <li className="card rounded-xl p-4">
@@ -78,6 +79,9 @@ function Card({ r, rank }: { r: Recommendation; rank: number }) {
           {isQuestion ? '?' : rank}
         </span>
         <Tag tone={CATEGORY_TONE[r.category]}>{r.category}</Tag>
+        {axis === 'damage' || axis === 'survivability' ? (
+          r.category === 'damage' || r.category === 'survivability' ? null : <Tag>helps {axis}</Tag>
+        ) : null}
         <Tag tone={costTone(r.cost.kind)}>
           {COST_LABEL[r.cost.kind]}
           {r.cost.amount > 0 ? ` · ${r.cost.amount}` : ''}
