@@ -34,6 +34,7 @@ export * from './ninja/url.js'
 export * from './ninja/client.js'
 export * from './ninja/ladder.js'
 
+export * from './cache/key.js'
 export * from './chat/index.js'
 export * from './gear/index.js'
 export * from './gems/index.js'

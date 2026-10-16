@@ -18,9 +18,12 @@
 import type { Analysis } from '../analyze.js'
 import { effectivePool, NO_KEYSTONE_EFFECTS, type KeystoneEffects } from '../keystones/index.js'
 import { isHealthy } from '../thresholds.js'
+import { SNAPSHOT_SCHEMA } from './migrate.js'
 
 /** A compact record of what a character's numbers were at one point in time. */
 export interface CharacterSnapshot {
+  /** Storage schema version. Absent on snapshots written before versioning (schema 1). */
+  schema?: number
   /** ISO timestamp this snapshot was taken. */
   at: string
   /** When poe.ninja last reindexed the character. Null when it did not say. */
@@ -66,6 +69,7 @@ export function toSnapshot(
   const hits = defense.maxHits.map((h) => h.value).filter((v) => v > 0)
 
   return {
+    schema: SNAPSHOT_SCHEMA,
     at,
     updatedUtc: identity.updatedUtc,
     key: snapshotKey(identity),
@@ -229,7 +233,7 @@ export function appendSnapshot(history: CharacterSnapshot[], next: CharacterSnap
   const unchanged =
     last !== undefined &&
     (Object.keys(next) as Array<keyof CharacterSnapshot>)
-      .filter((k) => k !== 'at' && k !== 'updatedUtc')
+      .filter((k) => k !== 'at' && k !== 'updatedUtc' && k !== 'schema')
       .every((k) => last[k] === next[k])
 
   // Return the ORIGINAL array when nothing was recorded, so a caller can detect
@@ -311,3 +315,4 @@ export function compareSnapshots(a: CharacterSnapshot, b: CharacterSnapshot): Co
 }
 
 export * from './readiness.js'
+export * from './migrate.js'

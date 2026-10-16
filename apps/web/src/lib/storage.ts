@@ -1,3 +1,4 @@
+import { migrateSnapshots } from "@poe2/core";
 import type { PersistedState } from "./types";
 
 export const STORAGE_KEY = "poe2-endgame-companion:v1";
@@ -23,16 +24,34 @@ let cache: PersistedState = DEFAULT_STATE;
 let cacheInitialized = false;
 const listeners = new Set<() => void>();
 
-function readFromLocalStorage(): PersistedState {
+/**
+ * Parse a stored payload. Pure, so it can be tested without a window.
+ *
+ * A payload from a different top-level version is still discarded. Character
+ * snapshots are versioned on their own and migrated here, so a change to their
+ * shape never costs the player their checklist or Atlas progress.
+ */
+export function parsePersisted(raw: string | null): PersistedState {
+  if (!raw) return DEFAULT_STATE;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_STATE;
     const parsed = JSON.parse(raw) as PersistedState;
     if (!parsed || parsed.version !== STORAGE_VERSION) return DEFAULT_STATE;
     return {
       ...DEFAULT_STATE,
       ...parsed,
+      character: {
+        ...parsed.character,
+        snapshots: migrateSnapshots(parsed.character?.snapshots).snapshots,
+      },
     };
+  } catch {
+    return DEFAULT_STATE;
+  }
+}
+
+function readFromLocalStorage(): PersistedState {
+  try {
+    return parsePersisted(window.localStorage.getItem(STORAGE_KEY));
   } catch {
     return DEFAULT_STATE;
   }
