@@ -11,7 +11,7 @@
  * didn't report) drops its tile rather than showing a zero.
  */
 
-import { auditSpirit, type Analysis } from '@poe2/core'
+import { auditSpirit, dataAge, type Analysis } from '@poe2/core'
 import { Tag, fmt, fmtCompact } from '@/components/ui'
 
 const RES_LABEL: Record<string, string> = { fire: 'Fire', cold: 'Cold', lightning: 'Light.', chaos: 'Chaos' }
@@ -55,6 +55,7 @@ export function CharacterHero({ analysis }: { analysis: Analysis }) {
   const spirit = auditSpirit(pobStats)
   const spiritTotal = spirit?.total ?? (defense.spirit > 0 ? defense.spirit : null)
   const uncapped = defense.resistances.filter((r) => !r.capped).length
+  const age = dataAge(identity.updatedUtc, new Date())
 
   return (
     <section className="card relative overflow-hidden rounded-2xl border-accent-line/60">
@@ -74,6 +75,10 @@ export function CharacterHero({ analysis }: { analysis: Analysis }) {
             </span>
             {identity.league ? <Tag>{identity.league}</Tag> : null}
             {pobStats ? <Tag tone="good">cross-validated</Tag> : null}
+            <Tag tone={age.stale ? 'danger' : 'default'}>
+              {age.label}
+              {age.stale ? ' · re-import before buying' : ''}
+            </Tag>
           </div>
         </div>
       </div>
