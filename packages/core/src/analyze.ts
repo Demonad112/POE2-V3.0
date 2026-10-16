@@ -20,6 +20,8 @@ import { reconcile, type ReconciliationReport } from './reconcile/index.js'
 import type { ModTiers } from './gear/tiers.js'
 import { decodePobExport, readPlayerStats } from './pob/export.js'
 import { readPobConfig, type PobConfig } from './pob/config.js'
+import { readPobMainSkill } from './pob/main-skill.js'
+import { mainSkillNote } from './dps/main-skill.js'
 import { assessBuild, type BuildAssessment } from './score/index.js'
 import { resolveAllocation, type PassiveTree } from './tree/index.js'
 import type { LadderSummary } from './ninja/ladder.js'
@@ -169,10 +171,12 @@ export async function analyzeCharacter(
 
   let pobStats: Record<string, number> | null = null
   let pobConfig: PobConfig | null = null
+  let exportMain: string | null = null
   if (model.pathOfBuildingExport) {
     try {
       const xml = await decodePobExport(model.pathOfBuildingExport)
       pobStats = readPlayerStats(xml)
+      exportMain = readPobMainSkill(xml)?.name ?? null
       pobConfig = readPobConfig(xml)
     } catch (err) {
       warnings.push(
@@ -182,7 +186,9 @@ export async function analyzeCharacter(
   }
 
   const defense = analyzeDefense(model)
-  const dps = analyzeDps(model)
+  const baseDps = analyzeDps(model)
+  const mainSkill = mainSkillNote(baseDps, exportMain)
+  const dps: DpsSummary = mainSkill ? { ...baseDps, mainSkill } : baseDps
   const passives = normalizePassives(model)
   const items = normalizeItems(model)
   const breakdowns = indexBreakdowns(model)
