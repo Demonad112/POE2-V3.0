@@ -290,6 +290,7 @@ export default function Home() {
             defense={a.defense}
             state={tiersState}
             characterName={a.identity.name}
+            recommendations={a.recommendations.recommendations}
             {...(attributes ? { attributes } : {})}
             bare
           />

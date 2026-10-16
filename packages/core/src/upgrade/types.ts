@@ -7,6 +7,7 @@
  * it cannot be built without it. UI and exporters branch on `source`.
  */
 
+import type { CardWarning } from '../warnings/index.js'
 import type { ScoreResult } from './scoring.js'
 
 /** A measured percent change, a range of them, or an explicit unknown. */
@@ -41,6 +42,8 @@ interface CardBase {
   assumptions: string[]
   rarityLabel: string | null
   score: ScoreResult
+  /** Rule-based cautions; absent when none apply. Never alters `gain` or `score`. */
+  warnings?: CardWarning[]
 }
 
 export interface ObservedCard extends CardBase {
