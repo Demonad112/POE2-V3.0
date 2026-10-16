@@ -28,14 +28,24 @@ const FORMS: Readonly<Record<Ailment, string>> = {
   stun: 'stunned|stun(?:ning)?',
 }
 
-const pattern = (a: Ailment): RegExp => new RegExp(`\\b(?:cannot be|immune to|can't be)\\s+(?:${FORMS[a]})\\b`, 'i')
+// Everything after the immunity phrase, so "Cannot be Frozen or Chilled" counts for both.
+const CLAUSE = /\b(?:cannot be|immune to|can't be|unaffected by)\s+(.*)$/i
+// Conditional or non-player lines never prove an unconditional immunity.
+const NOT_UNCONDITIONAL = /\b(?:while|if|when|during|against|enemies|allies|minions)\b/i
+
+const PATTERNS = Object.fromEntries(AILMENTS.map((a) => [a, new RegExp(`\\b(?:${FORMS[a]})\\b`, 'i')])) as Record<Ailment, RegExp>
+
+const grants = (mod: string, ailment: Ailment): boolean => {
+  if (NOT_UNCONDITIONAL.test(mod)) return false
+  const rest = CLAUSE.exec(mod)?.[1]
+  return rest !== undefined && PATTERNS[ailment].test(rest)
+}
 
 export function ailmentImmunities(items: readonly Pick<EquippedItem, 'slotLabel' | 'name' | 'mods' | 'active'>[]): AilmentStatus[] {
   return AILMENTS.map((ailment): AilmentStatus => {
-    const re = pattern(ailment)
     const sources = items
       .filter((i) => i.active)
-      .flatMap((i) => i.mods.filter((m) => re.test(m)).map((line) => ({ slotLabel: i.slotLabel, itemName: i.name, line })))
+      .flatMap((i) => i.mods.filter((m) => grants(m, ailment)).map((line) => ({ slotLabel: i.slotLabel, itemName: i.name, line })))
     return sources.length
       ? { ailment, status: 'immune', sources }
       : {
