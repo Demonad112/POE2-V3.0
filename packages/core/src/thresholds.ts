@@ -88,6 +88,13 @@ export const DOT_DOMINANT = 0.6
 export const ACCURACY_MIN_GAIN = 3
 
 /**
+ * Hours after which poe.ninja's copy of a character is called out of date.
+ * A judgement, not a measurement: gear swaps made since then are invisible to
+ * the analysis, so older data deserves a re-import before buying anything.
+ */
+export const DATA_AGE_STALE_HOURS = 24
+
+/**
  * The target a resistance is judged against.
  *
  * Elemental resistances use the character's OWN maximum as poe.ninja reports
