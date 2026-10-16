@@ -59,11 +59,15 @@ export function LastCharacterCard() {
   const name = recent?.name ?? latest.key.split("/").pop() ?? latest.key;
   const href = recent ? importPath(recent.url) : "/character";
 
+  // A figure the import did not report is null and is not shown (never as 0).
+  // Rows saved before null existed hold 0 for "unknown", so 0 is hidden too.
+  const figure = (label: string, value: number | null, before: number | null | undefined) =>
+    ({ label, value: value ?? 0, before: before ?? undefined, show: value !== null && value > 0 });
   const figures: { label: string; value: number; before?: number; show: boolean }[] = [
-    { label: "Life", value: latest.life, before: previous?.life, show: latest.life > 0 },
-    { label: "Energy shield", value: latest.energyShield, before: previous?.energyShield, show: latest.energyShield > 0 },
-    { label: "Main skill DPS", value: latest.dps, before: previous?.dps, show: latest.dps > 0 },
-    { label: "Killed by", value: latest.weakestHit, before: previous?.weakestHit, show: latest.weakestHit > 0 },
+    figure("Life", latest.life, previous?.life),
+    figure("Energy shield", latest.energyShield, previous?.energyShield),
+    figure("Main skill DPS", latest.dps, previous?.dps),
+    figure("Killed by", latest.weakestHit, previous?.weakestHit),
   ];
 
   return (
@@ -78,7 +82,7 @@ export function LastCharacterCard() {
       <h2 id="last-character-title" className="mt-1 font-display text-2xl font-semibold text-ink">
         {name}
         <span className="ml-2 font-sans text-sm font-normal text-ink-mute">
-          Level {latest.level}
+          {latest.level === null ? "Level unknown" : `Level ${latest.level}`}
           {recent?.className ? ` ${recent.className}` : ""}
         </span>
       </h2>
@@ -101,12 +105,12 @@ export function LastCharacterCard() {
         {RES.map(([type, label, dot]) => {
           const value = latest[type];
           // 75 is the base cap; a value below it is under cap whatever the maximum.
-          const short = type !== "chaos" && value < 75;
+          const short = type !== "chaos" && value !== null && value < 75;
           return (
             <li key={type} className="flex items-center gap-1.5">
               <span aria-hidden className={`inline-block size-1.5 rounded-[1px] ${dot}`} />
               {label}
-              <span className={`tabular font-semibold ${short ? "text-danger" : "text-ink"}`}>{value}%</span>
+              <span className={`tabular font-semibold ${short ? "text-danger" : "text-ink"}`}>{value === null ? "unknown" : `${value}%`}</span>
             </li>
           );
         })}

@@ -16,31 +16,31 @@
     "resistances": [
       {
         "type": "fire",
-        "value": 0,
+        "value": null,
         "max": 75,
-        "overCap": 0,
-        "underCap": 75
+        "overCap": null,
+        "underCap": null
       },
       {
         "type": "cold",
-        "value": 0,
+        "value": null,
         "max": 75,
-        "overCap": 0,
-        "underCap": 75
+        "overCap": null,
+        "underCap": null
       },
       {
         "type": "lightning",
-        "value": 0,
+        "value": null,
         "max": 75,
-        "overCap": 0,
-        "underCap": 75
+        "overCap": null,
+        "underCap": null
       },
       {
         "type": "chaos",
-        "value": 0,
+        "value": null,
         "max": 75,
-        "overCap": 0,
-        "underCap": 75
+        "overCap": null,
+        "underCap": null
       }
     ]
   },
@@ -74,17 +74,14 @@
     "offenceUnscoredReason": "No ladder sample was available for this league and ascendancy, and this codebase does not carry invented damage thresholds to fall back on.",
     "weaknesses": [
       "critical: Thin defensive pool — 2,400 combined life + energy shield + ward",
-      "critical: Uncapped elemental resistance (Fire 0% of 75%, Cold 0% of 75%, Lightning 0% of 75%)",
-      "warning: Low chaos resistance (0%, against a 30% target)",
       "warning: Little armour or block — leaning on evasion and resistances alone"
     ]
   },
   "recommendations": [
-    "res-fire-under-cap",
-    "res-cold-under-cap",
-    "res-lightning-under-cap",
-    "res-chaos-under-cap",
-    "anoint-unused"
+    "anoint-unused",
+    "weapon-ilvl-lag",
+    "weapon-set-idle",
+    "dps-crit-uninvested"
   ],
   "pobConfigInputCount": 20,
   "warnings": [

@@ -98,7 +98,7 @@ export function targetFor(res: Pick<ResistanceState, 'type' | 'max'>): number {
 }
 
 /** Whether a resistance clears its target. */
-export function isHealthy(res: Pick<ResistanceState, 'type' | 'max' | 'value'>): boolean {
+export function isHealthy(res: Pick<ResistanceState, 'type' | 'max'> & { value: number }): boolean {
   return res.value >= targetFor(res)
 }
 

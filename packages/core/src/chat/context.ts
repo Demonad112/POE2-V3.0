@@ -85,9 +85,11 @@ export function buildChatContext(analysis: Analysis, options: ChatContextOptions
       'Resistances (cap shown; over/under cap stated):',
       ...d.resistances.map(
         (r) =>
-          `  ${r.type}: ${r.value}% of ${r.max}%` +
-          (r.overCap > 0 ? ` (+${r.overCap} over cap — wasted)` : '') +
-          (r.underCap > 0 ? ` (${r.underCap} UNDER cap)` : ''),
+          r.value === null
+            ? `  ${r.type}: unknown (not in the payload)`
+            : `  ${r.type}: ${r.value}% of ${r.max}%` +
+              ((r.overCap ?? 0) > 0 ? ` (+${r.overCap} over cap — wasted)` : '') +
+              ((r.underCap ?? 0) > 0 ? ` (${r.underCap} UNDER cap)` : ''),
       ),
       d.missing.length ? `\nNot present in the payload: ${d.missing.join(', ')}` : null,
     ]

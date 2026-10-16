@@ -32,12 +32,30 @@ const NUMERIC_FIELDS = [
   'passives',
 ] as const
 
+const NULLABLE_FIELDS: ReadonlySet<string> = new Set([
+  'level',
+  'life',
+  'energyShield',
+  'pool',
+  'ehp',
+  'fire',
+  'cold',
+  'lightning',
+  'chaos',
+  'dps',
+  'weakestHit',
+])
+
 function readable(row: unknown): row is Record<string, unknown> {
   if (!row || typeof row !== 'object' || Array.isArray(row)) return false
   const r = row as Record<string, unknown>
   if (typeof r.at !== 'string' || typeof r.key !== 'string' || r.key === '') return false
   if (r.updatedUtc !== null && typeof r.updatedUtc !== 'string') return false
-  return NUMERIC_FIELDS.every((f) => typeof r[f] === 'number' && Number.isFinite(r[f]))
+  // A figure the source did not report is stored as null (never 0), so null is readable
+  // for every field that may be unknown. Legacy rows hold 0 there and are left as written.
+  return NUMERIC_FIELDS.every((f) =>
+    r[f] === null && NULLABLE_FIELDS.has(f) ? true : typeof r[f] === 'number' && Number.isFinite(r[f]),
+  )
 }
 
 export interface SnapshotMigration {

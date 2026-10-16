@@ -16,7 +16,7 @@
  *     resistance" is not a harsh verdict, it is a wrong one.
  */
 
-import type { DefenseSummary } from '../defense/index.js'
+import { knownResistances, type DefenseSummary } from '../defense/index.js'
 import type { DpsSummary } from '../dps/index.js'
 import { effectiveArmour, effectivePool, NO_KEYSTONE_EFFECTS, type KeystoneEffects } from '../keystones/index.js'
 import { bandFor, describeLadderSample, type LadderStat, type LadderSummary } from '../ninja/ladder.js'
@@ -85,7 +85,7 @@ export interface BuildAssessment {
   /** Why offence went unscored, when it did. */
   offenceUnscoredReason: string | null
   /** The keystone-corrected pool the score used, and what it excludes. */
-  pool: { total: number; label: string; excluded: string[] }
+  pool: { total: number | null; label: string; excluded: string[] }
   /** Caveats that qualify the verdict without changing it. */
   caveats: string[]
 }
@@ -140,11 +140,14 @@ export function assessBuild(input: BuildAssessmentInput): BuildAssessment {
   const pool = effectivePool(defense, keystones)
   const poolLabel = `combined ${pool.parts.join(' + ')}`
 
-  if (pool.total > POOL_GOOD) {
-    strengths.push(`Healthy defensive pool (${pool.total.toLocaleString()} ${poolLabel})`)
-  } else if (pool.total < POOL_THIN) {
+  const poolTotal = pool.total
+  if (poolTotal === null) {
+    caveats.push(`The defensive pool is unknown: the payload did not report every part of the ${poolLabel}. It was not graded.`)
+  } else if (poolTotal > POOL_GOOD) {
+    strengths.push(`Healthy defensive pool (${poolTotal.toLocaleString()} ${poolLabel})`)
+  } else if (poolTotal < POOL_THIN) {
     weaknesses.push({
-      text: `Thin defensive pool — ${pool.total.toLocaleString()} ${poolLabel}`,
+      text: `Thin defensive pool — ${poolTotal.toLocaleString()} ${poolLabel}`,
       severity: 'critical',
     })
   }
@@ -155,9 +158,19 @@ export function assessBuild(input: BuildAssessmentInput): BuildAssessment {
   }
 
   // --- Resistances ---------------------------------------------------------
-  const elemental = defense.resistances.filter((r) => r.type !== 'chaos')
+  // An unreported resistance is unknown, not 0: it is neither credited nor
+  // listed as a shortfall, and the caveat says it was not graded.
+  const elementalAll = defense.resistances.filter((r) => r.type !== 'chaos')
+  const elemental = knownResistances({ resistances: elementalAll })
+  const elementalUnknown = elementalAll.filter((r) => r.value === null)
+  if (elementalUnknown.length) {
+    caveats.push(
+      `${elementalUnknown.map((r) => `${r.type[0]!.toUpperCase()}${r.type.slice(1)}`).join(', ')} resistance not in the payload, so it was not graded.`,
+    )
+  }
   const uncapped = elemental.filter((r) => !isHealthy(r))
-  if (elemental.length && uncapped.length === 0) {
+  const allElementalCapped = elemental.length > 0 && elementalUnknown.length === 0 && uncapped.length === 0
+  if (allElementalCapped) {
     strengths.push(
       `All three elemental resistances at their maximum (${elemental.map((r) => `${r.max}%`).join(' / ')})`,
     )
@@ -173,9 +186,11 @@ export function assessBuild(input: BuildAssessmentInput): BuildAssessment {
   const chaos = defense.resistances.find((r) => r.type === 'chaos')
   if (keystones.chaosImmune) {
     strengths.push('Immune to chaos damage and bleeding — chaos resistance is moot')
-  } else if (chaos && chaos.value < CHAOS_CRITICAL) {
+  } else if (chaos && chaos.value === null) {
+    caveats.push('Chaos resistance not in the payload, so it was not graded.')
+  } else if (chaos && chaos.value !== null && chaos.value < CHAOS_CRITICAL) {
     weaknesses.push({ text: `Negative chaos resistance (${chaos.value}%)`, severity: 'critical' })
-  } else if (chaos && chaos.value < CHAOS_TARGET) {
+  } else if (chaos && chaos.value !== null && chaos.value < CHAOS_TARGET) {
     weaknesses.push({
       text: `Low chaos resistance (${chaos.value}%, against a ${CHAOS_TARGET}% target)`,
       severity: 'warning',
@@ -291,12 +306,13 @@ export function assessBuild(input: BuildAssessmentInput): BuildAssessment {
   // --- Score ---------------------------------------------------------------
   // Defence and offence are weighted evenly at 0.5 each.
   let defenceRaw = 0
-  if (pool.total > POOL_GOOD) defenceRaw += 0.3
-  else if (pool.total >= POOL_THIN) defenceRaw += 0.15
-  if (elemental.length && uncapped.length === 0) defenceRaw += 0.15
+  // Unknown parts earn no credit; the caveats above say so.
+  if (poolTotal !== null && poolTotal > POOL_GOOD) defenceRaw += 0.3
+  else if (poolTotal !== null && poolTotal >= POOL_THIN) defenceRaw += 0.15
+  if (allElementalCapped) defenceRaw += 0.15
   // Chaos immunity earns the chaos credit outright — it is strictly better than
   // any resistance value, so scoring it as a miss would penalise it.
-  if (keystones.chaosImmune || (chaos && chaos.value >= CHAOS_TARGET)) defenceRaw += 0.05
+  if (keystones.chaosImmune || (chaos && chaos.value !== null && chaos.value >= CHAOS_TARGET)) defenceRaw += 0.05
   // 0.3 + 0.15 + 0.05 is 0.49999999999999994 in binary floating point, which
   // rendered as a perfect half everywhere it was formatted while comparing as
   // less than one. Rounded once, here, so every figure derived from it agrees.
@@ -314,8 +330,8 @@ export function assessBuild(input: BuildAssessmentInput): BuildAssessment {
   let note: string
   if (uncapped.length) {
     note = 'Uncapped elemental resistances are the biggest thing holding this back.'
-  } else if (pool.total < POOL_THIN) {
-    note = `Resistances are handled — the ${pool.total.toLocaleString()} ${poolLabel} is the limiting factor.`
+  } else if (poolTotal !== null && poolTotal < POOL_THIN) {
+    note = `Resistances are handled — the ${poolTotal.toLocaleString()} ${poolLabel} is the limiting factor.`
   } else if (offence === null && tierRange) {
     note =
       tierRange.worst === tierRange.best

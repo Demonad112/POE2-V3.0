@@ -30,24 +30,25 @@ export interface CharacterSnapshot {
   updatedUtc: string | null
   /** account/name — history is per character, not per browser. */
   key: string
-  level: number
-  life: number
-  energyShield: number
+  /** Null (not 0) for every figure below that the source did not report. */
+  level: number | null
+  life: number | null
+  energyShield: number | null
   ward: number
   armour: number
   evasion: number
   /** Keystone-corrected defensive pool, matching what the assessment used. */
-  pool: number
+  pool: number | null
   /** poe.ninja's averaged effective health pool. Trended, never led with. */
-  ehp: number
-  fire: number
-  cold: number
-  lightning: number
-  chaos: number
-  /** Best hitting skill's total DPS. 0 when none was reported. */
-  dps: number
-  /** Lowest maximum hit taken across damage types; 0 when unknown. */
-  weakestHit: number
+  ehp: number | null
+  fire: number | null
+  cold: number | null
+  lightning: number | null
+  chaos: number | null
+  /** Best hitting skill's total DPS. Null when none was reported. */
+  dps: number | null
+  /** Lowest maximum hit taken across damage types; null when unknown. */
+  weakestHit: number | null
   /** Allocated passives, as poe.ninja counts them. */
   passives: number
 }
@@ -65,7 +66,7 @@ export function toSnapshot(
   keystones: KeystoneEffects = NO_KEYSTONE_EFFECTS,
 ): CharacterSnapshot {
   const { identity, defense, dps, passives } = analysis
-  const res = (type: string): number => defense.resistances.find((r) => r.type === type)?.value ?? 0
+  const res = (type: string): number | null => defense.resistances.find((r) => r.type === type)?.value ?? null
   const hits = defense.maxHits.map((h) => h.value).filter((v) => v > 0)
 
   return {
@@ -73,20 +74,20 @@ export function toSnapshot(
     at,
     updatedUtc: identity.updatedUtc,
     key: snapshotKey(identity),
-    level: identity.level ?? 0,
+    level: identity.level ?? null,
     life: defense.life,
     energyShield: defense.energyShield,
     ward: defense.ward,
     armour: defense.armour,
     evasion: defense.evasion,
     pool: effectivePool(defense, keystones).total,
-    ehp: defense.effectiveHealthPool ?? 0,
+    ehp: defense.effectiveHealthPool,
     fire: res('fire'),
     cold: res('cold'),
     lightning: res('lightning'),
     chaos: res('chaos'),
-    dps: Math.round(dps.primary?.totalDps ?? 0),
-    weakestHit: hits.length ? Math.min(...hits) : 0,
+    dps: dps.primary ? Math.round(dps.primary.totalDps) : null,
+    weakestHit: hits.length ? Math.min(...hits) : null,
     passives: passives.counts.passives ?? passives.mainSelectionLength,
   }
 }
@@ -208,8 +209,10 @@ export function diffSnapshots(
   const newlyCapped: string[] = []
   const newlyUncapped: string[] = []
   for (const { field, type, label } of ELEMENTS) {
-    const before = from[field] as number
-    const after = to[field] as number
+    const before = from[field]
+    const after = to[field]
+    // An unknown figure on either side is not a crossing of the cap.
+    if (typeof before !== 'number' || typeof after !== 'number') continue
     const max = maxFor(resistanceMax, type)
     const wasCapped = isHealthy({ type, value: before, max })
     const isCapped = isHealthy({ type, value: after, max })
@@ -280,8 +283,8 @@ export interface ComparedMetric {
   ahead: 'a' | 'b' | 'even' | null
 }
 
-// Figures a snapshot records as 0 when poe.ninja did not report them: 0 there
-// means "unknown", not "none", so it must not read as a character being behind.
+// Snapshots now record an unreported figure as null. Rows saved before that
+// stored 0 for these three, where 0 meant "unknown", so they are still read so.
 const ZERO_IS_UNKNOWN = new Set<ComparedMetric['metric']>(['dps', 'weakestHit', 'level'])
 
 const COMPARED: { metric: ComparedMetric['metric']; label: string }[] = [
@@ -305,7 +308,7 @@ const COMPARED: { metric: ComparedMetric['metric']; label: string }[] = [
 export function compareSnapshots(a: CharacterSnapshot, b: CharacterSnapshot): ComparedMetric[] {
   return COMPARED.map(({ metric, label }) => {
     const read = (s: CharacterSnapshot): number | null =>
-      ZERO_IS_UNKNOWN.has(metric) && s[metric] === 0 ? null : s[metric]
+      ZERO_IS_UNKNOWN.has(metric) && s[metric] === 0 ? null : (s[metric] ?? null)
     const av = read(a)
     const bv = read(b)
     const delta = av === null || bv === null ? null : bv - av
