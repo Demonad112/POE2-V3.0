@@ -1,0 +1,4 @@
+{
+  "description": "Derived from athrynas-v43: no per-skill damage blocks, so the offence half of the assessment cannot be graded.",
+  "ops": [{ "path": "charModel.skills", "set": [] }]
+}

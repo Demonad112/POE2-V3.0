@@ -1,0 +1,7 @@
+{
+  "description": "Derived from athrynas-v43: defensiveStats reduced to life and energy shield, breakdowns removed. Exercises the partial-payload path. KNOWN ISSUE B1 (docs/analyzer-audit.md): the defence summary reports the absent resistances as 0, which this golden records as current behaviour, not as correct behaviour.",
+  "ops": [
+    { "path": "charModel.defensiveStats", "set": { "life": 1500, "energyShield": 900 } },
+    { "path": "charModel.breakdowns", "delete": true }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "knownIssue": "B1: absent resistances appear as 0 in `defence.resistances`; `holdingUp.resistances` marks them unknown.",
+  "identity": {
+    "name": "Athrynas",
+    "account": "Demonad112#2589",
+    "league": "Runes of Aldur",
+    "level": 86,
+    "className": "Deadeye",
+    "updatedUtc": "2026-07-22T11:08:39.916111Z"
+  },
+  "defence": {
+    "lowestMaximumHit": null,
+    "lowestMaximumHitType": null,
+    "life": 1500,
+    "energyShield": 900,
+    "resistances": [
+      {
+        "type": "fire",
+        "value": 0,
+        "max": 75,
+        "overCap": 0,
+        "underCap": 75
+      },
+      {
+        "type": "cold",
+        "value": 0,
+        "max": 75,
+        "overCap": 0,
+        "underCap": 75
+      },
+      {
+        "type": "lightning",
+        "value": 0,
+        "max": 75,
+        "overCap": 0,
+        "underCap": 75
+      },
+      {
+        "type": "chaos",
+        "value": 0,
+        "max": 75,
+        "overCap": 0,
+        "underCap": 75
+      }
+    ]
+  },
+  "activeSlots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    11
+  ],
+  "primarySkill": {
+    "name": "Ice Shot",
+    "totalDps": 110157
+  },
+  "assessment": {
+    "score": null,
+    "scoreRange": {
+      "min": 0,
+      "max": 0.5
+    },
+    "tier": null,
+    "tierRange": {
+      "worst": "D",
+      "best": "B"
+    },
+    "offenceUnscoredReason": "No ladder sample was available for this league and ascendancy, and this codebase does not carry invented damage thresholds to fall back on.",
+    "weaknesses": [
+      "critical: Thin defensive pool — 2,400 combined life + energy shield + ward",
+      "critical: Uncapped elemental resistance (Fire 0% of 75%, Cold 0% of 75%, Lightning 0% of 75%)",
+      "warning: Low chaos resistance (0%, against a 30% target)",
+      "warning: Little armour or block — leaning on evasion and resistances alone"
+    ]
+  },
+  "recommendations": [
+    "res-fire-under-cap",
+    "res-cold-under-cap",
+    "res-lightning-under-cap",
+    "res-chaos-under-cap",
+    "anoint-unused"
+  ],
+  "pobConfigInputCount": 20,
+  "warnings": [
+    "3 stats disagree between poe.ninja and the attached Path of Building export. See the reconciliation report before trusting those figures."
+  ],
+  "holdingUp": {
+    "resistances": [
+      {
+        "type": "fire",
+        "known": false,
+        "value": null,
+        "max": null,
+        "slack": null,
+        "short": null,
+        "source": "ninja"
+      },
+      {
+        "type": "cold",
+        "known": false,
+        "value": null,
+        "max": null,
+        "slack": null,
+        "short": null,
+        "source": "ninja"
+      },
+      {
+        "type": "lightning",
+        "known": false,
+        "value": null,
+        "max": null,
+        "slack": null,
+        "short": null,
+        "source": "ninja"
+      },
+      {
+        "type": "chaos",
+        "known": false,
+        "value": null,
+        "max": null,
+        "slack": null,
+        "short": null,
+        "source": "ninja"
+      }
+    ],
+    "items": [],
+    "spirit": {
+      "total": 159,
+      "reserved": 80,
+      "unreserved": 79,
+      "unreservedPercent": 49.7
+    },
+    "attributes": [
+      {
+        "attribute": "strength",
+        "have": 47,
+        "required": 45,
+        "headroom": 2,
+        "tight": true
+      },
+      {
+        "attribute": "intelligence",
+        "have": 109,
+        "required": 83,
+        "headroom": 26,
+        "tight": false
+      },
+      {
+        "attribute": "dexterity",
+        "have": 240,
+        "required": 147,
+        "headroom": 93,
+        "tight": false
+      }
+    ],
+    "movementSpeed": null
+  },
+  "cacheKey": "b3699028c765d2387b437757c234a6bfb20e659e6776a47426960ddefcb2f71b"
+}
