@@ -26,6 +26,7 @@ export * from './recommend/index.js'
 export * from './reconcile/index.js'
 export * from './score/index.js'
 export * from './thresholds.js'
+export * from './upgrade/index.js'
 
 export * from './ninja/url.js'
 export * from './ninja/client.js'
