@@ -32,6 +32,7 @@ export * from './types.js'
 export * from './gear.js'
 export * from './offence.js'
 export * from './damage.js'
+export * from './axis.js'
 
 /** Relative cost weights used for ranking. Free work is worth doing first. */
 const COST_WEIGHT: Record<Cost['kind'], number> = {
