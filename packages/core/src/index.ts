@@ -33,6 +33,7 @@ export * from './score/index.js'
 export * from './thresholds.js'
 export * from './trade/query.js'
 export * from './upgrade/index.js'
+export * from './warnings/index.js'
 
 export * from './ninja/url.js'
 export * from './ninja/client.js'
