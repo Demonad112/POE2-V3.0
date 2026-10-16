@@ -12,7 +12,7 @@ import { analyzeDps, type DpsSummary } from './dps/index.js'
 import { indexBreakdowns, type BreakdownIndex } from './model/breakdowns.js'
 import { attributeToItems, type AttributionReport } from './model/attribution.js'
 import { normalizePassives, type PassiveAllocation } from './model/passives.js'
-import { normalizeItems, type EquippedItem } from './model/slots.js'
+import { inactiveSetReport, normalizeItems, type EquippedItem, type InactiveSetReport } from './model/slots.js'
 import { keystoneEffectsOf, NO_KEYSTONE_EFFECTS, type KeystoneEffects } from './keystones/index.js'
 import { gearRecommendations, mergeGearRecommendations, recommend } from './recommend/index.js'
 import type { RecommendationReport } from './recommend/types.js'
@@ -51,6 +51,8 @@ export interface Analysis {
   dps: DpsSummary
   passives: PassiveAllocation
   items: EquippedItem[]
+  /** What sits in the inactive weapon set; informational, nothing here counts towards the build. */
+  inactiveSet: InactiveSetReport
   breakdowns: BreakdownIndex
   /**
    * What each equipped item is holding up, and what the sheet would read
@@ -216,6 +218,7 @@ export async function analyzeCharacter(
     dps,
     passives,
     items,
+    inactiveSet: inactiveSetReport(model),
     breakdowns,
     attribution: attributeToItems(breakdowns, items, defense),
     keystones,
