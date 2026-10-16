@@ -19,7 +19,19 @@ Measured in this session on Node v22.22.0 / npm 10.9.4, after `npm ci`.
 Nothing failed at baseline. README states "374 tests" for core; the actual count is 441, so that figure is stale (finding I-1).
 Static export: `apps/web/out` is 7.1 MB; the largest JS chunk is 228 KB.
 
-After-change counts are in the PR description.
+## After the changes in this branch
+
+| Check | Before | After |
+|---|---|---|
+| Core tests | 441 (30 files) | 496 (38 files) |
+| Web tests | 68 (10 files) | 72 (11 files) |
+| Proxy tests | 17 | 17 |
+| Typecheck, lint, `npm run build` | pass | pass |
+| MCP build, `scripts/verify-mcp.mjs` (30 tools) | not run at baseline | pass |
+| `apps/mcp/TOOLS.md` regeneration | n/a | unchanged |
+| Playwright e2e | not run at baseline | **not verified here**: the preinstalled Chromium does not match the version Playwright expects (`chromium_headless_shell-1248` missing). Not installed, per the environment notes. |
+
+No existing test was edited or removed. New code: `constraints/holding-up.ts` (D-1), `upgrade/` (F-1, F-3, G-1, G-2), `trade/query.ts`, `pob/sensitivity.ts` (C-4), `cache/key.ts` (H-1), `progress/migrate.ts` plus its use in `apps/web/src/lib/storage.ts` (H-2 for snapshots), and `test/golden*` (I-2). Findings not addressed here (B-1 to B-7, A-*, C-1 to C-3, E-1, F-2, H-3, I-1, I-3 to I-5) are left for separate changes, as the audit task asked only for reporting on them.
 
 ## Decisions on ambiguous points
 
