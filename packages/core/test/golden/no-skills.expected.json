@@ -1,0 +1,364 @@
+{
+  "identity": {
+    "name": "Athrynas",
+    "account": "Demonad112#2589",
+    "league": "Runes of Aldur",
+    "level": 86,
+    "className": "Deadeye",
+    "updatedUtc": "2026-07-22T11:08:39.916111Z"
+  },
+  "defence": {
+    "lowestMaximumHit": 3808,
+    "lowestMaximumHitType": "chaos",
+    "life": 1448,
+    "energyShield": 1937,
+    "resistances": [
+      {
+        "type": "fire",
+        "value": 75,
+        "max": 75,
+        "overCap": 24,
+        "underCap": 0
+      },
+      {
+        "type": "cold",
+        "value": 74,
+        "max": 75,
+        "overCap": 0,
+        "underCap": 1
+      },
+      {
+        "type": "lightning",
+        "value": 75,
+        "max": 75,
+        "overCap": 8,
+        "underCap": 0
+      },
+      {
+        "type": "chaos",
+        "value": 18,
+        "max": 75,
+        "overCap": 0,
+        "underCap": 57
+      }
+    ]
+  },
+  "activeSlots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    11
+  ],
+  "primarySkill": null,
+  "assessment": {
+    "score": null,
+    "scoreRange": {
+      "min": 0.15,
+      "max": 0.65
+    },
+    "tier": null,
+    "tierRange": {
+      "worst": "D",
+      "best": "B"
+    },
+    "offenceUnscoredReason": "poe.ninja returned no per-skill damage block for this character. This usually means the profile has not been indexed since the last skill change.",
+    "weaknesses": [
+      "critical: Uncapped elemental resistance (Cold 74% of 75%)",
+      "warning: Low chaos resistance (18%, against a 30% target)",
+      "warning: Little armour or block — leaning on evasion and resistances alone",
+      "warning: 2 one-shot risks — Chaos 3,808, Physical 4,264, against 14,611 at best"
+    ]
+  },
+  "recommendations": [
+    "one-shot-chaos",
+    "res-chaos-under-cap",
+    "res-cold-under-cap",
+    "anoint-unused",
+    "weapon-ilvl-lag"
+  ],
+  "pobConfigInputCount": 20,
+  "warnings": [],
+  "holdingUp": {
+    "resistances": [
+      {
+        "type": "fire",
+        "known": true,
+        "value": 75,
+        "max": 75,
+        "slack": 24,
+        "short": 0,
+        "source": "ninja"
+      },
+      {
+        "type": "cold",
+        "known": true,
+        "value": 74,
+        "max": 75,
+        "slack": 0,
+        "short": 1,
+        "source": "ninja"
+      },
+      {
+        "type": "lightning",
+        "known": true,
+        "value": 75,
+        "max": 75,
+        "slack": 8,
+        "short": 0,
+        "source": "ninja"
+      },
+      {
+        "type": "chaos",
+        "known": true,
+        "value": 18,
+        "max": 75,
+        "slack": 0,
+        "short": 57,
+        "source": "ninja"
+      }
+    ],
+    "items": [
+      {
+        "slot": 1,
+        "holds": [
+          {
+            "stat": "energyShield",
+            "loss": 819,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "ward",
+            "loss": 213,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "life",
+            "loss": 48,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "coldResistance",
+            "loss": 35,
+            "dropsBelowCap": false,
+            "minToKeep": 35
+          },
+          {
+            "stat": "lightningResistance",
+            "loss": 30,
+            "dropsBelowCap": true,
+            "minToKeep": 30
+          },
+          {
+            "stat": "fireResistance",
+            "loss": 16,
+            "dropsBelowCap": true,
+            "minToKeep": 16
+          }
+        ],
+        "anoint": []
+      },
+      {
+        "slot": 2,
+        "holds": [
+          {
+            "stat": "evasionRating",
+            "loss": 328,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "ward",
+            "loss": 209,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          }
+        ],
+        "anoint": []
+      },
+      {
+        "slot": 3,
+        "holds": [
+          {
+            "stat": "evasionRating",
+            "loss": 3984,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "energyShield",
+            "loss": 758,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "ward",
+            "loss": 212,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "coldResistance",
+            "loss": 44,
+            "dropsBelowCap": false,
+            "minToKeep": 44
+          },
+          {
+            "stat": "fireResistance",
+            "loss": 20,
+            "dropsBelowCap": true,
+            "minToKeep": 20
+          }
+        ],
+        "anoint": []
+      },
+      {
+        "slot": 4,
+        "holds": [
+          {
+            "stat": "evasionRating",
+            "loss": 766,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "energyShield",
+            "loss": 187,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "lightningResistance",
+            "loss": 27,
+            "dropsBelowCap": true,
+            "minToKeep": 27
+          }
+        ],
+        "anoint": []
+      },
+      {
+        "slot": 5,
+        "holds": [
+          {
+            "stat": "evasionRating",
+            "loss": 879,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "energyShield",
+            "loss": 171,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "ward",
+            "loss": 72,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          }
+        ],
+        "anoint": []
+      },
+      {
+        "slot": 8,
+        "holds": [
+          {
+            "stat": "lightningResistance",
+            "loss": 27,
+            "dropsBelowCap": true,
+            "minToKeep": 27
+          },
+          {
+            "stat": "fireResistance",
+            "loss": 0,
+            "dropsBelowCap": false,
+            "minToKeep": 0
+          }
+        ],
+        "anoint": []
+      },
+      {
+        "slot": 9,
+        "holds": [
+          {
+            "stat": "lightningResistance",
+            "loss": 22,
+            "dropsBelowCap": true,
+            "minToKeep": 22
+          }
+        ],
+        "anoint": []
+      },
+      {
+        "slot": 11,
+        "holds": [
+          {
+            "stat": "armour",
+            "loss": 207,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "life",
+            "loss": 180,
+            "dropsBelowCap": false,
+            "minToKeep": null
+          },
+          {
+            "stat": "coldResistance",
+            "loss": 40,
+            "dropsBelowCap": false,
+            "minToKeep": 40
+          },
+          {
+            "stat": "fireResistance",
+            "loss": 14,
+            "dropsBelowCap": true,
+            "minToKeep": 14
+          }
+        ],
+        "anoint": []
+      }
+    ],
+    "spirit": {
+      "total": 159,
+      "reserved": 80,
+      "unreserved": 79,
+      "unreservedPercent": 49.7
+    },
+    "attributes": [
+      {
+        "attribute": "strength",
+        "have": 47,
+        "required": 45,
+        "headroom": 2,
+        "tight": true
+      },
+      {
+        "attribute": "intelligence",
+        "have": 109,
+        "required": 83,
+        "headroom": 26,
+        "tight": false
+      },
+      {
+        "attribute": "dexterity",
+        "have": 240,
+        "required": 147,
+        "headroom": 93,
+        "tight": false
+      }
+    ],
+    "movementSpeed": 144
+  },
+  "cacheKey": "0f8abe9408a98d919635596a0de26d6f27781e1b9587d15fb3ef2f0bc3d6c7d5"
+}

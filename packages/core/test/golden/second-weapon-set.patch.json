@@ -1,0 +1,4 @@
+{
+  "description": "Derived from athrynas-v43: the second weapon set is made the live one, so slots 15/16 count and 6/7 do not.",
+  "ops": [{ "path": "charModel.useSecondWeaponSet", "set": true }]
+}

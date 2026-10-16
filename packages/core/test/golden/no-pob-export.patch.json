@@ -1,0 +1,4 @@
+{
+  "description": "Derived from athrynas-v43: the embedded Path of Building export is removed, so reconciliation, PoB config, spirit and attribute headroom are all absent.",
+  "ops": [{ "path": "charModel.pathOfBuildingExport", "delete": true }]
+}
