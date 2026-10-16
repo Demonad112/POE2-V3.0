@@ -68,15 +68,19 @@ function DamageTypes({ d }: { d: DefenseSummary }) {
           const r = res.get(type)
           const color = DMG_VAR[type] ?? 'var(--ink-dim)'
           const physical = type === 'physical'
-          const gauge = r ? (
+          const gauge = r && r.value !== null ? (
             <Gauge fraction={r.value / r.max} text={`${r.value}`} color={color} alert={!r.capped} />
+          ) : r ? (
+            <Gauge fraction={0} text="?" color={color} alert={false} />
           ) : physical && d.physicalDamageReduction !== null ? (
             <Gauge fraction={d.physicalDamageReduction / 100} text={`${d.physicalDamageReduction}`} color={color} alert={false} />
           ) : (
             <Gauge fraction={0} text="—" color={color} alert={false} />
           )
           const note = r
-            ? r.underCap > 0
+            ? r.value === null || r.underCap === null || r.overCap === null
+              ? 'resistance unknown (not in the payload)'
+              : r.underCap > 0
               ? <span className="text-danger">{r.value}/{r.max}% · {r.underCap} under cap</span>
               : <>
                   {r.value}/{r.max}% resist{r.overCap > 0 ? <span className="text-ink-mute"> · {r.overCap} over cap</span> : null}

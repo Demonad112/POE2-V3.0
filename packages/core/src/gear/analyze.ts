@@ -25,7 +25,7 @@
  * project's rule holds: a confident wrong answer is worse than no answer.
  */
 
-import type { DefenseSummary } from '../defense/index.js'
+import { resistanceShortfalls, type DefenseSummary } from '../defense/index.js'
 import type { NinjaItemData } from '../model/types.js'
 import type { EquippedItem } from '../model/slots.js'
 import type { AffixKind, LadderEntry, ModTiers } from './tiers.js'
@@ -446,8 +446,7 @@ export function findResistanceSwaps(
   tiers: ModTiers,
   defense: DefenseSummary,
 ): GearSwap[] {
-  const shortfalls = defense.resistances
-    .filter((r) => r.underCap > 0)
+  const shortfalls = resistanceShortfalls(defense)
     .sort((a, b) => b.underCap - a.underCap)
   if (!shortfalls.length) return []
 
@@ -546,7 +545,7 @@ export function summarizeSwaps(
 ): { stat: string; type: string; shortfall: number; swapsNeeded: number | null; note: string }[] {
   const out = []
 
-  for (const res of defense.resistances.filter((r) => r.underCap > 0)) {
+  for (const res of resistanceShortfalls(defense)) {
     const statId = RESIST_STAT[res.type]
     if (!statId) continue
 

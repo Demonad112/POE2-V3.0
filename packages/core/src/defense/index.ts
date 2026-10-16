@@ -26,13 +26,15 @@ export interface MaxHit {
 
 export interface ResistanceState {
   type: Exclude<DamageType, 'physical'>
-  value: number
+  /** Null when the payload did not report this resistance. Never 0 for unknown. */
+  value: number | null
   max: number
-  /** Points above the cap — wasted, and reallocatable. */
-  overCap: number
-  /** Points below the cap. 0 when capped. */
-  underCap: number
-  capped: boolean
+  /** Points above the cap — wasted, and reallocatable. Null when unknown. */
+  overCap: number | null
+  /** Points below the cap. 0 when capped. Null when the value is unknown. */
+  underCap: number | null
+  /** Null when the value is unknown. */
+  capped: boolean | null
 }
 
 export interface DefenseSummary {
@@ -48,11 +50,13 @@ export interface DefenseSummary {
   maxHits: MaxHit[]
   resistances: ResistanceState[]
 
-  life: number
-  energyShield: number
+  /** Null when the payload did not report it. */
+  life: number | null
+  /** Null when the payload did not report it. */
+  energyShield: number | null
   ward: number
-  /** Pool against chaos: chaos drains ES at 2x, so ES counts half. */
-  chaosRawPool: number
+  /** Pool against chaos: chaos drains ES at 2x, so ES counts half. Null when life or ES is unknown. */
+  chaosRawPool: number | null
 
   armour: number
   /** Physical DR poe.ninja computed, against the hit size it assumed. */
@@ -72,6 +76,23 @@ export interface DefenseSummary {
   spirit: number
   /** Stats the payload omitted entirely, so callers can say what's missing. */
   missing: string[]
+}
+
+/** A resistance whose value the payload reported. */
+export type KnownResistance = ResistanceState & { value: number; overCap: number; underCap: number; capped: boolean }
+
+export function isKnownResistance(r: ResistanceState): r is KnownResistance {
+  return r.value !== null
+}
+
+/** Resistances with a reported value. Unknown ones are excluded, never counted as 0. */
+export function knownResistances(d: Pick<DefenseSummary, 'resistances'>): KnownResistance[] {
+  return d.resistances.filter(isKnownResistance)
+}
+
+/** Known resistances below their cap. An unknown resistance is not a shortfall. */
+export function resistanceShortfalls(d: Pick<DefenseSummary, 'resistances'>): KnownResistance[] {
+  return knownResistances(d).filter((r) => r.underCap > 0)
 }
 
 const MAX_HIT_KEYS: Record<DamageType, keyof NinjaDefensiveStats> = {
@@ -117,21 +138,23 @@ export function analyzeDefense(model: Pick<CharModel, 'defensiveStats'>): Defens
 
   const resistances: ResistanceState[] = (Object.keys(RES_KEYS) as Array<keyof typeof RES_KEYS>).map((type) => {
     const [valueKey, maxKey, overKey] = RES_KEYS[type]
-    const value = num(s, valueKey) ?? 0
+    const value = num(s, valueKey)
     const max = num(s, maxKey) ?? RES_CAP_DEFAULT
-    const overCap = num(s, overKey) ?? 0
+    if (value === null) missing.push(valueKey)
     return {
       type,
       value,
       max,
-      overCap,
-      underCap: Math.max(0, max - value),
-      capped: value >= max,
+      overCap: value === null ? null : (num(s, overKey) ?? 0),
+      underCap: value === null ? null : Math.max(0, max - value),
+      capped: value === null ? null : value >= max,
     }
   })
 
-  const life = num(s, 'life') ?? 0
-  const energyShield = num(s, 'energyShield') ?? 0
+  const life = num(s, 'life')
+  const energyShield = num(s, 'energyShield')
+  if (life === null) missing.push('life')
+  if (energyShield === null) missing.push('energyShield')
 
   // poe.ninja reports lowestMaximumHitTaken directly; prefer it, but fall back
   // to the minimum we computed rather than reporting nothing.
@@ -153,7 +176,7 @@ export function analyzeDefense(model: Pick<CharModel, 'defensiveStats'>): Defens
     life,
     energyShield,
     ward: num(s, 'ward') ?? 0,
-    chaosRawPool: chaosRawPool(life, energyShield),
+    chaosRawPool: life === null || energyShield === null ? null : chaosRawPool(life, energyShield),
 
     armour: num(s, 'armour') ?? 0,
     physicalDamageReduction: typeof physReduction?.value === 'number' ? physReduction.value : null,

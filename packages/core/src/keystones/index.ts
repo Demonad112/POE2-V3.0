@@ -84,13 +84,13 @@ const RULES: Readonly<Record<string, KeystoneRule>> = Object.freeze({
     effects: { chaosImmune: true, lifeIsNegligible: true },
     note: 'Maximum life is 1 and you are immune to chaos damage and bleeding, so chaos resistance is irrelevant and energy shield is your entire pool.',
     verify: (d) =>
-      d.life > 1 ? `maximum life reads ${d.life.toLocaleString()}, but this keystone fixes it at 1` : null,
+      d.life !== null && d.life > 1 ? `maximum life reads ${d.life.toLocaleString()}, but this keystone fixes it at 1` : null,
   },
   'Eldritch Battery': {
     effects: { esNotDefensive: true },
     note: 'All energy shield is converted to mana, so it is not absorbing hits — your defensive pool is life and ward only.',
     verify: (d) =>
-      d.energyShield > 0
+      d.energyShield !== null && d.energyShield > 0
         ? `energy shield reads ${d.energyShield.toLocaleString()}, but this keystone converts all of it to mana`
         : null,
   },
@@ -217,7 +217,8 @@ export function keystoneEffectsOf(
 }
 
 export interface EffectivePool {
-  total: number
+  /** Null when a part that counts toward the pool was not reported. */
+  total: number | null
   /** Pools a keystone converted away, named so the total can be labelled. */
   excluded: string[]
   /** The parts that remain, in the order they are summed. */
@@ -237,21 +238,21 @@ export function effectivePool(
 ): EffectivePool {
   const excluded: string[] = []
   const parts: string[] = []
-  let total = 0
+  let total: number | null = 0
 
   if (effects.lifeIsNegligible) excluded.push('life')
   else {
-    total += defense.life
+    total = defense.life === null || total === null ? null : total + defense.life
     parts.push('life')
   }
 
   if (effects.esNotDefensive) excluded.push('energy shield')
   else {
-    total += defense.energyShield
+    total = defense.energyShield === null || total === null ? null : total + defense.energyShield
     parts.push('energy shield')
   }
 
-  total += defense.ward
+  if (total !== null) total += defense.ward
   parts.push('ward')
 
   return { total, excluded, parts }
