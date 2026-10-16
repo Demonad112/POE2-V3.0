@@ -5,8 +5,8 @@ import type { GearSwap, ItemAnalysis } from './analyze.js'
  * Active slots this analysis found nothing to change on.
  *
  * "Nothing flagged" is not "proven optimal": it means no better tier on the
- * item, no wasted points, no resistance swap and no recommendation named the
- * slot. A slot whose mods could not be graded at all is listed as not
+ * item, no wasted points and no recommendation named the slot (plus no swap in
+ * `swaps`; the web workbench does not pass swaps yet). A slot whose mods could not be graded at all is listed as not
  * evaluated instead, so missing tier data never reads as a clean bill.
  */
 export interface SlotVerdict {
