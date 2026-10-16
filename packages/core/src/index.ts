@@ -11,6 +11,7 @@ export * from './model/passives.js'
 export * from './model/breakdowns.js'
 export * from './model/attribution.js'
 
+export * from './constraints/holding-up.js'
 export * from './defense/index.js'
 export * from './dps/index.js'
 export * from './keystones/index.js'
