@@ -77,6 +77,12 @@ export interface NinjaSkill {
   /** Present on real skills; meta/trigger setups carry only `allGems`. */
   dps?: NinjaSkillDps[]
   allGems?: NinjaGem[]
+  /**
+   * Which weapon set (1 or 2) the skill belongs to. UNVERIFIED: absent from the
+   * recorded capture, which carries no skill-to-weapon-set link at all. Read
+   * only when present; never inferred.
+   */
+  weaponSet?: number
 }
 
 /**
