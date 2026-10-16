@@ -13,6 +13,7 @@ export * from './model/attribution.js'
 
 export * from './constraints/holding-up.js'
 export * from './defense/index.js'
+export * from './defense/ailments.js'
 export * from './dps/index.js'
 export * from './keystones/index.js'
 export * from './pob/export.js'
