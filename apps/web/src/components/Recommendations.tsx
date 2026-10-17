@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { axisOf, type Cost, type Evidence, type Recommendation, type RecommendationReport } from '@poe2/core'
+import { FOCUS_CHOICES, focusOf, type FocusChoice } from '@/lib/characterNotes'
+import { axisOf, focusView, type Cost, type Evidence, type Recommendation, type RecommendationReport } from '@poe2/core'
 import { Tag, fmt } from './ui'
 
 const CATEGORY_TONE = {
@@ -127,16 +128,34 @@ function Card({ r, rank }: { r: Recommendation; rank: number }) {
 }
 
 export function Recommendations({ report }: { report: RecommendationReport }) {
-  const actionable = report.recommendations.filter((r) => r.category !== 'question')
-  const questions = report.recommendations.filter((r) => r.category === 'question')
+  const [focus, setFocus] = useState<FocusChoice>('default')
+  // `default` is focusView(recs, null): the original order, untouched.
+  const ordered = focusView(report.recommendations, focusOf(focus))
+  const actionable = ordered.filter((r) => r.category !== 'question')
+  const questions = ordered.filter((r) => r.category === 'question')
 
   return (
     <section>
-      <div className="mb-2">
-        <h2 className="text-base font-semibold text-ink">Findings</h2>
-        <p className="mt-0.5 text-xs text-ink-dim">
-          Ranked by gain per unit of cost. Every claim traces to data in the character payload.
-        </p>
+      <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h2 className="text-base font-semibold text-ink">Findings</h2>
+          <p className="mt-0.5 text-xs text-ink-dim">
+            Ranked by gain per unit of cost. Every claim traces to data in the character payload.
+          </p>
+        </div>
+        <div role="group" aria-label="Focus" className="flex gap-1 text-xs">
+          {FOCUS_CHOICES.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              aria-pressed={focus === c.value}
+              onClick={() => setFocus(c.value)}
+              className={`rounded-md border px-2 py-1 ${focus === c.value ? 'border-accent text-accent' : 'border-line text-ink-dim'}`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
       </div>
       {report.buildIsSound ? (
         <p className="card rounded-xl px-4 py-5 text-sm leading-relaxed text-good">{report.summary}</p>
