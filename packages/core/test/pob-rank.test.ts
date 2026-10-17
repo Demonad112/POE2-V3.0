@@ -262,4 +262,34 @@ describe('rankNodesByMeasuredGain baseline gate', () => {
     expect(report.baselineGate).toBeNull()
     expect(report.warnings.join(' ')).toContain('unvalidated')
   })
+  it('stops between candidates when cancelled and returns what it measured', async () => {
+    const pob = new RankablePob()
+    pob.worth.set(10, 500)
+    pob.worth.set(11, 300)
+    const ctl = new AbortController()
+    const inner = pob.transport
+    pob.transport = async (port, payload, t) => {
+      const out = await inner(port, payload, t)
+      if (JSON.parse(payload).method === 'set_passive_node') ctl.abort()
+      return out
+    }
+    const report = await rankNodesByMeasuredGain(bridgeFor(pob), [{ id: 10 }, { id: 11 }], { signal: ctl.signal })
+    expect(report.halted).toBe(true)
+    expect(report.ranked.map((r) => r.nodeId)).toEqual([10])
+    expect(report.warnings.join(' ')).toContain('Cancelled')
+  })
+
+  it('records the PoB version and flags a mismatch with the expected one', async () => {
+    const pob = new RankablePob()
+    pob.worth.set(10, 500)
+    const inner = pob.transport
+    pob.transport = async (port, payload, t) => {
+      const req = JSON.parse(payload) as { id: number; method: string }
+      if (req.method === 'ping') return `${JSON.stringify({ jsonrpc: '2.0', id: req.id, result: { pob_version: '2.51.0' } })}\n`
+      return inner(port, payload, t)
+    }
+    const report = await rankNodesByMeasuredGain(bridgeFor(pob), [{ id: 10 }], { expectedPobVersion: '2.50.0' })
+    expect(report.pobVersion).toBe('2.51.0')
+    expect(report.warnings.join(' ')).toContain('2.51.0, not 2.50.0')
+  })
 })

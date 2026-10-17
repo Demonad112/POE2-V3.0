@@ -29,7 +29,7 @@ export function ReadinessPanel() {
       <section className="rounded-xl border border-dashed border-line bg-[var(--surface-raised)] p-5">
         <h2 className="font-semibold text-ink">Am I ready?</h2>
         <p className="mt-1 text-sm text-ink-mute">
-          <Link href="/character" className="text-[var(--accent)] hover:underline">
+          <Link href="/character" className="text-[var(--accent)] underline">
             Import your character
           </Link>{" "}
           and this panel checks your resistances, life/ES pool and level against the
@@ -96,7 +96,7 @@ export function ReadinessPanel() {
       </div>
       <p className="mt-2 text-xs text-ink-mute">
         Pinnacles also need everything under Mapping basics. Re-import on the{" "}
-        <Link href="/character" className="text-[var(--accent)] hover:underline">
+        <Link href="/character" className="text-[var(--accent)] underline">
           character page
         </Link>{" "}
         after gear changes.
