@@ -46,3 +46,18 @@ It exercises nearly every edge case the analyser has to survive:
 - **A full `breakdowns` block.** 35 stats, 46 sources, covering every source
   type (base, passive, item, attribute, quest, derived).
 - **An attached PoB export** for independent cross-validation.
+
+## Captures still to commit
+
+`test/evidence-pack.test.ts` holds regression tests for two more characters and
+skips them until their captures exist. Save each verbatim (same two-step fetch
+as above, `{type, charModel}` envelope intact):
+
+| File | Character |
+|---|---|
+| `yykiuy-v<model version>.json` | Yykiuy, level 63 Martial Artist, Forbidden Rites |
+| `athrynas-94-v<model version>.json` | Athrynas at level 94 (the committed `athrynas-v43.json` is level 86) |
+
+Every file here is also checked by `tree.test.ts` for allocated passive nodes
+the shipped tree data lacks; `KNOWN_DATA_GAPS` there lists the characters
+allowed some.

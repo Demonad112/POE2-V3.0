@@ -16,6 +16,11 @@ import { analyzeDefense } from '../defense/index.js'
 import { analyzeDps } from '../dps/index.js'
 import { indexBreakdowns, verifyTotal } from '../model/breakdowns.js'
 
+/**
+ * `unmapped` is a stat whose id has no known name. It is shown with its values
+ * but never judged: there is no way to know how poe.ninja derives it, so a
+ * disagreement is not evidence of anything.
+ */
 export type DriftSeverity = 'match' | 'minor' | 'major'
 
 export interface DriftCheck {
@@ -27,7 +32,7 @@ export interface DriftCheck {
   otherSource: 'pob-export' | 'local-formula' | 'breakdown-arithmetic'
   /** |other - ninja| / |ninja|, or null when either side is missing. */
   relativeDelta: number | null
-  severity: DriftSeverity | 'unresolved'
+  severity: DriftSeverity | 'unresolved' | 'unmapped'
   note: string
 }
 
@@ -35,14 +40,19 @@ export interface DriftCheck {
 const MINOR_THRESHOLD = 0.005
 /** Above this the disagreement is worth surfacing prominently. */
 const MAJOR_THRESHOLD = 0.05
+/** Absolute difference treated as integer rounding however small the values are. */
+const ROUNDING_UNITS = 1
 
 function classify(ninja: number | null, other: number | null): { severity: DriftCheck['severity']; relativeDelta: number | null } {
   if (ninja === null || other === null) return { severity: 'unresolved', relativeDelta: null }
   if (ninja === 0 && other === 0) return { severity: 'match', relativeDelta: 0 }
   const denom = Math.abs(ninja) || Math.abs(other)
-  const rel = Math.abs(other - ninja) / denom
+  const diff = Math.abs(other - ninja)
+  const rel = diff / denom
   if (rel <= MINOR_THRESHOLD) return { severity: 'match', relativeDelta: rel }
-  if (rel <= MAJOR_THRESHOLD) return { severity: 'minor', relativeDelta: rel }
+  // Both sides round to whole numbers, so one unit apart is rounding, not a
+  // disagreement: 52 against 53 is 1.9% but never "major".
+  if (rel <= MAJOR_THRESHOLD || diff <= ROUNDING_UNITS) return { severity: 'minor', relativeDelta: rel }
   return { severity: 'major', relativeDelta: rel }
 }
 
@@ -77,6 +87,8 @@ export interface ReconciliationReport {
   minor: number
   major: number
   unresolved: number
+  /** Checks on stat ids with no known name. Reported, never counted as agreement or disagreement. */
+  unmapped: number
   /** True when nothing disagreed materially. */
   clean: boolean
 }
@@ -89,7 +101,22 @@ export interface ReconciliationReport {
  * object when no export is available — the checks then report `unresolved`
  * rather than fabricating a comparison.
  */
-export function reconcile(model: CharModel, pobStats: Record<string, number> = {}): ReconciliationReport {
+export interface ReconcileOptions {
+  /**
+   * The skill the export marks as main, which is the skill PoB's `TotalDPS`
+   * belongs to. Null when the export does not say. When this option is given,
+   * the DPS check pairs PoB's figure with poe.ninja's figure for THAT skill; when
+   * it is omitted (older callers), the check pairs it with poe.ninja's highest
+   * hit-DPS skill as before.
+   */
+  pobMainSkill?: string | null
+}
+
+export function reconcile(
+  model: CharModel,
+  pobStats: Record<string, number> = {},
+  options: ReconcileOptions = {},
+): ReconciliationReport {
   const defense = analyzeDefense(model)
   const dps = analyzeDps(model)
   const breakdowns = indexBreakdowns(model)
@@ -99,7 +126,37 @@ export function reconcile(model: CharModel, pobStats: Record<string, number> = {
     typeof pobStats[key] === 'number' && Number.isFinite(pobStats[key]) ? pobStats[key] : null
 
   // --- poe.ninja vs Path of Building's own engine -------------------------
-  if (dps.primary) {
+  // PoB's TotalDPS belongs to the skill the export had selected, so that is the
+  // skill poe.ninja's figure must be taken from. Pairing it with another skill
+  // would report a disagreement that is only two different skills.
+  if ('pobMainSkill' in options) {
+    const wanted = options.pobMainSkill
+    if (!wanted) {
+      if (dps.primary) {
+        checks.push({
+          ...check(`dps:${dps.primary.name}`, dps.primary.dps, null, 'pob-export'),
+          note: 'The export does not say which skill it computed TotalDPS for, so no skill was compared.',
+        })
+      }
+    } else {
+      const norm = (s: string) => s.trim().toLowerCase()
+      const skill = dps.skills.find((s) => norm(s.name) === norm(wanted) && s.dps > 0)
+      checks.push(
+        skill
+          ? check(
+              `dps:${skill.name}`,
+              skill.dps,
+              pob('TotalDPS'),
+              'pob-export',
+              `poe.ninja’s DPS for ${skill.name} vs the TotalDPS PoB computed for it (the skill the export marks as main).`,
+            )
+          : {
+              ...check(`dps:${wanted}`, null, pob('TotalDPS'), 'pob-export'),
+              note: `The export marks ${wanted} as main, but poe.ninja reports no hit damage for a skill of that name, so nothing was compared.`,
+            },
+      )
+    }
+  } else if (dps.primary) {
     checks.push(
       check(
         `dps:${dps.primary.name}`,
@@ -114,6 +171,7 @@ export function reconcile(model: CharModel, pobStats: Record<string, number> = {
   checks.push(check('energyShield', defense.energyShield, pob('EnergyShield'), 'pob-export'))
   checks.push(check('armour', defense.armour, pob('Armour'), 'pob-export'))
   checks.push(check('evasion', defense.evasion, pob('Evasion'), 'pob-export'))
+  checks.push(check('evadeChance', defense.evadeChance, pob('EvadeChance'), 'pob-export'))
 
   for (const [statKey, pobKey] of [
     ['physicalMaximumHit', 'PhysicalMaximumHitTaken'],
@@ -135,6 +193,18 @@ export function reconcile(model: CharModel, pobStats: Record<string, number> = {
   for (const stat of breakdowns.all) {
     if (stat.derivation === 'empty') continue
     const verification = verifyTotal(stat)
+    if (stat.confidence === null) {
+      checks.push({
+        stat: `breakdown:${stat.key}`,
+        ninja: stat.total,
+        other: verification.expected,
+        otherSource: 'breakdown-arithmetic',
+        relativeDelta: null,
+        severity: 'unmapped',
+        note: `poe.ninja stat id ${stat.key.replace(/^stat_/, '')} has no known name, so how it is derived is unknown. Shown, not judged.`,
+      })
+      continue
+    }
     checks.push(
       check(
         `breakdown:${stat.key}`,
@@ -153,6 +223,7 @@ export function reconcile(model: CharModel, pobStats: Record<string, number> = {
   const minor = checks.filter((c) => c.severity === 'minor').length
   const major = checks.filter((c) => c.severity === 'major').length
   const unresolved = checks.filter((c) => c.severity === 'unresolved').length
+  const unmapped = checks.filter((c) => c.severity === 'unmapped').length
 
-  return { checks, matches, minor, major, unresolved, clean: major === 0 && minor === 0 }
+  return { checks, matches, minor, major, unresolved, unmapped, clean: major === 0 && minor === 0 }
 }

@@ -23,6 +23,7 @@
  * a configuration that is no longer the user's.
  */
 
+import { checkBaseline, type BaselineExpectation, type BaselineGateResult } from './baseline-gate.js'
 import type { PobBridge } from './bridge.js'
 
 export interface SensitivityCondition {
@@ -78,6 +79,8 @@ export interface SensitivityReport {
   /** True when the run stopped early because the build could not be restored. */
   halted: boolean
   warnings: string[]
+  /** Baseline vs poe.ninja check. Null when no expectations were given (unvalidated). */
+  baselineGate: BaselineGateResult | null
 }
 
 const num = (stats: Record<string, number>, metric: string): number | null => {
@@ -87,7 +90,7 @@ const num = (stats: Record<string, number>, metric: string): number | null => {
 
 export async function measureSensitivity(
   probe: SensitivityProbe,
-  options: { metric?: string; conditions?: readonly SensitivityCondition[] } = {},
+  options: { metric?: string; conditions?: readonly SensitivityCondition[]; expected?: readonly BaselineExpectation[] } = {},
 ): Promise<SensitivityReport> {
   const metric = options.metric ?? 'TotalDPS'
   const conditions = options.conditions ?? DEFAULT_CONDITIONS
@@ -101,10 +104,22 @@ export async function measureSensitivity(
     unknownReason: null,
     halted: false,
     warnings: [],
+    baselineGate: null,
   }
 
   try {
-    report.baseline = num(await probe.measure(), metric)
+    const stats = await probe.measure()
+    report.baseline = num(stats, metric)
+    if (options.expected) {
+      report.baselineGate = checkBaseline(options.expected, stats)
+      if (!report.baselineGate.ok) {
+        report.unknownReason = report.baselineGate.reason
+        report.halted = true
+        return report
+      }
+    } else {
+      report.warnings.push('The simulation baseline was not checked against poe.ninja, so these readings are unvalidated.')
+    }
   } catch (err) {
     report.unknownReason = `Could not read the baseline: ${(err as Error).message}`
     return report

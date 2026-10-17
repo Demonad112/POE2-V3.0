@@ -26,6 +26,7 @@
  * had measured up to that point rather than discarding it.
  */
 
+import { checkBaseline, type BaselineExpectation, type BaselineGateResult } from './baseline-gate.js'
 import {
   PobBridge,
   PobBridgeError,
@@ -77,6 +78,12 @@ export interface RankReport {
    */
   halted: boolean
   warnings: string[]
+  /**
+   * Result of comparing the simulation's baseline with poe.ninja's observed
+   * values. Null when no expectations were given, in which case the ranking is
+   * unvalidated and says so in `warnings`.
+   */
+  baselineGate: BaselineGateResult | null
 }
 
 /** Side effects worth surfacing: a real move in something other than the metric. */
@@ -94,7 +101,7 @@ function sideEffectsOf(result: SimulationResult, metric: string): StatDelta[] {
 export async function rankNodesByMeasuredGain(
   bridge: PobBridge,
   candidates: NodeCandidate[],
-  options: { metric?: string } = {},
+  options: { metric?: string; expected?: readonly BaselineExpectation[] } = {},
 ): Promise<RankReport> {
   const metric = options.metric ?? DEFAULT_METRIC
   const warnings: string[] = []
@@ -102,7 +109,7 @@ export async function rankNodesByMeasuredGain(
   const skipped: SkippedNode[] = []
 
   if (candidates.length === 0) {
-    return { metric, baseline: null, ranked, skipped, halted: false, warnings: ['No candidate nodes were given.'] }
+    return { metric, baseline: null, ranked, skipped, halted: false, warnings: ['No candidate nodes were given.'], baselineGate: null }
   }
 
   // The baseline serves two purposes: it is what every delta is relative to,
@@ -121,11 +128,32 @@ export async function rankNodesByMeasuredGain(
       ranked,
       skipped,
       halted: true,
+      baselineGate: null,
       warnings: [
         `Path of Building does not report a numeric "${metric}", so there is nothing to rank by. ` +
           `It currently reports: ${numeric.join(', ')}.`,
       ],
     }
+  }
+
+  // Trust gate: the baseline must reproduce what poe.ninja observed before any
+  // delta is shown. On failure no node is simulated at all.
+  let baselineGate: BaselineGateResult | null = null
+  if (options.expected) {
+    baselineGate = checkBaseline(options.expected, baselineCalcs)
+    if (!baselineGate.ok) {
+      return {
+        metric,
+        baseline,
+        ranked,
+        skipped,
+        halted: true,
+        warnings: [baselineGate.reason ?? 'The simulation baseline could not be validated.'],
+        baselineGate,
+      }
+    }
+  } else {
+    warnings.push('The simulation baseline was not checked against poe.ninja, so these deltas are unvalidated.')
   }
 
   let halted = false
@@ -199,5 +227,5 @@ export async function rankNodesByMeasuredGain(
     )
   }
 
-  return { metric, baseline, ranked, skipped, halted, warnings }
+  return { metric, baseline, ranked, skipped, halted, warnings, baselineGate }
 }

@@ -34,6 +34,7 @@ export {
   pathToNode,
   readPlayerStats,
   rankNodesByMeasuredGain,
+  ninjaBaselineExpectations,
   resolveAllocation,
   simulateCustomMods,
   simulatePassiveNode,

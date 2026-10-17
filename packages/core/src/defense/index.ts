@@ -13,6 +13,7 @@
 import type { CharModel, DamageType, NinjaDefensiveStats } from '../model/types.js'
 import { DAMAGE_TYPES } from '../model/types.js'
 import { RES_CAP_DEFAULT, armourDamageReduction, chaosRawPool } from './constants.js'
+import { impliedResistances, type ImpliedResistance } from './implied.js'
 
 export interface MaxHit {
   type: DamageType
@@ -49,6 +50,11 @@ export interface DefenseSummary {
 
   maxHits: MaxHit[]
   resistances: ResistanceState[]
+  /**
+   * Resistance implied by poe.ninja's elemental maximum hits (`derived`, an
+   * inference: see ./implied.ts). Unknown whenever other mitigation applies.
+   */
+  impliedResistances: ImpliedResistance[]
 
   /** Null when the payload did not report it. */
   life: number | null
@@ -65,7 +71,12 @@ export interface DefenseSummary {
   physicalDamageReductionAgainstHit: number | null
 
   evasion: number
-  evadeChance: number
+  /**
+   * poe.ninja's evade chance, read as given. Null when the payload carries none:
+   * never 0, which would read as "cannot evade". Not derived locally; see
+   * `evadeChance()` in constants.ts for why that formula is not used.
+   */
+  evadeChance: number | null
   blockChance: number
 
   /** 0.5 mechanics V1 had no model for. */
@@ -172,6 +183,21 @@ export function analyzeDefense(model: Pick<CharModel, 'defensiveStats'>): Defens
 
     maxHits,
     resistances,
+    impliedResistances: impliedResistances({
+      life,
+      energyShield,
+      physicalMaxHit: maxHits.find((m) => m.type === 'physical')?.value ?? null,
+      maxHits: {
+        fire: maxHits.find((m) => m.type === 'fire')?.value ?? null,
+        cold: maxHits.find((m) => m.type === 'cold')?.value ?? null,
+        lightning: maxHits.find((m) => m.type === 'lightning')?.value ?? null,
+      },
+      displayed: {
+        fire: resistances.find((r) => r.type === 'fire')?.value ?? null,
+        cold: resistances.find((r) => r.type === 'cold')?.value ?? null,
+        lightning: resistances.find((r) => r.type === 'lightning')?.value ?? null,
+      },
+    }),
 
     life,
     energyShield,
@@ -184,7 +210,7 @@ export function analyzeDefense(model: Pick<CharModel, 'defensiveStats'>): Defens
       typeof physReduction?.takenDamage === 'number' ? physReduction.takenDamage : null,
 
     evasion: num(s, 'evasionRating') ?? 0,
-    evadeChance: num(s, 'evadeChance') ?? 0,
+    evadeChance: num(s, 'evadeChance'),
     blockChance: num(s, 'blockChance') ?? 0,
 
     deflectionRating: num(s, 'deflectionRating') ?? 0,
@@ -215,3 +241,4 @@ export function projectArmour(
 }
 
 export * from './constants.js'
+export * from './implied.js'

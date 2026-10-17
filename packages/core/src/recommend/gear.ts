@@ -51,6 +51,12 @@ import {
   type ItemAnalysis,
 } from '../gear/analyze.js'
 import type { ModTiers } from '../gear/tiers.js'
+import {
+  applyLedger,
+  resistanceTotals,
+  type LedgerChange,
+  type LedgerStat,
+} from '../constraints/ledger.js'
 import type { Evidence, Recommendation } from './types.js'
 
 /** The resistance cap, and the yardstick significance is measured against. */
@@ -223,6 +229,50 @@ function openAffixRule(analysed: ItemAnalysis[]): Recommendation[] {
   ]
 }
 
+export interface SameLineSwap {
+  rec: Recommendation
+  type: string
+  /** Points of the shortfall this option closes. */
+  closes: number
+  /** The shortfall it is aimed at. */
+  gap: number
+  /** The replacement, as text. */
+  option: string
+  /** Id of the generic finding this option supersedes. */
+  coverId: string
+}
+
+/**
+ * Fold findings that recraft the same line into one decision.
+ *
+ * A suffix is recrafted once, so "recraft it into cold" and "recraft it into
+ * chaos" are alternatives. Options are ordered by what they can close: one that
+ * fully closes its own gap first (a 6-point cold gap is closable), then the one
+ * that closes the most (a 59-point chaos gap is not, with a single line).
+ * Returns the finding that carries the merged decision; the rest are redundant.
+ */
+export function mergeSameLineSwaps(entries: SameLineSwap[]): Recommendation {
+  const ordered = entries
+    .slice()
+    .sort((a, b) => Number(b.closes >= b.gap) - Number(a.closes >= a.gap) || b.closes - a.closes)
+  const primary = ordered[0]!
+  const others = ordered.slice(1)
+  const describe = (o: SameLineSwap) =>
+    `${o.option}: closes ${o.closes} of the ${o.gap}% ${o.type} shortfall` +
+    (o.closes >= o.gap ? '' : ', which this line cannot close on its own')
+  primary.rec.action = `${primary.rec.action} This is one line, so it is one choice: ${ordered.map(describe).join('; or ')}.`
+  primary.rec.alsoCovers = others.map((o) => o.coverId)
+  for (const o of others) {
+    primary.rec.evidence.push({
+      kind: 'stat',
+      stat: `${o.type}Resistance`,
+      value: o.gap,
+      note: `The same line could instead close ${o.closes} of the ${o.gap}% ${o.type} shortfall.`,
+    })
+  }
+  return primary.rec
+}
+
 /**
  * Concrete gear actions, ranked on the same scale as the rest of the engine.
  *
@@ -238,6 +288,14 @@ export function gearRecommendations({ items, defense, tiers }: GearRecommendatio
   const shortfalls = summarizeSwaps(swaps, defense)
 
   const out: Recommendation[] = []
+  /** What each emitted swap changes, for the cumulative check below. */
+  const changes: LedgerChange[] = []
+  const unknownRolls = new Set<string>()
+  /** Which line each swap recrafts, so findings about the same line can merge. */
+  const meta = new Map<
+    string,
+    { key: string; type: string; closes: number; gap: number; option: string; coverId: string }
+  >()
 
   // --- resistance rebalancing, per shortfall --------------------------------
   for (const shortfall of shortfalls) {
@@ -275,8 +333,32 @@ export function gearRecommendations({ items, defense, tiers }: GearRecommendatio
       },
     ]
 
+    const id = `gear-swap-${shortfall.type}`
+    const deltas: LedgerChange['deltas'] = {}
+    for (const lost of best.removes) {
+      if (lost.value === null) {
+        unknownRolls.add(id)
+        continue
+      }
+      const stat = `${lost.type}Resistance` as LedgerStat
+      deltas[stat] = (typeof deltas[stat] === 'number' ? (deltas[stat] as number) : 0) - lost.value
+    }
+    // The new line rolls anywhere in its tier range, so the gain is a range.
+    const gained = `${shortfall.type}Resistance` as LedgerStat
+    const prior = typeof deltas[gained] === 'number' ? (deltas[gained] as number) : 0
+    deltas[gained] = { min: prior + candidate.min, max: prior + candidate.max }
+    changes.push({ id, label: `Recraft ${best.replace.text} on ${best.itemName}`, deltas })
+    meta.set(id, {
+      key: `${best.slotId}|${best.replace.id ?? best.replace.text}`,
+      type: shortfall.type,
+      closes: candidate.closesShortfall,
+      gap: shortfall.shortfall,
+      option: `"${candidate.affix ?? candidate.id}" (tier ${candidate.tier}, ${candidate.min}-${candidate.max}% ${shortfall.type} resistance)`,
+      coverId: `res-${shortfall.type}-under-cap`,
+    })
+
     out.push({
-      id: `gear-swap-${shortfall.type}`,
+      id,
       category: 'gear',
       action:
         `Recraft the ${best.replace.text} suffix on ${best.itemName} into "${candidate.affix ?? candidate.id}" ` +
@@ -316,6 +398,64 @@ export function gearRecommendations({ items, defense, tiers }: GearRecommendatio
     })
   }
 
+  // --- one decision per recrafted line -----------------------------------------
+  // A suffix can be recrafted once. Two findings that recraft the same line are
+  // alternatives, not two actions, so they become one finding whose options are
+  // ordered by what they can close: a swap that fully closes its gap first, then
+  // the one that closes the most.
+  const groups = new Map<string, string[]>()
+  for (const rec of out) {
+    const m = meta.get(rec.id)
+    if (m) groups.set(m.key, [...(groups.get(m.key) ?? []), rec.id])
+  }
+  for (const group of groups.values()) {
+    if (group.length < 2) continue
+    const entries = group.map((id) => ({ rec: out.find((r) => r.id === id)!, ...meta.get(id)! }))
+    const primary = mergeSameLineSwaps(entries)
+    for (const e of entries) {
+      if (e.rec === primary) continue
+      out.splice(out.indexOf(e.rec), 1)
+      changes.splice(changes.findIndex((c) => c.id === e.rec.id), 1)
+    }
+  }
+
+  // --- cumulative check ------------------------------------------------------
+  // Each swap above is judged alone against the overcap, but they are taken
+  // together: two swaps that each give up "wasted" fire spend the same overcap
+  // twice. Check the sum against the real uncapped totals and say so.
+  if (changes.length) {
+    const totals = resistanceTotals(defense)
+    const together = applyLedger(totals, changes)
+    for (const rec of out) {
+      const change = changes.find((c) => c.id === rec.id)
+      if (!change) continue
+      const notes: string[] = []
+      const solo = applyLedger(totals, [change]).violations
+      for (const v of solo) notes.push(`Alone: ${v.message}`)
+      if (changes.length > 1) {
+        for (const v of together.violations) {
+          if (!v.changes.includes(rec.id)) continue
+          const soloSame = solo.find((s) => s.stat === v.stat)
+          // Only worth saying when taking the other swaps too makes it worse.
+          if (!soloSame || soloSame.afterWorst !== v.afterWorst) {
+            notes.push(`With the other recraft findings: ${v.message}`)
+          }
+        }
+      }
+      if (unknownRolls.has(rec.id)) {
+        notes.push('The roll on the removed line is not known, so what it costs is not included in this check.')
+      }
+      if (notes.length) {
+        // The reassurance that the loss is "smaller than it looks" holds only
+        // while the overcap covers it; when the check fails it is wrong.
+        const base = notes.some((n) => n.includes('floor'))
+          ? (rec.tradeoff ?? '').replace(/ That is already[\s\S]*$/, '')
+          : (rec.tradeoff ?? '')
+        rec.tradeoff = `${base} Constraint check: ${notes.join(' ')}`.trim()
+      }
+    }
+  }
+
   // --- unused affix slots ---------------------------------------------------
   out.push(...openAffixRule(analysed))
 
@@ -338,12 +478,13 @@ export function mergeGearRecommendations(
 
   // A gear swap for a resistance supersedes the engine's generic under-cap entry
   // for the SAME resistance, and nothing else.
-  const superseded = new Set(
-    gear
+  const superseded = new Set([
+    ...gear
       .map((g) => /^gear-swap-(\w+)$/.exec(g.id)?.[1])
       .filter((type): type is string => Boolean(type))
       .map((type) => `res-${type}-under-cap`),
-  )
+    ...gear.flatMap((g) => g.alsoCovers ?? []),
+  ])
 
   return [...base.filter((r) => !superseded.has(r.id)), ...gear].sort((a, b) => b.score - a.score)
 }

@@ -61,6 +61,14 @@ export function armourDamageReduction(armour: number, rawHit: number): number {
  *
  * evade = 100 - (accuracy * 1.25 * 100) / (accuracy + evasion * 0.3)
  * clamped to [5, 100].
+ *
+ * REFERENCE ONLY, not used for any displayed number. It does not reproduce the
+ * recorded payload: for the Athrynas fixture (evasion 6490, enemy accuracy 2114)
+ * it gives 34.9% where poe.ninja and the PoB export both report 41%. The
+ * displayed evade chance is poe.ninja's own figure, cross-checked against the
+ * export's `EvadeChance` by `reconcile`. Which attack type that figure is for
+ * (the export also reports melee, projectile and spell variants) is not stated
+ * by the payload.
  */
 export function evadeChance(evasion: number, accuracy: number): number {
   if (accuracy <= 0) return EVADE_CHANCE_MAX

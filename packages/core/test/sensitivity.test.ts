@@ -128,3 +128,22 @@ describe('bridgeProbe', () => {
     expect(r.skipped.every((s) => /Not measurable/.test(s.reason))).toBe(true)
   })
 })
+
+describe('measureSensitivity baseline gate', () => {
+  it('reports no readings and halts when the baseline does not reproduce poe.ninja', async () => {
+    const { probe, log } = fakeProbe()
+    const r = await measureSensitivity(probe, { expected: [{ label: 'Main skill DPS', expected: 800, simulatedKeys: ['TotalDPS'] }] })
+    expect(r.readings).toEqual([])
+    expect(r.range).toBeNull()
+    expect(r.halted).toBe(true)
+    expect(r.unknownReason).toContain('Main skill DPS')
+    expect(log).toEqual([])
+  })
+
+  it('proceeds when the baseline reproduces', async () => {
+    const { probe } = fakeProbe()
+    const r = await measureSensitivity(probe, { expected: [{ label: 'Main skill DPS', expected: 1000, simulatedKeys: ['TotalDPS'] }] })
+    expect(r.baselineGate?.ok).toBe(true)
+    expect(r.range).toEqual({ min: 1000, max: 1500 })
+  })
+})

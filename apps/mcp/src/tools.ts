@@ -40,6 +40,7 @@ import {
   rankAffixCandidates,
   readPlayerStats,
   rankNodesByMeasuredGain,
+  ninjaBaselineExpectations,
   resolveAllocation,
   simulateCustomMods,
   simulatePassiveNode,
@@ -1172,8 +1173,18 @@ export const TOOLS: ToolDef[] = [
         throw new Error('Provide either nodeIds, or forStat to search the tree for candidates.')
       }
 
+      // Trust gate: the live PoB baseline must reproduce poe.ninja's observed
+      // values before any delta is shown. Needs a loaded character to compare.
+      const loaded = loadedCharacter()
+      const expected = loaded
+        ? ninjaBaselineExpectations(
+            loaded.model.defensiveStats,
+            loaded.analysis.dps.mainSkill?.agrees ? loaded.analysis.dps.mainSkill.exportMainTotalDps : null,
+          )
+        : undefined
       const report = await rankNodesByMeasuredGain(pobBridge(), candidates.slice(0, limit), {
         metric: args.metric ? String(args.metric) : undefined,
+        expected,
       })
 
       return {

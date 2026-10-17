@@ -164,7 +164,16 @@ export interface InactiveSetReport {
    * explicit weapon-set marker; the recorded capture carries none, so this is
    * normally `unknown`, never an empty "none".
    */
-  skills: { status: 'known'; names: string[] } | { status: 'unknown'; reason: string }
+  skills:
+    | {
+        status: 'known'
+        names: string[]
+        /** Where the names came from. Absent means the poe.ninja payload's own markers. */
+        source?: 'pob-export'
+        /** True when the list is skills the export ties to this set, which may not be all of them. */
+        partial?: boolean
+      }
+    | { status: 'unknown'; reason: string }
 }
 
 const grantedSkillNames = (item: EquippedItem): string[] =>

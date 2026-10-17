@@ -170,3 +170,28 @@ describe('support tier cap and lineage', () => {
     expect(capped.familyNotes.length).toBeLessThanOrEqual(uncapped.familyNotes.length)
   })
 })
+
+describe('nominal support values', () => {
+  const review = reviewDamage({
+    dps: analysis.dps,
+    setups: parseAllSetups(model.skills),
+    items: analysed,
+    rawItems: items,
+    tiers,
+    catalog,
+  })!
+
+  it('never names a lowest-value support from nominal figures', () => {
+    for (const swap of review.gemSwaps) {
+      // A swap may only be named for a support that cannot apply at all.
+      expect(swap.replace.issue).not.toBeNull()
+      expect(swap.reason).not.toMatch(/lowest-value/)
+    }
+  })
+
+  it('says the figures are nominal, not measured', () => {
+    const quantified = review.supports.some((s) => s.value?.offensive && s.value.quantified && s.value.conditional.length === 0)
+    expect(quantified).toBe(true)
+    expect(review.notes.join(' ')).toMatch(/nominal.*not measured/)
+  })
+})

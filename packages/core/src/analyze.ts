@@ -21,9 +21,11 @@ import type { ModTiers } from './gear/tiers.js'
 import { decodePobExport, readPlayerStats } from './pob/export.js'
 import { readPobConfig, type PobConfig } from './pob/config.js'
 import { readPobMainSkill } from './pob/main-skill.js'
+import { inactiveSetFromPob, readPobSkillGroups, type PobSkillGroup } from './pob/skill-groups.js'
 import { mainSkillNote } from './dps/main-skill.js'
 import { assessBuild, type BuildAssessment } from './score/index.js'
 import { resolveAllocation, type PassiveTree } from './tree/index.js'
+import { ailmentImmunities, type AilmentStatus } from './defense/ailments.js'
 import type { LadderSummary } from './ninja/ladder.js'
 import type { CharModel, CharModelResponse } from './model/types.js'
 
@@ -53,6 +55,10 @@ export interface Analysis {
   items: EquippedItem[]
   /** What sits in the inactive weapon set; informational, nothing here counts towards the build. */
   inactiveSet: InactiveSetReport
+  /** Ailment immunities from equipped gear and, when the tree data was given, allocated nodes. */
+  ailments: AilmentStatus[]
+  /** Every skill group in the attached Path of Building export, both skill sets. Null without an export. */
+  pobSkillGroups: PobSkillGroup[] | null
   breakdowns: BreakdownIndex
   /**
    * What each equipped item is holding up, and what the sheet would read
@@ -174,12 +180,14 @@ export async function analyzeCharacter(
   let pobStats: Record<string, number> | null = null
   let pobConfig: PobConfig | null = null
   let exportMain: string | null = null
+  let pobSkillGroups: PobSkillGroup[] | null = null
   if (model.pathOfBuildingExport) {
     try {
       const xml = await decodePobExport(model.pathOfBuildingExport)
       pobStats = readPlayerStats(xml)
       exportMain = readPobMainSkill(xml)?.name ?? null
       pobConfig = readPobConfig(xml)
+      pobSkillGroups = readPobSkillGroups(xml)
     } catch (err) {
       warnings.push(
         `The attached Path of Building export could not be decoded (${(err as Error).message}), so poe.ninja's numbers could not be cross-checked.`,
@@ -198,11 +206,26 @@ export async function analyzeCharacter(
   // Keystone names live in the tree data, so without it nothing can be
   // resolved. Report the neutral result rather than a guess: an uncorrected
   // reading is merely less specific, while a guessed keystone would be wrong.
-  const keystones = options.tree
-    ? keystoneEffectsOf(resolveAllocation(options.tree, passives).keystones, defense)
-    : NO_KEYSTONE_EFFECTS
+  const resolvedTree = options.tree ? resolveAllocation(options.tree, passives) : null
+  const keystones = resolvedTree ? keystoneEffectsOf(resolvedTree.keystones, defense) : NO_KEYSTONE_EFFECTS
+  if (options.tree && resolvedTree) {
+    const missing = [
+      ...new Set([
+        ...resolvedTree.unresolvedIds,
+        ...resolvedTree.unresolvedBySet.main,
+        ...resolvedTree.unresolvedBySet.set1,
+        ...resolvedTree.unresolvedBySet.set2,
+      ]),
+    ].sort((a, b) => a - b)
+    if (missing.length) {
+      warnings.push(
+        `${missing.length} allocated passive node${missing.length === 1 ? '' : 's'} (id ${missing.join(', ')}) ${missing.length === 1 ? 'is' : 'are'} not in this tree data (${options.tree.treeName}). ` +
+          'Their effects are not read, so keystone and notable findings may be incomplete. The data may predate the character’s tree version.',
+      )
+    }
+  }
 
-  const reconciliation = pobStats ? reconcile(model, pobStats) : null
+  const reconciliation = pobStats ? reconcile(model, pobStats, { pobMainSkill: exportMain }) : null
   const dpsAgrees = pobDpsAgreement(reconciliation)
 
   const analysis: Analysis = {
@@ -218,7 +241,9 @@ export async function analyzeCharacter(
     dps,
     passives,
     items,
-    inactiveSet: inactiveSetReport(model),
+    inactiveSet: pobSkillGroups ? inactiveSetFromPob(inactiveSetReport(model), pobSkillGroups) : inactiveSetReport(model),
+    pobSkillGroups,
+    ailments: ailmentImmunities(items, resolvedTree ? resolvedTree.live : null),
     breakdowns,
     attribution: attributeToItems(breakdowns, items, defense),
     keystones,
@@ -240,10 +265,23 @@ export async function analyzeCharacter(
     warnings,
   }
 
-  if (analysis.reconciliation && analysis.reconciliation.major > 0) {
-    warnings.push(
-      `${analysis.reconciliation.major} stat${analysis.reconciliation.major === 1 ? '' : 's'} disagree between poe.ninja and the attached Path of Building export. See the reconciliation report before trusting those figures.`,
-    )
+  // Only identified stats count. A stat id with no known name is `unmapped` in
+  // the report and never raises a banner; a total that disagrees with poe.ninja's
+  // own breakdown parts is a different claim from a disagreement with PoB.
+  if (analysis.reconciliation) {
+    const majors = analysis.reconciliation.checks.filter((c) => c.severity === 'major')
+    const vsPob = majors.filter((c) => c.otherSource === 'pob-export').length
+    const vsOwn = majors.length - vsPob
+    if (vsPob > 0) {
+      warnings.push(
+        `${vsPob} stat${vsPob === 1 ? '' : 's'} disagree between poe.ninja and the attached Path of Building export. See the reconciliation report before trusting those figures.`,
+      )
+    }
+    if (vsOwn > 0) {
+      warnings.push(
+        `${vsOwn} stat total${vsOwn === 1 ? '' : 's'} do${vsOwn === 1 ? 'es' : ''} not match poe.ninja’s own breakdown arithmetic. See the reconciliation report.`,
+      )
+    }
   }
 
   // An allocated keystone that the character's own stats contradict is worth

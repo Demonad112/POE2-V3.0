@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url'
 import { PassiveTree, NODE_KIND, pathToNode, resolveAllocation, type PassiveTreeData } from '../src/tree/index.js'
 import { normalizePassives } from '../src/model/passives.js'
 import { unwrapCharModel } from '../src/analyze.js'
+import { fixtureFiles } from './helpers/fixtures.js'
 
 const treeData = JSON.parse(
   readFileSync(fileURLToPath(new URL('../../data/generated/passive-tree.json', import.meta.url)), 'utf8'),
@@ -137,5 +138,45 @@ describe('path finding', () => {
 
   it('returns null for an unknown node rather than an empty path', () => {
     expect(pathToNode(tree, allocation.live, 99_999_999)).toBeNull()
+  })
+})
+
+describe('allocation coverage', () => {
+  it('reports unresolved ids for every saved allocation, not only the live one', () => {
+    const r = resolveAllocation(tree, { ...allocation, set2: [...allocation.set2, 999_999_999] })
+    expect(r.unresolvedIds).toEqual([])
+    expect(r.unresolvedBySet.set2).toEqual([999_999_999])
+  })
+
+  it('has no unresolved ids in any recorded fixture beyond the known data gaps', () => {
+    // Fails when any fixture allocates more nodes than the shipped tree data
+    // knows. Every captured payload in test/fixtures is checked; a new capture
+    // needs no edit here. A character known to need newer tree data is listed
+    // with the most unresolved ids it may have; that number only ever goes down.
+    const KNOWN_DATA_GAPS: Record<string, number> = {
+      // Evidence pack: 3 allocated nodes missing from the data set, which
+      // predates patch 0.5.5. Remove once the tree data is refreshed.
+      'yykiuy': 3,
+    }
+    for (const file of fixtureFiles()) {
+      const m = unwrapCharModel(JSON.parse(readFileSync(fileURLToPath(new URL(`./fixtures/${file}`, import.meta.url)), 'utf8')))
+      const r = resolveAllocation(tree, normalizePassives(m))
+      const unresolved = new Set([...r.unresolvedIds, ...r.unresolvedBySet.main, ...r.unresolvedBySet.set1, ...r.unresolvedBySet.set2])
+      const allowed = Object.entries(KNOWN_DATA_GAPS).find(([key]) => file.toLowerCase().startsWith(key))?.[1] ?? 0
+      expect({ file, unresolved: [...unresolved].slice(0, Math.max(0, unresolved.size - allowed)) }).toEqual({ file, unresolved: [] })
+    }
+  })
+})
+
+describe('ailment immunities on the recorded character', () => {
+  it('are read from the allocated tree when the tree data is given', async () => {
+    const { analyzeCharacter } = await import('../src/analyze.js')
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/athrynas-v43.json', import.meta.url)), 'utf8'))
+    const without = await analyzeCharacter(raw)
+    const withTree = await analyzeCharacter(raw, { tree })
+    expect(without.ailments.every((a) => a.status !== 'unknown' || /tree data was not loaded/.test(a.reason))).toBe(true)
+    // Every immune result must name a source line that really is on the tree or gear.
+    for (const a of withTree.ailments) if (a.status === 'immune') expect(a.sources.length).toBeGreaterThan(0)
+    expect(withTree.ailments).toHaveLength(7)
   })
 })

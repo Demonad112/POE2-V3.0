@@ -231,3 +231,35 @@ describe('rankNodesByMeasuredGain', () => {
     expect(report.halted).toBe(false)
   })
 })
+
+describe('rankNodesByMeasuredGain baseline gate', () => {
+  const expectLife = (life: number) => [{ label: 'Life', expected: life, simulatedKeys: ['Life'] }]
+
+  it('ranks normally when the baseline reproduces poe.ninja', async () => {
+    const pob = new RankablePob()
+    pob.worth.set(10, 500)
+    const report = await rankNodesByMeasuredGain(bridgeFor(pob), [{ id: 10 }], { expected: expectLife(1448) })
+    expect(report.baselineGate?.ok).toBe(true)
+    expect(report.ranked).toHaveLength(1)
+  })
+
+  it('shows no deltas and names the stat when the baseline does not reproduce', async () => {
+    const pob = new RankablePob()
+    pob.worth.set(10, 500)
+    const report = await rankNodesByMeasuredGain(bridgeFor(pob), [{ id: 10 }], { expected: expectLife(1111) })
+    expect(report.ranked).toEqual([])
+    expect(report.halted).toBe(true)
+    expect(report.warnings.join(' ')).toContain('Life')
+    expect(report.baselineGate?.ok).toBe(false)
+    // Nothing was simulated, so nothing was touched.
+    expect(pob.allocated.has(10)).toBe(false)
+  })
+
+  it('flags the ranking as unvalidated when no expectations are supplied', async () => {
+    const pob = new RankablePob()
+    pob.worth.set(10, 500)
+    const report = await rankNodesByMeasuredGain(bridgeFor(pob), [{ id: 10 }])
+    expect(report.baselineGate).toBeNull()
+    expect(report.warnings.join(' ')).toContain('unvalidated')
+  })
+})

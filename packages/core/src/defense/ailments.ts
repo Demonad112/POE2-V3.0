@@ -41,17 +41,49 @@ const grants = (mod: string, ailment: Ailment): boolean => {
   return rest !== undefined && PATTERNS[ailment].test(rest)
 }
 
-export function ailmentImmunities(items: readonly Pick<EquippedItem, 'slotLabel' | 'name' | 'mods' | 'active'>[]): AilmentStatus[] {
+/** A passive node or ascendancy node whose text may grant an immunity. */
+export interface AilmentNodeSource {
+  name: string
+  stats: readonly string[]
+  /** Ascendancy class name for ascendancy nodes, null for the main tree. */
+  ascendancy: string | null
+}
+
+/**
+ * "Light Stunned" is only half of stun: heavy stuns still land. A line about it
+ * is not an immunity to being stunned, so it never proves one.
+ */
+const LIGHT_STUN_ONLY = /\blight stun/i
+
+/**
+ * `nodes` is the character's allocated passive and ascendancy nodes. Pass
+ * `null` when the tree data was not available, which changes only what an
+ * `unknown` answer says about why.
+ */
+export function ailmentImmunities(
+  items: readonly Pick<EquippedItem, 'slotLabel' | 'name' | 'mods' | 'active'>[],
+  nodes: readonly AilmentNodeSource[] | null = null,
+): AilmentStatus[] {
+  const holds = (line: string, ailment: Ailment) => grants(line, ailment) && !(ailment === 'stun' && LIGHT_STUN_ONLY.test(line))
   return AILMENTS.map((ailment): AilmentStatus => {
-    const sources = items
+    const fromItems = items
       .filter((i) => i.active)
-      .flatMap((i) => i.mods.filter((m) => grants(m, ailment)).map((line) => ({ slotLabel: i.slotLabel, itemName: i.name, line })))
+      .flatMap((i) => i.mods.filter((m) => holds(m, ailment)).map((line) => ({ slotLabel: i.slotLabel, itemName: i.name, line })))
+    const fromTree = (nodes ?? []).flatMap((n) =>
+      n.stats
+        .filter((line) => holds(line, ailment))
+        .map((line) => ({ slotLabel: n.ascendancy ? `Ascendancy (${n.ascendancy})` : 'Passive tree', itemName: n.name, line })),
+    )
+    const sources = [...fromItems, ...fromTree]
     return sources.length
       ? { ailment, status: 'immune', sources }
       : {
           ailment,
           status: 'unknown',
-          reason: 'No equipped item says so. The payload has no ailment threshold, so passive-tree or ascendancy sources are not visible.',
+          reason:
+            nodes === null
+              ? 'No equipped item says so, and the passive tree data was not loaded, so passive and ascendancy sources were not read. The payload has no ailment threshold.'
+              : 'No equipped item or allocated passive or ascendancy node says so. The payload has no ailment threshold, and other sources (skills, charms, conditional effects) are not read.',
         }
   })
 }
