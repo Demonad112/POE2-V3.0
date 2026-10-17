@@ -12,6 +12,8 @@ import { describe, expect, it } from 'vitest'
 import { analyzeCharacter } from '../src/analyze.js'
 import { analyzeItem } from '../src/gear/analyze.js'
 import { ModTiers, type ModTierData } from '../src/gear/tiers.js'
+import { mergeGearRecommendations, mergeSameLineSwaps } from '../src/recommend/gear.js'
+import type { Recommendation } from '../src/recommend/types.js'
 
 const payload = JSON.parse(
   readFileSync(fileURLToPath(new URL('./fixtures/athrynas-v43.json', import.meta.url)), 'utf8'),
@@ -247,5 +249,36 @@ describe('cumulative constraint check on recraft findings', () => {
       // The reassurance is withdrawn once the check fails.
       expect(swap.tradeoff).not.toContain('smaller than the number suggests')
     }
+  })
+})
+
+describe('findings that recraft the same line', () => {
+  const rec = (id: string): Recommendation => ({
+    id,
+    category: 'gear',
+    action: `Recraft the fire suffix on Ring into ${id}.`,
+    rationale: '',
+    impact: null,
+    cost: { kind: 'gear', amount: 1, currencyTier: 'low', detail: '' },
+    tradeoff: null,
+    evidence: [],
+    provenance: 'ninja',
+    score: 1,
+  })
+  const chaos = { rec: rec('gear-swap-chaos'), type: 'chaos', closes: 27, gap: 59, option: '"of Bameth"', coverId: 'res-chaos-under-cap' }
+  const cold = { rec: rec('gear-swap-cold'), type: 'cold', closes: 6, gap: 6, option: '"of Haast"', coverId: 'res-cold-under-cap' }
+
+  it('becomes one decision, closable option first', () => {
+    const primary = mergeSameLineSwaps([chaos, cold])
+    expect(primary.id).toBe('gear-swap-cold')
+    expect(primary.action).toMatch(/one choice: "of Haast": closes 6 of the 6% cold shortfall; or "of Bameth": closes 27 of the 59% chaos shortfall, which this line cannot close/)
+    expect(primary.alsoCovers).toEqual(['res-chaos-under-cap'])
+  })
+
+  it('supersedes the generic finding of every alternative, not only the primary', () => {
+    const primary = mergeSameLineSwaps([chaos, cold])
+    const base = ['res-cold-under-cap', 'res-chaos-under-cap', 'res-lightning-under-cap'].map((id) => ({ ...rec(id), id }))
+    const merged = mergeGearRecommendations(base, [primary])
+    expect(merged.map((r) => r.id).sort()).toEqual(['gear-swap-cold', 'res-lightning-under-cap'])
   })
 })

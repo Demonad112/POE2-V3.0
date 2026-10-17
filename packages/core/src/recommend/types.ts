@@ -83,6 +83,11 @@ export interface Recommendation {
   provenance: Provenance
   /** impact significance / cost weight. Higher ranks first. */
   score: number
+  /**
+   * Ids of other findings this one subsumes as alternatives for the same
+   * action, e.g. two resistance shortfalls closable by recrafting one suffix.
+   */
+  alsoCovers?: string[]
 }
 
 /**
