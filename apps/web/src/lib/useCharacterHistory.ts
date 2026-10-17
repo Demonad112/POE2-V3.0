@@ -23,6 +23,7 @@ import {
   type CharacterSnapshot,
   type SnapshotDiff,
 } from '@poe2/core'
+import { CURRENT_PATCH } from './constants'
 import { getServerSnapshot, getSnapshot, setPersistedState, subscribe } from './storage'
 
 export interface CharacterHistory {
@@ -50,7 +51,7 @@ export function useCharacterHistory(analysis: Analysis | null): CharacterHistory
     // key every character to the same empty string and merge their histories.
     if (!analysis.identity.account || !analysis.identity.name) return
 
-    const next = toSnapshot(analysis, new Date().toISOString(), analysis.keystones)
+    const next = toSnapshot(analysis, new Date().toISOString(), analysis.keystones, CURRENT_PATCH)
     setPersistedState((prev) => {
       const snapshots = appendSnapshot(prev.character.snapshots, next)
       // `appendSnapshot` hands back the same array when the figures have not
