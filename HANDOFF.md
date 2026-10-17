@@ -4,11 +4,11 @@ Background context for the next session. Verify anything you rely on; this file 
 
 ## State (as of 2026-10-17)
 
-- `main` is at the merge of PR #50 (Playwright browser cache in CI and deploy). CI, the GitHub Pages deploy and its smoke job were green on it.
-- Merged since the last handoff: audit fixes B-1 to B-3 (#38, unknown stays `null`), plan items 5-10 in core and web (#39-#45), data age on the report, the 0.5.5 Soul Core table (#47, #48), the snapshot `gameVersion` stamp (#49), and the 0.5.5 endgame progression update (#52, #54): 32-step checklist, patch changes, Trial of Chaos, essence crafting, Atlas regex strings and trap-node groups, boss resistances.
+- `main` is at the merge of PR #55 (defences checklist, Hotfix 0.5.5c flag). CI was green on it.
+- Merged since the last handoff: audit fixes B-1 to B-3 (#38, unknown stays `null`), plan items 5-10 in core and web (#39-#45), data age on the report, the 0.5.5 Soul Core table (#47, #48), the snapshot `gameVersion` stamp (#49), and the 0.5.5 endgame progression update (#52, #54) and the defences checklist (#55): 32-step checklist, patch changes, Trial of Chaos, essence crafting, Atlas regex strings and trap-node groups, boss resistances.
 - Web has the focus toggle, "Changed since last report" panel, family notes, ailment immunities, main-skill note and inactive weapon set.
 - Cloud sessions can run Playwright e2e: `playwright.config.ts` uses the preinstalled Chromium when `CLAUDE_CODE_REMOTE=true`. 77 passed, 3 skipped on 2026-10-17.
-- Counts: core 569, web 91, proxy 6.
+- Counts: core 641 (7 skipped, 3 todo), web 91, proxy 6.
 
 ## Known risks and unverified items
 
