@@ -8,6 +8,18 @@
  */
 
 import type { BaselineExpectation } from './baseline-gate.js'
+import type {
+  AnointBatchRequest,
+  AnointMeasurement,
+  AnointRanking,
+  AnointRequest,
+  ItemChangeRequest,
+  ItemMeasurement,
+  ProbeResult,
+  RangedItemMeasurement,
+  RespecMeasurement,
+  RespecRequest,
+} from './mutation.js'
 
 /** A change to try, reverted after measuring. */
 export interface MeasuredDelta {
@@ -31,18 +43,23 @@ export interface SupportRemovalProbe {
   measureRemoval(skill: string, support: string, expected: readonly BaselineExpectation[]): Promise<MeasuredResult>
 }
 
-/** Replace or modify an equipped item or gem and report the change (C1, C3, C5). */
+/**
+ * Replace or modify an equipped item or gem and report the change (C1, C3, C5).
+ * Request shape, failure codes and RPC mapping: docs/pob-mutation-design.md, section 1.
+ */
 export interface ItemChangeProbe {
-  measureItemChange(
-    slot: string,
-    change: { kind: 'replace-mod' | 'set-gem-quality' | 'set-gem-level' | 'swap-rune' | 'swap-unique'; detail: string },
-    expected: readonly BaselineExpectation[],
-  ): Promise<MeasuredResult>
+  measureItemChange(request: ItemChangeRequest): Promise<ProbeResult<ItemMeasurement | RangedItemMeasurement>>
 }
 
-/** Try an anoint (C2). */
+/** Try an anoint (C2): one candidate, or a ranked batch under a budget. */
 export interface AnointProbe {
-  measureAnoint(notableNodeId: number, expected: readonly BaselineExpectation[]): Promise<MeasuredResult>
+  measureAnoint(request: AnointRequest): Promise<ProbeResult<AnointMeasurement>>
+  measureAnoints(request: AnointBatchRequest): Promise<AnointRanking>
+}
+
+/** Reallocate passive points under a budget and report the change (C4). */
+export interface RespecProbe {
+  measureRespec(request: RespecRequest): Promise<ProbeResult<RespecMeasurement>>
 }
 
 /** Read the export's own configuration back from the live PoB (X4, B1). Names unverified. */
