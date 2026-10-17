@@ -19,6 +19,7 @@ import { DamageReview } from '@/components/DamageReview'
 import { GearWorkbench } from '@/components/GearWorkbench'
 import { CharacterHero } from '@/components/character/CharacterHero'
 import { CharacterNotes } from '@/components/character/CharacterNotes'
+import { DefenceChecklist } from '@/components/character/DefenceChecklist'
 import { ChangedSincePanel } from '@/components/character/ChangedSincePanel'
 import { CompareCharacters } from '@/components/character/CompareCharacters'
 import { CopyLink } from '@/components/character/CopyLink'
@@ -403,6 +404,8 @@ export default function Home() {
                 {w}
               </p>
             ))}
+
+            <DefenceChecklist analysis={analysis} />
 
             <CharacterNotes analysis={analysis} />
 
