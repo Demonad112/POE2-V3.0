@@ -278,6 +278,109 @@ export const SOUL_CORE_LIMITS: Readonly<Record<string, number>> = Object.freeze(
   'Soul Core of Zalatl': 1,
 })
 
+/** One effect of a Soul Core whose value the 0.5.5 patch notes changed. */
+export interface SoulCoreValueChange {
+  /** The socket type the effect applies to, as the notes word it. */
+  where: string
+  /** The 0.5.5 effect, and what it replaced (a bare number where only the value moved). */
+  now: string
+  before: string
+}
+
+/**
+ * Soul Cores whose values changed in 0.5.5, from the official patch notes
+ * (https://www.pathofexile.com/forum/view-thread/4000864, 2026-09-04). Values
+ * are quoted from the notes; see docs/patch-0.5.5-notes.md. A core not listed
+ * here is not claimed to be unchanged: the notes may have been read in part.
+ * Display only; nothing scores from this table.
+ */
+export const SOUL_CORE_VALUE_CHANGES: Readonly<Record<string, readonly SoulCoreValueChange[]>> = Object.freeze({
+  "Atmohua's Soul Core of Retreat": [
+    { where: 'Body Armour', now: '40% increased Max Energy Shield from Focus', before: 'Ailment and Stun Threshold from 15% of max Energy Shield' },
+  ],
+  "Cholotl's Soul Core of War": [
+    { where: 'Bow', now: '20% chance to Chain an additional time from terrain', before: '20% increased Projectile Speed' },
+  ],
+  "Estazunti's Soul Core of Convalescence": [
+    { where: 'Boots', now: '15% increased speed of Recoup Effects', before: '12%' },
+    { where: 'Helmet', now: '10% of Damage taken Recouped as Life', before: '8%' },
+  ],
+  "Jiquani's Thesis Soul Core": [
+    { where: 'Helmet', now: '+1 to maximum Mana per 3 Item Armour on Equipped Helmet', before: '+1 per 2 Item Energy Shield' },
+  ],
+  "Uromoti's Soul Core of Attenuation": [
+    { where: 'any', now: '20% increased Curse Duration', before: '15%' },
+    { where: 'any', now: '20% increased Poison Duration', before: '15%' },
+  ],
+  'Soul Core of Atmohua': [{ where: 'any', now: 'Convert 40% of Requirements to Strength', before: '20%' }],
+  'Soul Core of Cholotl': [{ where: 'any', now: 'Convert 40% of Requirements to Dexterity', before: '20%' }],
+  'Soul Core of Zantipi': [{ where: 'any', now: 'Convert 40% of Requirements to Intelligence', before: '20%' }],
+  'Soul Core of Citaqualotl': [
+    { where: 'Martial Weapon', now: '40% increased Elemental Damage with Attacks', before: '30%' },
+    { where: 'Armour', now: '6% to all Elemental Resistances', before: '5%' },
+  ],
+  'Soul Core of Jiquani': [
+    { where: 'Martial Weapon', now: 'Recover 5% of Maximum Life on Kill', before: '2%' },
+    { where: 'Body Armour', now: '5% increased Maximum Life', before: '3%' },
+  ],
+  'Soul Core of Opiloti': [
+    { where: 'Martial Weapon', now: '40% increased Magnitude of Bleed', before: '15% chance to cause Bleeding on Hit' },
+    { where: 'Helmet', now: '25% increased Pin Duration', before: '20% increased Charm Charges Gained' },
+  ],
+  'Soul Core of Puhuarte': [
+    { where: 'Martial Weapon', now: '40% increased Ignite Magnitude', before: '30% increased Flammability Magnitude' },
+    { where: 'Gloves', now: '+2% to Maximum Fire Resistance', before: '+1%' },
+  ],
+  'Soul Core of Tacati': [
+    { where: 'Armour', now: '+13% to Chaos Resistance', before: '+11%' },
+    { where: 'Martial Weapon', now: '25% increased Magnitude of Poison', before: '15% chance to Poison on Hit' },
+  ],
+  'Soul Core of Ticaba': [
+    { where: 'Body Armour or Shields', now: 'Hits against you have 50% reduced Critical Damage Bonus', before: '20%' },
+  ],
+  'Soul Core of Topotante': [
+    { where: 'Martial Weapon', now: 'Attacks Penetrate 25% Elemental Resistances', before: '15%' },
+    { where: 'Boots', now: '25% reduced Effect of Non-Damaging Ailments on you', before: '25% increased Elemental Ailment Threshold' },
+  ],
+  'Soul Core of Tzamoto': [
+    { where: 'Martial Weapon', now: '60% increased Freeze Buildup', before: '30%' },
+    { where: 'Helmet', now: '+2% to Maximum Cold Resistance', before: '+1%' },
+  ],
+  'Soul Core of Xopec': [
+    { where: 'Martial Weapon', now: '25% increased Magnitude of Shocks you inflict', before: '30% increased chance to Shock' },
+    { where: 'Boots', now: '+2% to Maximum Lightning Resistance', before: '+1%' },
+  ],
+  'Soul Core of Zalatl': [
+    { where: 'Martial Weapon', now: 'Recover 4% of maximum Mana on Kill', before: '2%' },
+    { where: 'Helmet', now: '5% increased Maximum Mana', before: '3%' },
+  ],
+})
+
+export interface SoulCoreChangeReport {
+  name: string
+  slotLabels: string[]
+  changes: readonly SoulCoreValueChange[]
+}
+
+/**
+ * Socketed Soul Cores whose value changed in 0.5.5, so a guide or build written
+ * for an earlier patch may quote the old number. Reads the active gear only.
+ */
+export function auditSoulCoreChanges(items: EquippedItem[]): SoulCoreChangeReport[] {
+  const seen = new Map<string, string[]>()
+  for (const item of items) {
+    if (!item.active) continue
+    const socketed = item.raw.itemData?.socketedItems
+    if (!Array.isArray(socketed)) continue
+    for (const core of socketed) {
+      const name = core?.typeLine || core?.baseType
+      if (!name || !SOUL_CORE_VALUE_CHANGES[name]) continue
+      seen.set(name, [...(seen.get(name) ?? []), item.slotLabel])
+    }
+  }
+  return [...seen].map(([name, slotLabels]) => ({ name, slotLabels, changes: SOUL_CORE_VALUE_CHANGES[name]! }))
+}
+
 export interface SoulCoreLimitReport {
   name: string
   limit: number
@@ -345,6 +448,8 @@ export interface AuditReport {
   jewels: ItemAnalysis[]
   emptySockets: SocketReport[]
   soulCoreLimits: SoulCoreLimitReport[]
+  /** Socketed cores whose value the 0.5.5 notes changed. */
+  soulCoreChanges: SoulCoreChangeReport[]
   gemQuality: GemQualityReport[]
   attributes: AttributeHeadroom[]
   spirit: SpiritReport | null
@@ -371,6 +476,7 @@ export function auditCharacter(
     jewels: tiers ? analyzeJewels(model, tiers) : [],
     emptySockets: findEmptySockets(normalizeItems(model)),
     soulCoreLimits: auditSoulCoreLimits(normalizeItems(model)),
+    soulCoreChanges: auditSoulCoreChanges(normalizeItems(model)),
     gemQuality: auditGemQuality(model),
     attributes: auditAttributes(pobStats),
     spirit: auditSpirit(pobStats),
