@@ -78,8 +78,8 @@
     ]
   },
   "recommendations": [
-    "anoint-unused",
     "weapon-ilvl-lag",
+    "anoint-unused",
     "weapon-set-idle",
     "dps-crit-uninvested"
   ],

@@ -76,11 +76,11 @@
     ]
   },
   "recommendations": [
-    "one-shot-chaos",
     "res-chaos-under-cap",
+    "one-shot-chaos",
     "res-cold-under-cap",
-    "anoint-unused",
-    "weapon-ilvl-lag"
+    "weapon-ilvl-lag",
+    "anoint-unused"
   ],
   "pobConfigInputCount": 20,
   "warnings": [],

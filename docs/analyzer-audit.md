@@ -101,7 +101,7 @@ Missing (all M, all need the PoB transport or a worker): affix ablation, simulat
 | ID | Sev | Type | Finding | Evidence |
 |---|---|---|---|---|
 | F-1 | Med | M | No Mapping / Bossing modes or priority weights. Added in this branch (`upgrade/scoring.ts`). | |
-| F-2 | Med | I | Recommendations rank by `significance / cost weight`; several significances are hand-picked constants (e.g. 0.45), against the comment that they are never hand-tuned. | `recommend/index.ts:45-50,419`; `recommend/types.ts:54-57` |
+| F-2 | Med | I | Recommendations rank by `significance / cost weight`; several significances are hand-picked constants (e.g. 0.45), against the comment that they are never hand-tuned. **Fixed:** anoint is now 1 notable over the allocated passive count (impact `null` when the count is missing); the free `+0.15` bonus is gone and the free preference sits in `COST_WEIGHT` (free 0.5); one-shot is `1 - 1/ratio`; weapon lag is `gap / median ilvl`. All significances are in [0,1]. Remaining scale choices: resistance `underCap / max`, gear `slots / capacity` and `closesShortfall / RESIST_CAP`, offence projected-gain share (all already stat-scale ratios). `COST_WEIGHT` values are documented preferences, not significances. | `recommend/index.ts`; `recommend/types.ts:54-57`; `test/recommend-significance.test.ts` |
 | F-3 | Med | M | Gains are not combinable across slots. A log-ratio score makes multiplicative gains additive; implemented as `combineScores`, explicitly labelled as not jointly simulated. | |
 
 ### G. Report and trust UX
