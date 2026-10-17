@@ -30,3 +30,28 @@ Results use the `UpgradeReport` types in core: every simulated card has `source:
 - Addon extension needed for items and config; licence and maintenance of that addon.
 - PoB and game data must be pinned together or caches silently go stale (audit C-3).
 - Cost: simulation count grows with candidate count; interaction-aware search multiplies it. A budget per job is mandatory.
+
+## Measured recommendations (design only, from `docs/analyzer-triage.md`)
+
+Interfaces: `packages/core/src/pob/probes.ts`. Nothing implements them.
+
+| Item | Needs | Output | Notes |
+|---|---|---|---|
+| A3 support value | `SupportRemovalProbe`: disable one gem, recalc, restore | DPS delta per support, `pob-sim` | Replaces the nominal figures. Until then `reviewDamage` names no lowest-value support |
+| A8 every skill | `getFullDps` per skill (exists in `bridge.ts`) | PoB DPS per skill beside poe.ninja's | Compare the skills present in both; flag >5 % |
+| C1 weapon / item | `ItemChangeProbe` (item mutation; not in the addon today) | DPS and survivability components separately | Totals must reconcile with the score `w_d·ln + w_s·ln` |
+| C2 anoint | `AnointProbe` plus an economy source for cost | Ranked options, gain, DPS/survivability split | Cost stays "unpriced" without a price source |
+| C3 gem and rune | `ItemChangeProbe`, gem quality/level, rune swaps | Measured gain, costed | Main skill first (14 gems under 20 % quality on the evidence character) |
+| C4 respec | Node simulation (exists: `simulatePassiveNode`) plus gold costs | Best nearby notables per point | **Unmeasurable guard:** a node whose removal shows no change (penetration, conditional, utility) is labelled unmeasurable and never refunded, unless the config models the condition. PoB's own refund of Storm Swell / Storm Surge is this failure |
+| C5 unique swap | `ItemChangeProbe` plus a unique dataset | Gain, with per-resistance drop from `applyLedger` | Ledger already built |
+| X4 config | `ConfigReadback` | Resistance penalty, enemy level/conditions of the live PoB vs the export | Lets `checkBaseline` say *why* it failed. Unverified RPC names |
+
+Every result passes `checkBaseline` first. A failing baseline withholds all deltas and names the stat.
+
+### Tree data (A2)
+
+`passive-tree.json` is `PassiveTree-0.5` with no patch or date. Refreshing it needs the matching `psg_passive_nodes.json`, which is not in the repository and could not be fetched offline. Steps: obtain the file for patch 0.5.5, run `build-tree.mjs`, record the patch in `PROVENANCE.md`, remove the `KNOWN_DATA_GAPS` entry in `tree.test.ts`.
+
+### Trade search (D2)
+
+`trade/query.ts` builds Exact / Wider / Best value from an injected `TradeStatMap`. No provenanced stat-id map exists; building one needs the trade site's stats endpoint (not callable here). Encode the `applyLedger` floors as the must-keep filters once it does.

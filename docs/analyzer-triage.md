@@ -65,3 +65,31 @@ Survivability is the weighted geometric mean of the smallest max hit and EHP. On
 ## Build order
 
 S0: B1, B2. S1 (lower effort first): A5, A7, A1, A8, A3, A2 report, B4, A4, B3. S2: A9, D1. One commit per item with tests.
+
+## Outcome (end of branch)
+
+| ID | Result | Commit subject |
+|---|---|---|
+| B1 | built | gate simulated deltas on baseline reproduction (`pob/baseline-gate.ts`; wired into `rankNodesByMeasuredGain`, `measureSensitivity`, MCP `poe2_pob_rank_nodes`). The recorded fixture's own export passes the gate |
+| B2 | built | cumulative constraint ledger (`constraints/ledger.ts`), applied to recraft findings. On the recorded fixture the two recraft findings each take fire from 99 to about 55-59 alone and to 15 together; the old text called the loss "smaller than the number suggests". It now says so |
+| A5 | built | findings recrafting one line merge into a single decision (`mergeSameLineSwaps`). The fixture has no such pair, so it is covered by a unit test |
+| A7 | built | evade is poe.ninja's figure, unknown when absent, reconciled against the export's `EvadeChance` |
+| A1 | built | `unmapped` severity, ±1 rounding tolerance, banner split (PoB vs own breakdown), one "major" in the header |
+| A8 | built (pairing) | PoB `TotalDPS` pairs with poe.ninja's figure for the export's main skill; all-skill comparison stays design only |
+| A3 | built (label) | no lowest-value support from nominal figures; removal simulation is design only |
+| A2 | built (report) | unresolved ids reported for all allocations; data refresh design only |
+| A4 | built | tree and ascendancy nodes read; light-stun lines do not count as stun immunity |
+| B3 | built | `labelOf`, `ProvenanceBadge`; applied to defence, nominal gem values and the implied-resistance note. Not retrofitted everywhere |
+| B4 | built (pending) | loader and skipped tests; fixture-wide tree check |
+| A9 | built | `impliedResistance`, refuses when physical max hit is not the life + ES pool (the recorded fixture, so unknown there) |
+| D1 | built | `readPobSkillGroups`, `inactiveSetFromPob` |
+| A6 | deferred | |
+| C1-C5, D2 | design only | `docs/pob-worker-design.md`, `pob/probes.ts` |
+| C6, C7 | rejected (already present) | |
+
+### Left as found, worth a look
+
+- The user's description of the Yykiuy tree ("84 drawn of 86, 3 missing") does not add up (86 - 84 = 2). `KNOWN_DATA_GAPS` allows up to 3 and only ever tightens.
+- The recorded Athrynas fixture is level 86, not 94.
+- `PobAnalysis.provenance` is still `'pob'` (pinned by an existing test); it is outside the `Provenance` union.
+- Not verified here: any live poe.ninja / PoB / trade behaviour, the `Item:<id>` skill-source format in PoB exports, `get_config_input` / `set_config_input`, the 0.5.5 tree version.
