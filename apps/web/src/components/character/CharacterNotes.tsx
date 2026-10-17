@@ -69,7 +69,9 @@ export function CharacterNotes({ analysis }: { analysis: Analysis }) {
         <p className="mt-1 text-[11px] text-ink-mute">
           {inactiveSet.skills.status === 'known'
             ? inactiveSet.skills.names.length
-              ? `Skills in this set: ${inactiveSet.skills.names.join(', ')}.`
+              ? inactiveSet.skills.partial
+                ? `Skills the attached Path of Building export ties to this set: ${inactiveSet.skills.names.join(', ')}. There may be more it does not link.`
+                : `Skills in this set: ${inactiveSet.skills.names.join(', ')}.`
               : 'No skills are placed in this set.'
             : inactiveSet.skills.reason}{' '}
           Nothing here counts towards the live build.

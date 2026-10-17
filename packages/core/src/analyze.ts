@@ -21,6 +21,7 @@ import type { ModTiers } from './gear/tiers.js'
 import { decodePobExport, readPlayerStats } from './pob/export.js'
 import { readPobConfig, type PobConfig } from './pob/config.js'
 import { readPobMainSkill } from './pob/main-skill.js'
+import { inactiveSetFromPob, readPobSkillGroups, type PobSkillGroup } from './pob/skill-groups.js'
 import { mainSkillNote } from './dps/main-skill.js'
 import { assessBuild, type BuildAssessment } from './score/index.js'
 import { resolveAllocation, type PassiveTree } from './tree/index.js'
@@ -56,6 +57,8 @@ export interface Analysis {
   inactiveSet: InactiveSetReport
   /** Ailment immunities from equipped gear and, when the tree data was given, allocated nodes. */
   ailments: AilmentStatus[]
+  /** Every skill group in the attached Path of Building export, both skill sets. Null without an export. */
+  pobSkillGroups: PobSkillGroup[] | null
   breakdowns: BreakdownIndex
   /**
    * What each equipped item is holding up, and what the sheet would read
@@ -177,12 +180,14 @@ export async function analyzeCharacter(
   let pobStats: Record<string, number> | null = null
   let pobConfig: PobConfig | null = null
   let exportMain: string | null = null
+  let pobSkillGroups: PobSkillGroup[] | null = null
   if (model.pathOfBuildingExport) {
     try {
       const xml = await decodePobExport(model.pathOfBuildingExport)
       pobStats = readPlayerStats(xml)
       exportMain = readPobMainSkill(xml)?.name ?? null
       pobConfig = readPobConfig(xml)
+      pobSkillGroups = readPobSkillGroups(xml)
     } catch (err) {
       warnings.push(
         `The attached Path of Building export could not be decoded (${(err as Error).message}), so poe.ninja's numbers could not be cross-checked.`,
@@ -236,7 +241,8 @@ export async function analyzeCharacter(
     dps,
     passives,
     items,
-    inactiveSet: inactiveSetReport(model),
+    inactiveSet: pobSkillGroups ? inactiveSetFromPob(inactiveSetReport(model), pobSkillGroups) : inactiveSetReport(model),
+    pobSkillGroups,
     ailments: ailmentImmunities(items, resolvedTree ? resolvedTree.live : null),
     breakdowns,
     attribution: attributeToItems(breakdowns, items, defense),
