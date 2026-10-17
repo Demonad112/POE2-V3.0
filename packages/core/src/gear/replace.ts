@@ -22,6 +22,7 @@
  */
 
 import { knownResistances, resistanceShortfalls, type DefenseSummary } from '../defense/index.js'
+import { attributionForSlot, attributionForStat, type AttributableStat, type AttributionReport } from '../model/attribution.js'
 import type { EquippedItem } from '../model/slots.js'
 import {
   AFFIX_CAPACITY,
@@ -109,31 +110,46 @@ function resistTypeOf(statId: string): string | null {
   return Object.entries(RESIST_STAT).find(([, id]) => id === statId)?.[0] ?? null
 }
 
-/** Resistance points an item grants, per type. */
-export function resistancesFrom(item: ItemAnalysis): Record<string, number> {
-  const out: Record<string, number> = {}
-  for (const mod of item.mods) {
-    for (const r of mod.rolled) {
-      if (r.id === ALL_ELEMENTAL) {
-        for (const e of ELEMENTS) out[e] = (out[e] ?? 0) + r.value
-        continue
-      }
-      const type = resistTypeOf(r.id)
-      if (type) out[type] = (out[type] ?? 0) + r.value
+/**
+ * Resistance points the item in a slot grants, per type, read from poe.ninja's
+ * breakdown so rune, implicit and enchant resistance count too. Null where the
+ * breakdown cannot be trusted for that type (it does not add up, or it
+ * disagrees with the character sheet): unknown, never zero.
+ */
+export function resistanceGrants(
+  slotId: number,
+  defense: DefenseSummary,
+  attribution: AttributionReport,
+): Record<string, number | null> {
+  const row = attributionForSlot(attribution, slotId)
+  const out: Record<string, number | null> = {}
+  for (const res of knownResistances(defense)) {
+    const stat = `${res.type}Resistance` as AttributableStat
+    if (!attributionForStat(attribution, stat)?.trustworthy) {
+      out[res.type] = null
+      continue
     }
+    const contribution = row?.contributions.find((c) => c.stat === stat)
+    out[res.type] = contribution ? Math.max(0, res.value + res.overCap - contribution.withoutUncapped) : 0
   }
   return out
 }
 
 /**
  * Points below cap each resistance would fall with the item removed and nothing
- * in its place, per type. Types that stay capped are 0.
+ * in its place, per type. Types that stay capped are 0; types the breakdown
+ * cannot attribute are null.
  */
-export function removalDeficits(item: ItemAnalysis, defense: DefenseSummary): Record<string, number> {
-  const granted = resistancesFrom(item)
-  const out: Record<string, number> = {}
+export function removalDeficits(
+  item: ItemAnalysis,
+  defense: DefenseSummary,
+  attribution: AttributionReport,
+): Record<string, number | null> {
+  const granted = resistanceGrants(item.slotId, defense, attribution)
+  const out: Record<string, number | null> = {}
   for (const res of knownResistances(defense)) {
-    out[res.type] = Math.max(0, res.max - (res.value + res.overCap - (granted[res.type] ?? 0)))
+    const g = granted[res.type]
+    out[res.type] = g === null || g === undefined ? null : Math.max(0, res.max - (res.value + res.overCap - g))
   }
   return out
 }
@@ -191,6 +207,8 @@ export interface ReplacementInput {
   items: ItemAnalysis[]
   rawItems: EquippedItem[]
   defense: DefenseSummary
+  /** poe.ninja's attribution: the source for what the target holds up. */
+  attribution: AttributionReport
   tiers: ModTiers
   /** Cap tiers at what drops at this item level, e.g. 82. Omit for the best that exists. */
   maxIlvl?: number
@@ -207,6 +225,7 @@ export function planReplacement({
   items,
   rawItems,
   defense,
+  attribution,
   tiers,
   maxIlvl,
   omitResistances = [],
@@ -220,18 +239,20 @@ export function planReplacement({
       `${target.name} is unique — a rare replacement loses its unique effect. The plan below only covers the resistances it provides.`,
     )
   }
-  if (target.mods.some((m) => m.source === 'rune')) {
-    notes.push('Rune lines have no stat data in the payload, so any resistance they grant is not counted here.')
-  }
 
   // --- resistance impact of removing the item ------------------------------
-  const granted = resistancesFrom(target)
-  const deficits = removalDeficits(target, defense)
+  const granted = resistanceGrants(target.slotId, defense, attribution)
+  const deficits = removalDeficits(target, defense, attribution)
   const impact = new Map<string, ResistanceImpact>()
   for (const res of knownResistances(defense)) {
-    const fromItem = granted[res.type] ?? 0
+    const fromItem = granted[res.type]
+    const deficitIfRemoved = deficits[res.type]
+    if (fromItem === null || fromItem === undefined || deficitIfRemoved === null || deficitIfRemoved === undefined) {
+      // No entry: an unknown must not read as "stays capped".
+      notes.push(`${res.type} resistance: poe.ninja's breakdown doesn't attribute it reliably, so what this item holds up is unknown and not planned for.`)
+      continue
+    }
     const uncapped = res.value + res.overCap
-    const deficitIfRemoved = deficits[res.type] ?? 0
     impact.set(res.type, {
       type: res.type,
       fromItem,

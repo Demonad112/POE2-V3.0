@@ -21,6 +21,7 @@
  */
 
 import type { DefenseSummary } from '../defense/index.js'
+import type { AttributionReport } from '../model/attribution.js'
 import { AFFIX_CAPACITY, OCCUPIES_AFFIX_SLOT, type ItemAnalysis } from './analyze.js'
 import { removalDeficits } from './replace.js'
 
@@ -48,6 +49,8 @@ export interface ReplacementPriority {
    * not charged to the item.
    */
   removalCost: Record<string, number>
+  /** Resistance types whose removal cost is unknown because the breakdown cannot attribute them. */
+  removalCostUnknown: string[]
   /** Plain-language reasons, in the order above. Empty when nothing measurable was found. */
   reasons: string[]
 }
@@ -65,7 +68,7 @@ const ORDERED_BY =
 
 const sum = (r: Record<string, number>) => Object.values(r).reduce((a, b) => a + b, 0)
 
-function assess(item: ItemAnalysis, defense: DefenseSummary): ReplacementPriority {
+function assess(item: ItemAnalysis, defense: DefenseSummary, attribution: AttributionReport): ReplacementPriority {
   const wasted = item.mods.filter((m) => m.waste).map((m) => ({ text: m.text, reason: m.waste!.reason }))
   const needsNewBase = item.mods
     .filter((m) => m.upgrades.length && !m.upgrades.some((u) => u.reachableOnThisItem))
@@ -79,7 +82,12 @@ function assess(item: ItemAnalysis, defense: DefenseSummary): ReplacementPriorit
       : Math.max(0, capacity - item.affixCounts.prefix) + Math.max(0, capacity - item.affixCounts.suffix)
   const unresolved = item.mods.filter((m) => m.unresolved).length
   const removalCost: Record<string, number> = {}
-  for (const [type, deficit] of Object.entries(removalDeficits(item, defense))) {
+  const removalCostUnknown: string[] = []
+  for (const [type, deficit] of Object.entries(removalDeficits(item, defense, attribution))) {
+    if (deficit === null) {
+      removalCostUnknown.push(type)
+      continue
+    }
     const already = defense.resistances.find((r) => r.type === type)?.underCap ?? 0
     if (deficit - already > 0) removalCost[type] = deficit - already
   }
@@ -106,13 +114,18 @@ function assess(item: ItemAnalysis, defense: DefenseSummary): ReplacementPriorit
     openSlots,
     unresolved,
     removalCost,
+    removalCostUnknown,
     reasons,
   }
 }
 
 /** Rank the character's active gear by how much replacing each item would recover. */
-export function rankReplacements(items: ItemAnalysis[], defense: DefenseSummary): ReplacementRanking {
-  const assessed = items.filter((i) => i.active).map((i) => assess(i, defense))
+export function rankReplacements(
+  items: ItemAnalysis[],
+  defense: DefenseSummary,
+  attribution: AttributionReport,
+): ReplacementRanking {
+  const assessed = items.filter((i) => i.active).map((i) => assess(i, defense, attribution))
   const unranked = assessed.filter((a) => a.rarity === 'Unique')
   const ranked = assessed
     .filter((a) => a.rarity !== 'Unique')

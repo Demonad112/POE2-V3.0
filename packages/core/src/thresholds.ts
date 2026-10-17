@@ -123,6 +123,20 @@ export const LEVEL_PINNACLE_PUSH = 85
 /** The guide's "5,000+ life" pinnacle gate, read as the combined pool. */
 export const POOL_PINNACLE = 5000
 
+/** Share of the build score given to damage; defence gets the rest. */
+export const OFFENCE_WEIGHT = 0.5
+
+/**
+ * Damage grades, in the offence half's own units (0 to OFFENCE_WEIGHT), by where
+ * the build's DPS falls among the observed ladder sample.
+ */
+export const OFFENCE_GRADE = Object.freeze({ upperHalf: 0.5, median: 0.4, p25: 0.28, below: 0.15 })
+
+/** Lowest build score that earns each tier; below TIER_C_MIN is D. */
+export const TIER_A_MIN = 0.75
+export const TIER_B_MIN = 0.5
+export const TIER_C_MIN = 0.3
+
 /** Optional view emphasis: which kind of content the reader is preparing for. */
 export type FocusMode = 'mapping' | 'bossing'
 

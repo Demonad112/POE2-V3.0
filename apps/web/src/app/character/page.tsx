@@ -296,6 +296,7 @@ export default function Home() {
           <GearWorkbench
             items={a.items}
             defense={a.defense}
+            attribution={a.attribution}
             state={tiersState}
             characterName={a.identity.name}
             recommendations={a.recommendations.recommendations}

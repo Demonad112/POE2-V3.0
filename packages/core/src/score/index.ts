@@ -28,9 +28,14 @@ import {
   CHAOS_TARGET,
   EVASION_SUBSTANTIAL,
   isHealthy,
+  OFFENCE_GRADE,
+  OFFENCE_WEIGHT,
   ONE_SHOT_RATIO,
   POOL_GOOD,
   POOL_THIN,
+  TIER_A_MIN,
+  TIER_B_MIN,
+  TIER_C_MIN,
 } from '../thresholds.js'
 
 export type Severity = 'critical' | 'warning'
@@ -42,11 +47,8 @@ export interface Weakness {
 
 export type BuildTier = 'A' | 'B' | 'C' | 'D'
 
-/** Each half of the score. Defence and damage are weighted evenly. */
-const OFFENCE_WEIGHT = 0.5
-
 function tierFor(score: number): BuildTier {
-  return score >= 0.75 ? 'A' : score >= 0.5 ? 'B' : score >= 0.3 ? 'C' : 'D'
+  return score >= TIER_A_MIN ? 'A' : score >= TIER_B_MIN ? 'B' : score >= TIER_C_MIN ? 'C' : 'D'
 }
 
 export interface BuildAssessment {
@@ -118,10 +120,10 @@ function primaryDps(dps: DpsSummary): number {
 function gradeOffence(dps: number, stat: LadderStat): number {
   // Quartiles of the observed sample, not invented cutoffs.
   const band = bandFor(dps, stat)
-  if (band === 'top' || band === 'p75') return 0.5
-  if (band === 'median') return 0.4
-  if (band === 'p25') return 0.28
-  return 0.15
+  if (band === 'top' || band === 'p75') return OFFENCE_GRADE.upperHalf
+  if (band === 'median') return OFFENCE_GRADE.median
+  if (band === 'p25') return OFFENCE_GRADE.p25
+  return OFFENCE_GRADE.below
 }
 
 export function assessBuild(input: BuildAssessmentInput): BuildAssessment {

@@ -23,13 +23,28 @@ const tiers = new ModTiers(JSON.parse(readFileSync(join(dataDir, 'mod-tiers.json
 const analysis = await analyzeCharacter(payload)
 const items = normalizeItems(model).filter((i) => i.active)
 const analysed = items.map((i) => analyzeItem(i, tiers, analysis.defense))
-const ranking = rankReplacements(analysed, analysis.defense)
+const ranking = rankReplacements(analysed, analysis.defense, analysis.attribution)
 const row = (label: string) => ranking.ranked.find((r) => r.slotLabel === label)!
 
 describe('removalDeficits', () => {
   it('matches what the replacement planner charges the helmet', () => {
     const helmet = analysed.find((i) => i.slotLabel === 'Helmet')!
-    expect(removalDeficits(helmet, analysis.defense)).toMatchObject({ fire: 16, cold: 36, lightning: 30 })
+    expect(removalDeficits(helmet, analysis.defense, analysis.attribution)).toMatchObject({ fire: 16, cold: 36, lightning: 30 })
+  })
+})
+
+describe('removalDeficits without a trustworthy breakdown', () => {
+  it('returns null for the untrusted type and lists it on the ranking row', () => {
+    const attribution = {
+      ...analysis.attribution,
+      stats: analysis.attribution.stats.map((s) => (s.stat === 'fireResistance' ? { ...s, trustworthy: false } : s)),
+    }
+    const helmet = analysed.find((i) => i.slotLabel === 'Helmet')!
+    expect(removalDeficits(helmet, analysis.defense, attribution).fire).toBeNull()
+    const r = rankReplacements(analysed, analysis.defense, attribution)
+    const hrow = [...r.ranked, ...r.unranked].find((x) => x.slotLabel === 'Helmet')!
+    expect(hrow.removalCostUnknown).toContain('fire')
+    expect(hrow.removalCost.fire).toBeUndefined()
   })
 })
 

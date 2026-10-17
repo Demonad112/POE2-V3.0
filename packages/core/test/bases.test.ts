@@ -25,7 +25,7 @@ const items = normalizeItems(model).filter((i) => i.active)
 const analysed = items.map((i) => analyzeItem(i, tiers, analysis.defense))
 const bySlot = (label: string) => analysed.find((i) => i.slotLabel === label)!
 const plan = (label: string) =>
-  planReplacement({ target: bySlot(label), items: analysed, rawItems: items, defense: analysis.defense, tiers })
+  planReplacement({ target: bySlot(label), items: analysed, rawItems: items, defense: analysis.defense, attribution: analysis.attribution, tiers })
 
 describe('BaseCatalog', () => {
   it('reads defences, requirements and implicits from PoB', () => {

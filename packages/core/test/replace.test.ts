@@ -15,7 +15,7 @@ import { analyzeCharacter } from '../src/analyze.js'
 import { normalizeItems } from '../src/model/slots.js'
 import { ModTiers, type ModTierData } from '../src/gear/tiers.js'
 import { analyzeItem } from '../src/gear/analyze.js'
-import { planReplacement, resistancesFrom } from '../src/gear/replace.js'
+import { planReplacement, resistanceGrants } from '../src/gear/replace.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const dataDir = join(here, '..', '..', 'data', 'generated')
@@ -28,15 +28,41 @@ const analysed = items.map((i) => analyzeItem(i, tiers, analysis.defense))
 const bySlot = (label: string) => analysed.find((i) => i.slotLabel === label)!
 
 const plan = (label: string, extra: { omitResistances?: string[]; maxIlvl?: number } = {}) =>
-  planReplacement({ target: bySlot(label), items: analysed, rawItems: items, defense: analysis.defense, tiers, ...extra })
+  planReplacement({ target: bySlot(label), items: analysed, rawItems: items, defense: analysis.defense, attribution: analysis.attribution, tiers, ...extra })
 
-describe('resistancesFrom', () => {
-  it('sums every resistance line on the item', () => {
-    expect(resistancesFrom(bySlot('Helmet'))).toMatchObject({ fire: 40, cold: 35, lightning: 38 })
+describe('resistanceGrants', () => {
+  it('reads what the item grants from poe.ninja\'s breakdown', () => {
+    expect(resistanceGrants(bySlot('Helmet').slotId, analysis.defense, analysis.attribution)).toMatchObject({ fire: 40, cold: 35, lightning: 38 })
+  })
+})
+
+const untrusted = (stat: string) => ({
+  ...analysis.attribution,
+  stats: analysis.attribution.stats.map((s) => (s.stat === stat ? { ...s, trustworthy: false } : s)),
+})
+
+describe('resistanceGrants without a trustworthy breakdown', () => {
+  it('reports unknown, not zero, for the untrusted type only', () => {
+    const grants = resistanceGrants(bySlot('Helmet').slotId, analysis.defense, untrusted('fireResistance'))
+    expect(grants.fire).toBeNull()
+    expect(grants.cold).toBe(35)
   })
 })
 
 describe('planReplacement', () => {
+  it('plans nothing for a resistance it cannot attribute, and says so', () => {
+    const p = planReplacement({
+      target: bySlot('Helmet'),
+      items: analysed,
+      rawItems: items,
+      defense: analysis.defense,
+      attribution: untrusted('fireResistance'),
+      tiers,
+    })
+    expect(p.resistances.map((r) => r.type)).not.toContain('fire')
+    expect(p.notes.some((n) => n.startsWith('fire resistance') && n.includes('unknown'))).toBe(true)
+  })
+
   it('measures what the item holds up', () => {
     const p = plan('Helmet')
     const byType = Object.fromEntries(p.resistances.map((r) => [r.type, r.deficitIfRemoved]))
