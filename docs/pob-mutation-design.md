@@ -417,3 +417,122 @@ D2 simulates nothing, so `checkBaseline` does not apply. The equivalent gate is 
 
 - Risk: low-medium. A wrong id silently searches for the wrong stat, hence `verified: false` by default, exclusion of unverified entries by default, and the visible must-keep completeness flag. The query shape and the stats endpoint are unverified until the owner records them. Hybrid affixes fall outside single-stat filters.
 - Estimate: schema, resolution and flags **S**; recording and verifying the map **S** (manual, owner); snapshot tests **S**; optional pseudo-stat support **M** (depends on what the site offers).
+
+---
+
+## 4. A8: full per-skill PoB DPS
+
+Interfaces: `packages/core/src/pob/per-skill-dps.ts` (`SkillSelection`, `PerSkillDpsRequest`, `PerSkillReading`, `PerSkillComparison`, `PerSkillDpsReport`, `PerSkillDpsProbe`, `ConfigValue`, `ConfigComparison`, `ConfigReadbackResult`), `ConfigReadback` in `probes.ts`.
+
+```ts
+interface PerSkillDpsProbe { measurePerSkillDps(r: PerSkillDpsRequest): Promise<ProbeResult<PerSkillDpsReport>> }
+interface ConfigReadback  { readConfig(names: readonly string[]): Promise<ConfigReadbackResult> }
+```
+
+Today, verified in code: the export carries one `TotalDPS`; `reconcile` pairs it with poe.ninja's figure for the export's main skill and reports "not compared" when names differ (A8 pairing, built). The recorded export has `FullDPS = 0` and `FullDotDPS = 0`, and its 12 `<Skill>` groups all carry `includeInFullDPS="nil"`: PoB's FullDPS output is empty unless groups are flagged.
+
+### 4.1 Two ways to obtain per-skill DPS
+
+| | (b) Selection iteration (**default**) | (a) `get_full_dps` RPC |
+|---|---|---|
+| Mechanism | For each skill: `apply_step{set_main_selection{group, activeIndex, skillPart}}`, `recalculate`, read `TotalDPS`/`TotalDotDPS`/`main`; restore the original selection at the end | One call to the existing `getFullDps()` |
+| Per-skill figure | Yes, same stat as the baseline gate checks | Unknown. The reply shape has never been recorded; the bridge method exists but nothing in the repo calls it. **Assumption:** it lists skills only for groups with `includeInFullDPS` |
+| Needs mutation | Selection only (`mainSocketGroup`, `mainActiveSkill`, part) | None for the call; but the recorded groups are unflagged, so it returns nothing until flags are set, which is itself a mutation |
+| Cost | About 3 RPC calls per skill plus 5 fixed | 1 call, if flags are set |
+| Fits the gate | Yes: every reading is a `TotalDPS` that `checkBaseline` already knows how to check for the baseline skill | No: FullDPS is a sum under PoB's own rules (stacking, shared-hit handling), not comparable to one skill's `dps` |
+| Use | Per-skill table and comparison | Optional cross-check of the sum (`fullDps` field), never a per-skill source |
+
+Decision in this design: **(b) is the per-skill path; (a) is a cross-check only** and runs only if the owner asks for it (see "Decision needed").
+
+### 4.2 Procedure (select-iterate)
+
+1. `snapshot_state{skills}`, `state_fingerprint`, `get_skill_groups` (groups, enabled active gems, current `main`).
+2. `get_calcs`; `checkBaseline(expected, stats)`. This gates the **export's main skill**: Life, defences and `TotalDPS` for that skill against poe.ninja. Fail: `withheld`, no selection has been switched.
+3. Build the skill list (`'ninja-listed'`: skills poe.ninja lists that PoB also has enabled; `'all-enabled'`: every enabled active gem in every enabled group).
+4. For each skill: switch selection, `recalculate`, read `TotalDPS`, `TotalDotDPS`, `main`. If `main` differs from the request: reading `selection-readback-mismatch`.
+5. The reading for the export's own main selection must reproduce the baseline `TotalDPS` within the gate tolerance, else the whole run is `failed: readback-mismatch` (the iteration is not taking effect).
+6. `restore_state`; `state_fingerprint` must equal step 1, else `failed: revert-failed`.
+
+Skills PoB cannot compute in the active state are **not** forced:
+
+- Tied to the inactive weapon set (`PobSkillGroup.weaponSet` from D1 differs from the active set), or granted by an item not in the active set: `needs-weapon-set-swap`, `hitDps: null`.
+- Buff or aura with no damage output: `no-damage-output` (poe.ninja gives `dps: 0` and a `dotDps` for these, `NinjaSkillDps` in `model/types.ts`). Not zero DPS.
+- Skill with several parts: the part PoB defaults to is measured and `skillPart: null` is recorded; `partCount` is stored when the addon says. A multi-part skill with no way to tell which part poe.ninja used pairs as `ambiguous`.
+
+### 4.3 Cost
+
+With s skills read: 3·s + 5 RPC calls on the per-step path; one connection with `batch_measure`. The recorded export has 12 groups; `'ninja-listed'` reduces s to the skills poe.ninja actually reports. Wall time per `recalculate` is unmeasured. A `ProbeBudget` applies; exhaustion returns `partial: true` with the remaining skills `unmeasured`, never an invented value.
+
+### 4.4 Reconciling with poe.ninja
+
+Pairing rules (extending the A8 pairing already built in `reconcile`):
+
+| Rule | Detail |
+|---|---|
+| Key | Skill name, trimmed, case-insensitive exact match. poe.ninja entries without `name` (meta/trigger setups, per `NinjaSkillDps`) are `ambiguous` |
+| Repeated names | Two PoB readings or two poe.ninja entries with one name: `ambiguous` |
+| Hit | PoB `TotalDPS` against poe.ninja `dps` |
+| DoT | PoB `TotalDotDPS` against poe.ninja `dotDps`, as a separate comparison (`basis: 'dot'`) |
+| Absent on one side | `not-in-ninja` / `not-in-pob`, shown, never filled |
+| Tolerance | `agrees` within the gate's tolerance (1 % or 1 unit); `minor` up to 5 %; `diverges` above 5 %. 5 % is the figure from the triage note; it is a judgement threshold, not a measured one |
+| Divergence | Shown with both numbers and the config differences (`ConfigReadback`), not corrected. The cause is not asserted: poe.ninja's per-skill figure comes from its own calculation and the repo cannot establish its configuration |
+| Main skill | Must also agree with the existing reconcile check; a conflict between the two is a defect in the probe, not a finding |
+
+Every PoB number is `source: 'pob-sim'`; every poe.ninja number stays `observed`. They are shown side by side, never averaged.
+
+A divergence on a **non-main** skill does not by itself withhold the main skill's figures: the gate already passed on the main skill. It lowers confidence in the per-skill table, which says so.
+
+### 4.5 `ConfigReadback`: names and states
+
+`get_config_input` / `set_config_input` are used by `bridgeProbe` (`sensitivity.ts`) but have **never been verified** against the addon. Needed:
+
+| Input | Why | Status of the name |
+|---|---|---|
+| `misc_buffMode` | EFFECTIVE vs COMBAT changes every figure | present in the recorded export |
+| `conditionEnemyChilled`, `conditionEnemyIgnited`, `conditionEnemyBleeding`, `conditionBeenHitRecently`, `conditionCritRecently`, `conditionMoving` | conditionals the recorded export sets | present in the recorded export |
+| `multiplierNearbyEnemies`, `multiplierNearbyRareOrUniqueEnemies`, `DisableEHPGainOnBlock` | present in the recorded export | present in the recorded export |
+| `skill_number` | present in the recorded export | meaning not verified |
+| Enemy is boss / boss type | `BOSS_KEYS` in `pob/config.ts` lists `enemyIsBoss`, `conditionEnemyBoss`, `enemyIsBossType`, `bossSkillEffect` | **not seen** in the recorded export; names are guesses, to be captured |
+| Enemy level, enemy resistance and the resistance penalty | the reference tool's failure cause (triage X4) | **names unknown**, to be captured from a live PoB Configuration tab |
+| Skill part | selection state, not a config input in the export | taken from the `main` readback, not from `ConfigReadback` |
+
+The export lists only inputs that are set. So "absent from the export" means *default*, and the live value for that input must also read *default* (or the PoB default must be known). `ConfigValue` keeps `set`, `default` and `unreadable` apart; an `unreadable` input is never `equal`, and a failed gate then reports "configuration could not be compared" instead of blaming a stat.
+
+### 4.6 PoB-side requirement
+
+`snapshot_state`/`restore_state`/`state_fingerprint` (scope `skills`; `mainSocketGroup` must be inside it), `get_skill_groups` with the current selection, `apply_step{set_main_selection}` returning `main`, `get_config_input`. Optionally `get_full_dps` with a known shape. All **assumptions**.
+
+### 4.7 Baseline expectations that gate it
+
+`ninjaBaselineExpectations(stats, mainSkillDps)` with `mainSkillDps` set, evaluated on the unmutated build. Per-skill readings are then compared, not gated: a non-main skill has no gate of its own beyond the poe.ninja comparison, which is the point of the table. A run whose main-skill reading fails to reproduce the baseline is `failed`.
+
+### 4.8 Failure and `unknown` behaviour
+
+| Condition | Result |
+|---|---|
+| Gate fails | `withheld`; no per-skill table |
+| Addon lacks `set_main_selection` | `failed: rpc-unsupported`; today's single-skill pairing stays |
+| Selection does not take | that reading `selection-readback-mismatch` (or whole run `failed` if it is the baseline skill) |
+| Weapon set or item not active | `needs-weapon-set-swap`, no number |
+| Buff or aura | `no-damage-output` |
+| Multi-part, part unknown | measured default part, comparison `ambiguous` |
+| `FullDPS` is 0 | reported as 0 with `groupsIncluded: 0`, never summed from parts |
+| Revert not proven | `failed: revert-failed`; table discarded |
+
+### 4.9 Test plan
+
+Fake transport; no fixtures committed here.
+
+- Gate failure: no `set_main_selection` call.
+- Iteration order, restore of the original selection, and fingerprint equality; a restore that leaves a different selection fails.
+- Baseline reproduction: the export-main reading equals the baseline within tolerance; otherwise `failed`.
+- Comparison table: scripted pairs for `agrees` (1 %), `minor` (3 %), `diverges` (8 %), `not-in-ninja`, `not-in-pob`, duplicate name `ambiguous`, unnamed poe.ninja skill `ambiguous`, DoT basis.
+- Buff skill (`dps: 0`, `dotDps` present): `no-damage-output` hit, DoT compared.
+- `FullDPS = 0`: reported as 0, no inference.
+- Config comparison: set/default/unreadable combinations; unreadable never `equal`.
+- Fixtures needed later: `get_skill_groups` and `get_calcs` under at least two selections; one multi-part skill; one aura; one `get_full_dps` reply from a build with flagged groups; a live `get_config_input` reply for each name above.
+
+### 4.10 Risk and estimate
+
+- Risk: medium. Switching the selection touches the user's `mainSocketGroup`; revert is proven by fingerprint. Per-skill config effects (stages, parts, charges) may make PoB's non-main figures differ from poe.ninja's for reasons the repo cannot see; the table reports differences, never a cause.
+- Estimate: probe **M** (after section 0 and `set_main_selection`); config readback verification and names **S** (needs one live session); comparison table and reconcile integration **S**.

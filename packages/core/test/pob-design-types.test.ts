@@ -1,5 +1,13 @@
 import { describe, expectTypeOf, it } from 'vitest'
-import type { ItemChangeProbe, AnointProbe, RespecProbe } from '../src/pob/probes.js'
+import type { ItemChangeProbe, AnointProbe, ConfigReadback, RespecProbe } from '../src/pob/probes.js'
+import type {
+  ConfigReadbackResult,
+  ConfigValue,
+  PerSkillComparison,
+  PerSkillDpsProbe,
+  PerSkillDpsReport,
+  PerSkillReading,
+} from '../src/pob/per-skill-dps.js'
 import type {
   ItemChangeRequest,
   ItemMeasurement,
@@ -91,5 +99,21 @@ describe('trade stat mapping shapes (types only)', () => {
   it('unverified entries are excluded unless the caller opts in', () => {
     expectTypeOf<UnverifiedPolicy>().toEqualTypeOf<'exclude' | 'include-flagged'>()
     expectTypeOf<TradeVariantCompleteness['mustKeepComplete']>().toEqualTypeOf<boolean>()
+  })
+})
+
+describe('per-skill DPS and config shapes (types only)', () => {
+  it('a reading carries a number only as a nullable field', () => {
+    expectTypeOf<PerSkillReading['hitDps']>().toEqualTypeOf<number | null>()
+    expectTypeOf<PerSkillComparison['status']>().toMatchTypeOf<string>()
+  })
+
+  it('config states are kept apart', () => {
+    expectTypeOf<ConfigValue['state']>().toEqualTypeOf<'set' | 'default' | 'unreadable'>()
+    expectTypeOf<ConfigReadback['readConfig']>().returns.resolves.toEqualTypeOf<ConfigReadbackResult>()
+  })
+
+  it('the per-skill probe returns the common envelope', () => {
+    expectTypeOf<PerSkillDpsProbe['measurePerSkillDps']>().returns.resolves.toEqualTypeOf<ProbeResult<PerSkillDpsReport>>()
   })
 })

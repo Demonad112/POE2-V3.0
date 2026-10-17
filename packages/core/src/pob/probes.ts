@@ -7,7 +7,7 @@
  * `source: 'pob-sim'` and must pass `checkBaseline` first.
  */
 
-import type { BaselineExpectation } from './baseline-gate.js'
+import type { ConfigReadbackResult } from './per-skill-dps.js'
 import type {
   AnointBatchRequest,
   AnointMeasurement,
@@ -31,6 +31,7 @@ export interface MeasuredDelta {
   ehp: { before: number; after: number } | null
 }
 
+/** Superseded by `ProbeResult` in mutation.ts, which also carries the gate, fingerprints and failure codes. Kept so nothing else changes. */
 export interface MeasuredResult {
   source: 'pob-sim'
   delta: MeasuredDelta
@@ -63,7 +64,14 @@ export interface RespecProbe {
   measureRespec(request: RespecRequest): Promise<ProbeResult<RespecMeasurement>>
 }
 
-/** Read the export's own configuration back from the live PoB (X4, B1). Names unverified. */
+/**
+ * Read the export's own configuration back from the live PoB (X4, B1) and
+ * compare it with the export's `<Input>` elements. RPC names unverified.
+ * Design: docs/pob-mutation-design.md, section 4.
+ */
 export interface ConfigReadback {
-  readConfig(names: readonly string[]): Promise<Record<string, unknown>>
+  readConfig(names: readonly string[]): Promise<ConfigReadbackResult>
 }
+
+/** Per-skill PoB DPS beside poe.ninja's (A8). Design: docs/pob-mutation-design.md, section 4. */
+export type { PerSkillDpsProbe } from './per-skill-dps.js'
