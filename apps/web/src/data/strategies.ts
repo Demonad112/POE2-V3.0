@@ -15,7 +15,7 @@ export const farmingStrategies: FarmingStrategy[] = [
     tier: "S",
     mechanics: ["abyss"],
     atlasSetup:
-      "Abyss sub-tree (Shadow of Undeath, Lightless Legions), Rogue Exile nodes for Abyss jewels, Monster Effectiveness focus. Fubgun prefers a Hilda Master setup (cheaper tablets). Always full-clear Abyssal Depths — buffed mid-0.5, they drop lots of echoes and often a Light. Do NOT take Survival of the Fittest (merges rares; one Omen per rare). Avoid the Desert biome.",
+      "Day 1 to 2 currency start (Fubgun; tablet and node detail from the endgame update spec, unverified): 2 Abyss Tablets (of Champions, buffed in 0.5.5 for 2 to 3 more rares) plus 1 Overseer Tablet, with high Item Rarity; Balance of Power: Ulaman for currency chests, Ghastly Relics (now covers all Large Abyssal Chests from Pits) and every Rogue Exile node, then swap to Amanamu once Omen of Light prices climb. Abyss sub-tree (Shadow of Undeath, Lightless Legions), Rogue Exile nodes for Abyss jewels, Monster Effectiveness focus. Fubgun prefers a Hilda Master setup (cheaper tablets). Always full-clear Abyssal Depths — buffed mid-0.5, they drop lots of echoes and often a Light. Do NOT take Survival of the Fittest (merges rares; one Omen per rare). Avoid the Desert biome.",
     investment: "low",
     expectedReturn:
       "1–2 Omens of Light per juiced map (price-dependent); Heart-of-the-Well jewels can be huge.",
@@ -31,7 +31,7 @@ export const farmingStrategies: FarmingStrategy[] = [
     tier: "S",
     mechanics: ["expedition"],
     atlasSetup:
-      "Fubgun's #1 farm in 0.5.5 — \"by far the best farm\", even without Aldur's Saga, but hard: your build must handle high-juice Expeditions, and it takes practice to learn. City maps + Expedition tablets; 200% Delirium on top is the digest-reported ceiling. 0.5.4 Expedition Atlas tree ('Feeling Lucky?' for Liquid Verisium), Grand Expeditions, Jado pairing. Since 0.5.5 Expedition is core in every league: Expedition Tablets (1-4 per map, each adding Expeditions, Verisium Remnants or density) drop in Standard and Forbidden Rites but not in Runes of Aldur. Aldur's Saga stays Runes of Aldur-only, though its modifiers can roll on Grand Expeditions elsewhere.",
+      "Fubgun's #1 farm in 0.5.5 — \"by far the best farm\", even without Aldur's Saga, but hard: your build must handle high-juice Expeditions, and it takes practice to learn. City maps + Expedition tablets; 200% Delirium on top is the digest-reported ceiling. 0.5.4 Expedition Atlas tree ('Feeling Lucky?' for Liquid Verisium), Grand Expeditions, Jado pairing. Since 0.5.5 Expedition is core in every league: Expedition Tablets (1-4 per map, each adding Expeditions, Verisium Remnants or density) drop in Standard and Forbidden Rites but not in Runes of Aldur. Aldur's Saga stays Runes of Aldur-only, though its modifiers can roll on Grand Expeditions elsewhere. Endgame update spec (unverified): run T14 to T15 8-mod Waystones with 3 Irradiated Tablets rolling 2 additional random map modifiers plus Monster Effectiveness or Increased Rare Monsters, Jado as Master (Unexpected Missions, Eastern Knowledge, Partial Translations, Keen Appraisal). Tablet stacking: 1 tablet = 1 Expedition, 2 = +1 Verisium Remnant and +35% density, 3 = +1 Expedition, 4 on city maps = +1 Remnant and +35% density. Runic Remnant tiers, never stack duplicate runes: SS Opulent (mandatory rush target); S Power, Death, Bond; A Time, Oath (reworked in 0.5.5: Ward and higher Rarity instead of damage immunity), Rebirth.",
     investment: "low",
     expectedReturn:
       "Pre-0.5.5 guide: ~10-20 Div/hr disciplined, '50/hr' as an optimized ceiling. Fubgun shows single 25-Div maps; web digests claim 100+ Div/hr (unverified).",
@@ -49,7 +49,7 @@ export const farmingStrategies: FarmingStrategy[] = [
     tier: "S",
     mechanics: ["breach"],
     atlasSetup:
-      "Pack-size Atlas focus. Breach sub-tree (Lavish Wombgifts, catalysts/rings), 3-4 Breach tablets (Hive Blood), Doryani or Jado. Works on non-city maps (no city hunting), better in cities. Needs strong clear speed; crafting knowledge raises the ceiling.",
+      "Pack-size Atlas focus. Breach sub-tree (Lavish Wombgifts, catalysts/rings; Genesis Tree picks: Breeding Program: Banded Fruit, Imbue the Body, For the Price of One, Riches Beget Riches, Refuse Emptiness, Sole Purpose: Destruction — spec, unverified), 3-4 Breach tablets (Hive Blood), Doryani or Jado. Works on non-city maps (no city hunting), better in cities. Needs strong clear speed; crafting knowledge raises the ceiling.",
     investment: "medium",
     expectedReturn: "Pre-0.5.5 guide: ~16-35 Div/hr; Fracturing Orbs bonus. Consistent.",
     risk: "medium",
@@ -84,7 +84,7 @@ export const farmingStrategies: FarmingStrategy[] = [
     tier: "A",
     mechanics: ["ritual"],
     atlasSetup:
-      "Pack-size (more favour) + rarity Atlas focus, Summoning Circle nodes, Ritual sub-tree, Tribute deferral to fish Omens/chase uniques. Ritual is the league mechanic and spawns in every map, so Omens are cheap — value swings with Omen prices.",
+      "Pack-size (more favour) + rarity Atlas focus, Summoning Circle nodes, Ritual sub-tree, Tribute deferral to fish Omens/chase uniques (Royal Lenience, new in 0.5.5, lets you defer favours using Tribute already offered at 500% cost; Reborn in Shadow and From the Mists are the other picks — spec, unverified). Stacking 2+ Ritual Tablets adds an Altar and more Azmeri Wisps in Sacred Bloom Viridian Wildwood maps. Ritual is the league mechanic and spawns in every map, so Omens are cheap — value swings with Omen prices.",
     investment: "low",
     expectedReturn:
       "Highest jackpot potential (Mageblood/Headhunter), lower Div/hr floor. Web digests: ~60 Div/hr (unverified).",

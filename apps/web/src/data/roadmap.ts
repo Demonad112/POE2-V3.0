@@ -1,5 +1,5 @@
 import type { RoadmapStep } from "@/lib/types";
-import { video05Source, videoSource } from "./sourceMeta";
+import { digestSource, video05Source, videoSource } from "./sourceMeta";
 
 /**
  * Step ids are the localStorage key for checklist progress, and action items
@@ -36,6 +36,7 @@ export const roadmapSteps: RoadmapStep[] = [
       "Boss-rush every map. Only click Essences and Shrines — they're fast. Skip Ritual, Breach, Abyss and the rest.",
       "The whole goal is Arbiter of Ash ×1 and Arbiter of Divinity ×2. In 0.5.5 the second Divinity kill unlocks every Atlas point at once.",
       "Atlas points can't be refunded. Check the trap-node list on the Atlas page before you allocate anything you don't recognise.",
+      "Hold each league mechanic's Tablets until its sub-tree is unlocked, and never run a mechanic's Tablet while you are doing its questline.",
       "Run the highest tier you can clear at a decent pace — not the highest tier you can survive. Higher tiers mean better item level, more XP, faster Atlas.",
     ],
     relatedMistakeIds: ["m-clearing-maps-pre-atlas", "m-atlas-trap-nodes"],
@@ -188,8 +189,25 @@ export const roadmapSteps: RoadmapStep[] = [
 
   // ─── T11 checkpoint ─────────────────────────────────────────────────────
   {
-    id: "step-t11-park",
+    id: "step-build-strength-fork",
     order: 10,
+    phase: "t11-checkpoint",
+    title: "Pick your track: fast-track to T15, or park at T11",
+    description:
+      "After Arbiter of Ash, your build's clear speed decides the route. Strong build: Track A, skip side mechanics and push into the inner Fortress at T14 to T15. Average, SSF or hardcore build: Track B, stop climbing at T11 and gear up there. Both end at the same two Arbiter of Divinity kills.",
+    tips: [
+      "Track A (Fubgun, Lazy Exile): optionally clear the Withered Willow (5 Delirium-fog map bosses) for a cheap early amulet anoint, and finish your 4th Ascendancy (about 30 to 40% more damage) before the Arbiter of Divinity.",
+      "Track B (Asmodeus, CyclonDefinitiv): T11 is area level 75, so item level 75 drops already cover tier-1 flat damage, +3 amulets, tier-1/2 life, tier-2 defences and level-18 gems. Take 1 Corrupted Nexus for a Doryani point and Stitch the Flesh (+1 revival in maps).",
+      "Track B also: farm an item level 75 four-trial Djinn Barya in T11 maps for the 4th Ascendancy at level 85+, then run the Abyss (Well of Souls → Kulemak) and Breach (Monastery of the Keepers → Xesht) questlines for currency and early Genesis Tree belts and rings.",
+      "Not sure? Track B costs only time. Track A on a build that can't clear T14 costs revives and gear.",
+    ],
+    benchmarkGateIds: ["b-t11-gear-floor"],
+    relatedMistakeIds: ["m-rush-t15"],
+    source: digestSource("The two-track split comes from the 0.5.5 endgame update spec, which merges Fubgun and Lazy Exile (fast-track) with Asmodeus and CyclonDefinitiv (T11 park). Each half is covered by the steps below; the fork itself is the spec's framing."),
+  },
+  {
+    id: "step-t11-park",
+    order: 11,
     phase: "t11-checkpoint",
     title: "Grind T11 as the key gearing checkpoint",
     description:
@@ -204,16 +222,19 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-doryani-revival",
-    order: 11,
+    order: 12,
     phase: "t11-checkpoint",
     title: "Take one Doryani point for the extra revival",
     description:
-      "Clear the nearest corrupted zone's nexus (kill its boss) to unlock Doryani and one point — spend it on the extra revive.",
+      "Clear the nearest corrupted zone's nexus (kill its boss) to unlock Doryani and one point — spend it on the extra revive (Stitch the Flesh).",
+    tips: [
+      "0.5.5: a failed Corrupted Nexus can be retried, and dying on the map boss no longer stops the Corrupted Boss spawning (endgame update spec, unverified).",
+    ],
     source: video05Source(["VSeDfybR3Cc@13:09"]),
   },
   {
     id: "step-delirium-part1",
-    order: 12,
+    order: 13,
     phase: "t11-checkpoint",
     title: "Delirium Part 1 only — amulet anointing unlock",
     description:
@@ -222,7 +243,7 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-abyss-breach",
-    order: 13,
+    order: 14,
     phase: "t11-checkpoint",
     title: "Layer Abyss, then Breach, while mapping",
     description:
@@ -235,7 +256,7 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-level85-ascendancy",
-    order: 14,
+    order: 15,
     phase: "t11-checkpoint",
     title: "Hit level 85+, finish your 4th Ascendancy",
     description:
@@ -247,22 +268,23 @@ export const roadmapSteps: RoadmapStep[] = [
   // ─── Arbiter of Divinity (2 kills) ──────────────────────────────────────
   {
     id: "step-find-halls",
-    order: 15,
+    order: 16,
     phase: "arbiter-of-divinity-loop",
     title: "Quest Halls: Matriarch Hall + Patriarch Hall",
     description:
-      "At the Origin Tower, Doryani sends you to the Patriarch Hall (Origin Spark) and Matriarch Hall (Origin Cradle) either side of the tower. Both bosses are hard — you should be comfortable in red maps. Look for the smooth orange beam; the pair usually spawns together.",
+      "At the Origin Tower, Doryani sends you to the Patriarch Hall (Origin Spark) and Matriarch Hall (Origin Cradle) either side of the tower. Both bosses are hard — you should be comfortable in red maps. Look for the smooth orange beam; the pair usually spawns together, and since 0.5.5 they spawn much closer to the Ziggurat Refuge.",
     source: videoSource(["5Vp_3gUFbwI@06:53", "lsu7-ITJe_M@13:08"]),
   },
   {
     id: "step-kill-divinity",
-    order: 16,
+    order: 17,
     phase: "arbiter-of-divinity-loop",
     title: "Kill #1: quest Arbiter of Divinity",
     description:
       "Combine the Cradle and Spark into the Origin Core (Doryani / Engine Room), carry it to the top of the Origin Tower and kill the Arbiter. Two phases, unlimited attempts, no XP loss. It has 45% Lightning Resistance and Fire Vulnerability (0.5.5) — lightning builds should bring exposure and a curse.",
     tips: [
       "This first kill will NOT unlock your full Atlas — that's kill #2. Players who stop here think their tree is bugged.",
+      "Rakiata's Flow warning: on Fire or Tri-Elemental (Trinity) builds, unequip it for this fight. It inverts Fire Vulnerability into positive Fire Resistance. Lightning builds should bring Lightning Exposure or a curse instead.",
       "The kill unlocks the top of the Atlas tree — finish that line (Partial Translation) for 4-modifier tablets.",
     ],
     benchmarkGateIds: ["b-pinnacle-readiness"],
@@ -274,7 +296,7 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-memory-forks",
-    order: 17,
+    order: 18,
     phase: "arbiter-of-divinity-loop",
     title: "Allocate the top-of-tree passives and memory forks",
     description:
@@ -296,7 +318,7 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-repeat-divinity-loop",
-    order: 18,
+    order: 19,
     phase: "arbiter-of-divinity-loop",
     title: "Hunt one Matriarch + Patriarch pair outside the Fortress",
     description:
@@ -313,7 +335,7 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-cardinal-device",
-    order: 19,
+    order: 20,
     phase: "arbiter-of-divinity-loop",
     title: "Kill #2: non-quest Arbiter of Divinity → full Atlas unlocked",
     description:
@@ -330,14 +352,14 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-spend-full-tree",
-    order: 20,
+    order: 21,
     phase: "arbiter-of-divinity-loop",
     title: "Spend the full tree — skip the trap nodes",
     description:
       "With every point unlocked, fill the tree toward your farm. Check the trap-node list first: points can't be refunded.",
     actionItems: [
       "Search \"rare\" and \"tablet\" in the Atlas tree and take them all",
-      "Skip Man Trap, Survival of the Fittest (if you'll farm Abyss) and the hive-seeded Breach node (unless you farm hives)",
+      "Skip the group 1 soft bricks (Reactive Hiveseeding, Survival of the Fittest, The Lost Architect, Escalating Rivalry) plus Man Trap and Mysterious Transference — paste the search strings from the Atlas page to find them",
       "Doryani branch: Stitch the Flesh → Hidden Patterns → Remnants of the Greatness → Map Irradiation or Volatile Connection",
       "Leave the city/middle-region nodes for last if you farm outside cities",
       "Pick your biomes (Atlas page) to match your farm",
@@ -354,11 +376,14 @@ export const roadmapSteps: RoadmapStep[] = [
   // ─── Full tree ──────────────────────────────────────────────────────────
   {
     id: "step-close-out-tree",
-    order: 21,
+    order: 22,
     phase: "full-tree",
     title: "Close out the remaining tree",
     description:
       "Once the Fortress is complete, remaining points go to generic quantity/rarity/pack-size, then the mechanic sub-trees you still want. Recommended close-out order: Ritual → Vaal Temple → Delirium (hardest last). Fubgun's alternative: pick the one mechanic you'll farm right after the first Divinity kill and earn currency with its tablets while you hunt Halls.",
+    tips: [
+      "Day 1 to 2 trade order (Fubgun, P4wnyhof): Abyss with Rogue Exiles first for the fastest currency and jewellery, then Expedition or Breach, then Delirium, then Ritual, then Vaal Temple.",
+    ],
     relatedMistakeIds: ["m-spread-atlas-points"],
     source: video05Source(["VSeDfybR3Cc@25:21", "-R5KjDJQu9w@06:02"]),
   },
@@ -366,7 +391,7 @@ export const roadmapSteps: RoadmapStep[] = [
   // ─── Masters & league quest chains ──────────────────────────────────────
   {
     id: "step-chain-doryani",
-    order: 22,
+    order: 23,
     phase: "masters-and-mechanics",
     title: "Master: Doryani — corrupted nexuses",
     description:
@@ -380,7 +405,7 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-chain-hilda",
-    order: 23,
+    order: 24,
     phase: "masters-and-mechanics",
     title: "Master: Hilda — Great Beasts",
     description:
@@ -394,7 +419,7 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-chain-jado",
-    order: 24,
+    order: 25,
     phase: "masters-and-mechanics",
     title: "Master: Jado — Sealed Vault and anomaly maps",
     description:
@@ -411,7 +436,7 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-chain-ritual",
-    order: 25,
+    order: 26,
     phase: "masters-and-mechanics",
     title: "Ritual — King in the Mists → The Bodach",
     description:
@@ -427,13 +452,14 @@ export const roadmapSteps: RoadmapStep[] = [
     ],
     tips: [
       "Don't run Ritual tablets during the 5 body-part maps (web-digest tip; tablets may interfere with the quest drop).",
+      "Forbidden Rites: Rituals spawn in every map and drop Sacred Blooms, which add the Viridian Wildwood (Azmeri Wisp trails) to nearby Atlas maps. The standalone Viridian Wildwood unique map is disabled (spec, unverified).",
     ],
     relatedMistakeIds: ["m-golden-rule-tablets-while-questing"],
     source: video05Source(["VSeDfybR3Cc@25:21", "5Vp_3gUFbwI@09:57"]),
   },
   {
     id: "step-chain-vaal-temple",
-    order: 26,
+    order: 27,
     phase: "masters-and-mechanics",
     title: "Vaal Temple — Architect → Atziri",
     description:
@@ -448,11 +474,11 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-chain-delirium",
-    order: 27,
+    order: 28,
     phase: "masters-and-mechanics",
     title: "Delirium — Grand Mirror → Simulacrum → Tangmazu",
     description:
-      "Part 2 of Delirium, saved for last because it's the hardest. Since 0.5.5 Grand Mirror fog spreads to exactly 10 maps and pack count stops scaling past 100% Deliriousness.",
+      "Part 2 of Delirium, saved for last because it's the hardest. Since 0.5.5 Grand Mirror fog spreads to exactly 10 maps and pack count stops scaling past 100% Deliriousness (Monster Effectiveness and Rarity still scale to 200%). Recurring Nightmares adds +30% Deliriousness (spec, unverified).",
     actionItems: [
       "Part 1 done (Withered Willow, 5 fogged bosses → anoints)",
       "Find a Grand Mirror: kill the map boss and its mirrored copy to spread the fog",
@@ -467,7 +493,7 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-chain-abyss",
-    order: 28,
+    order: 29,
     phase: "masters-and-mechanics",
     title: "Abyss — Well of Souls → Kulemak",
     description:
@@ -480,7 +506,7 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-chain-breach",
-    order: 29,
+    order: 30,
     phase: "masters-and-mechanics",
     title: "Breach — Monastery → Breach Colony → Xesht",
     description:
@@ -494,11 +520,14 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     id: "step-chain-expedition",
-    order: 30,
+    order: 31,
     phase: "masters-and-mechanics",
     title: "Expedition — Ruins of Kingsmarch → Olroth → crater",
     description:
       "Follow the Logbook quest line from the Ruins of Kingsmarch. Grand Expeditions award Atlas points in 0.5.5 — and Expedition is the #1 farm, so this chain pays for itself.",
+    tips: [
+      "Expedition Tablets stack 1 to 4 per map: 1 tablet = 1 Expedition, 2 = +1 Verisium Remnant and +35% density, 3 = +1 Expedition, 4 (city maps) = +1 Verisium Remnant and +35% density (spec, unverified).",
+    ],
     actionItems: [
       "Get the Logbook at the Ruins of Kingsmarch and clear its Expeditions",
       "Kill Medved",
@@ -515,7 +544,7 @@ export const roadmapSteps: RoadmapStep[] = [
   // ─── Juiced farming ─────────────────────────────────────────────────────
   {
     id: "step-juiced-loop",
-    order: 31,
+    order: 32,
     phase: "juiced-farming",
     title: "Commit to a juiced single-mechanic farming loop",
     description:

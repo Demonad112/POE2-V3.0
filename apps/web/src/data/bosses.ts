@@ -18,7 +18,7 @@ export const pinnacleBosses: PinnacleBoss[] = [
       "Place the fragments in the Burning Monolith",
     ],
     notes:
-      "Quest fight: two phases, unlimited attempts, no XP loss, mechanic-heavy. Killing it unlocks 3-modifier (Regal) tablets. Since 0.5.5 it has Fire Resistance and Cold Vulnerability instead of All Elemental Resistances, so cold damage is favoured and fire is penalised. The non-quest version is the uber fight (older guides: ~5M standard, 22M+ uber, hard 55% phase transition).",
+      "Quest fight: two phases, unlimited attempts, no XP loss, mechanic-heavy. Killing it unlocks 3-modifier (Regal) tablets. Since 0.5.5 it has Fire Resistance and Cold Vulnerability instead of All Elemental Resistances, so cold damage is favoured and fire is penalised. Rakiata's Flow inverts these, so don't rely on it here. The non-quest version is the uber fight (older guides: ~5M standard, 22M+ uber, hard 55% phase transition).",
     source: videoSource(["5Vp_3gUFbwI@05:20", "jOU2zNgLxJ0@05:18", "lsu7-ITJe_M@12:07"], {
       note: "Resistance profile from the 0.5.5 patch notes; uber HP figures from the pre-0.5.5 strategy guide.",
     }),
@@ -38,7 +38,7 @@ export const pinnacleBosses: PinnacleBoss[] = [
       "5,000+ life and 80%+ relevant resistances recommended; be comfortable in T15 before kill #2",
     ],
     notes:
-      "0.5.5: kill it twice — the second, non-quest kill completes the entire Precursor Fortress and unlocks every Atlas point, replacing the old repeat-5-times Cardinal Device loop. 45% Lightning Resistance and Fire Vulnerability, so lightning builds bring exposure and a curse. Two phases, unlimited attempts on the quest version. Phase 2 (web digest, unverified): around 40% it resets, spawns Aspect clones, and Divine Power orbs on the outer platforms grant the immunity you need to kill them. 0.5.4 added a Spear of Kitava drop.",
+      "0.5.5: kill it twice — the second, non-quest kill completes the entire Precursor Fortress and unlocks every Atlas point, replacing the old repeat-5-times Cardinal Device loop. 45% Lightning Resistance and Fire Vulnerability (0% Cold), so lightning builds bring exposure and a curse. Rakiata's Flow warning: unequip it on Fire or Tri-Elemental (Trinity) builds, because inverting Fire Vulnerability turns it into positive Fire Resistance. Two phases, unlimited attempts on the quest version. Phase 2 (web digest, unverified): around 40% it resets, spawns Aspect clones, and Divine Power orbs on the outer platforms grant the immunity you need to kill them. 0.5.4 added a Spear of Kitava drop.",
     source: videoSource(["uMHfOL8sT6I@05:20", "5Vp_3gUFbwI@07:39", "5Vp_3gUFbwI@08:26"], {
       note: "Two-kill rule confirmed by the 0.5.5 patch notes and two 0.5.5 creator videos. Exchange availability: Scorpius (jOU2zNgLxJ0@05:18).",
     }),

@@ -169,6 +169,11 @@ export interface AtlasTrapNode {
   /** When to skip it — "always" when there's no build it helps. */
   avoidIf: string;
   severity: "avoid" | "situational" | "optional";
+  /**
+   * 1 = hard brick, 2 = bugged or situational, 3 = extreme boss scaling. Mirrors
+   * the grouping on the 0.5.5 soft-brick thread and the in-game regex strings.
+   */
+  group?: 1 | 2 | 3;
   /** Exact node names in the Atlas tree data (atlas-tree.json), for "show on tree". */
   treeNodes?: string[];
   source: SourceRef;
@@ -286,4 +291,40 @@ export interface ShoppingEntry {
    * Absent: a replacement plan (entries saved before drafts existed).
    */
   kind?: "draft";
+}
+
+/** One row of the 0.5.0 → 0.5.5 change table. */
+export interface PatchDelta {
+  id: string;
+  system: string;
+  before: string;
+  now: string;
+  source: SourceRef;
+}
+
+/** A copy-paste in-game search string. */
+export interface RegexEntry {
+  id: string;
+  label: string;
+  /** Where it is pasted: the Atlas tree search or a stash/vendor search. */
+  where: "atlas" | "stash";
+  /** Exact text to copy, outer quotes included. */
+  regex: string;
+  note?: string;
+  source: SourceRef;
+}
+
+export interface TrialModifier {
+  name: string;
+  detail: string;
+  tier: "free" | "avoid";
+}
+
+export interface EssenceEntry {
+  id: string;
+  name: string;
+  slot: string;
+  modType: string;
+  effect: string;
+  source: SourceRef;
 }

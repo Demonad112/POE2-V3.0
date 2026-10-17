@@ -52,7 +52,7 @@ describe("guide → tree node names", () => {
 
   it("maps every named trap node", () => {
     const named = atlasTrapNodes.filter((t) => t.treeNodes?.length);
-    expect(named.length).toBe(8);
+    expect(named.length).toBe(atlasTrapNodes.length - 1);
     for (const t of named) expect(t.treeNodes).toContain(t.node);
   });
 

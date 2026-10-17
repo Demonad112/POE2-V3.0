@@ -13,6 +13,7 @@ import { farmingStrategies } from "@/data/strategies";
 import { pinnacleBosses } from "@/data/bosses";
 import { atlasTrapNodes } from "@/data/trapNodes";
 import { biomes } from "@/data/biomes";
+import { essences, patchDeltas, regexStrings } from "@/data/endgameUpdate";
 import { primerFacts, tierBreakpoints } from "@/data/mechanicsPrimer";
 import { glossary } from "@/data/glossary";
 import { citationUrl } from "@/data/sourceMeta";
@@ -37,6 +38,9 @@ const allSources: [string, SourceRef][] = [
   ...pinnacleBosses.map((r) => [r.id, r.source] as [string, SourceRef]),
   ...atlasTrapNodes.map((r) => [r.id, r.source] as [string, SourceRef]),
   ...biomes.map((r) => [r.id, r.source] as [string, SourceRef]),
+  ...patchDeltas.map((r) => [r.id, r.source] as [string, SourceRef]),
+  ...regexStrings.map((r) => [r.id, r.source] as [string, SourceRef]),
+  ...essences.map((r) => [r.id, r.source] as [string, SourceRef]),
   ...primerFacts.map((r) => [r.id, r.source] as [string, SourceRef]),
   ...tierBreakpoints.map((r) => [r.tier, r.source] as [string, SourceRef]),
 ];
