@@ -28,7 +28,25 @@ describe("parsePersisted", () => {
     expect(out.character.snapshots).toEqual([]);
   });
 
-  it("still discards a payload from another top-level version", () => {
-    expect(parsePersisted(JSON.stringify({ ...defaultState(), version: STORAGE_VERSION + 1 }))).toBe(defaultState());
+  it("salvages a payload from another top-level version instead of resetting it", () => {
+    const stored = {
+      ...defaultState(),
+      version: STORAGE_VERSION + 1,
+      checklist: { completedStepIds: ["s1", 7], completedActionItemKeys: ["k"] },
+      atlas: { allocatedClusterIds: ["c1"], allocatedForkIds: "bad" },
+      character: { snapshots: [row] },
+      futureOnly: { x: 1 },
+    };
+    const out = parsePersisted(JSON.stringify(stored));
+    expect(out.version).toBe(STORAGE_VERSION);
+    expect(out.checklist.completedStepIds).toEqual(["s1"]);
+    expect(out.checklist.completedActionItemKeys).toEqual(["k"]);
+    expect(out.atlas).toEqual({ allocatedClusterIds: ["c1"], allocatedForkIds: [] });
+    expect(out.character.snapshots).toHaveLength(1);
+  });
+
+  it("still resets a payload that is not an object", () => {
+    expect(parsePersisted("[1,2]")).toBe(defaultState());
+    expect(parsePersisted("42")).toBe(defaultState());
   });
 });
