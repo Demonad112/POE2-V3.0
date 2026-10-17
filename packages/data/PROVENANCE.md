@@ -24,7 +24,12 @@ The other artifacts were last generated on **2026-07-28**, before patch 0.5.5
   the character payload, and resistances are attributed from poe.ninja's
   `breakdowns`. Limit checks read the item first and fall back to a table in
   `packages/core/src/gear/audit.ts`.
-- **Passive tree.** Unchanged by 0.5.5; it needs no regeneration.
+- **Passive tree.** Carried over from the pre-0.5.5 build and *not verified
+  against 0.5.5*. The file records only `PassiveTree-0.5`, no patch or date, and
+  the source file it was built from is not in this repository, so it cannot be
+  re-checked or rebuilt offline. A payload allocating nodes the data lacks is
+  reported by `analyzeCharacter` (a warning naming the ids). Refreshing it needs
+  the matching `psg_passive_nodes.json` (see `docs/DATA-REFRESH.md`).
 
 To regenerate `mod-tiers.json` and `bases.json` from Path of Building, run from
 the repository root:

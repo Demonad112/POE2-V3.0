@@ -198,9 +198,24 @@ export async function analyzeCharacter(
   // Keystone names live in the tree data, so without it nothing can be
   // resolved. Report the neutral result rather than a guess: an uncorrected
   // reading is merely less specific, while a guessed keystone would be wrong.
-  const keystones = options.tree
-    ? keystoneEffectsOf(resolveAllocation(options.tree, passives).keystones, defense)
-    : NO_KEYSTONE_EFFECTS
+  const resolvedTree = options.tree ? resolveAllocation(options.tree, passives) : null
+  const keystones = resolvedTree ? keystoneEffectsOf(resolvedTree.keystones, defense) : NO_KEYSTONE_EFFECTS
+  if (options.tree && resolvedTree) {
+    const missing = [
+      ...new Set([
+        ...resolvedTree.unresolvedIds,
+        ...resolvedTree.unresolvedBySet.main,
+        ...resolvedTree.unresolvedBySet.set1,
+        ...resolvedTree.unresolvedBySet.set2,
+      ]),
+    ].sort((a, b) => a - b)
+    if (missing.length) {
+      warnings.push(
+        `${missing.length} allocated passive node${missing.length === 1 ? '' : 's'} (id ${missing.join(', ')}) ${missing.length === 1 ? 'is' : 'are'} not in this tree data (${options.tree.treeName}). ` +
+          'Their effects are not read, so keystone and notable findings may be incomplete. The data may predate the character’s tree version.',
+      )
+    }
+  }
 
   const reconciliation = pobStats ? reconcile(model, pobStats, { pobMainSkill: exportMain }) : null
   const dpsAgrees = pobDpsAgreement(reconciliation)

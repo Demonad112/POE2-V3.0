@@ -139,3 +139,21 @@ describe('path finding', () => {
     expect(pathToNode(tree, allocation.live, 99_999_999)).toBeNull()
   })
 })
+
+describe('allocation coverage', () => {
+  it('reports unresolved ids for every saved allocation, not only the live one', () => {
+    const r = resolveAllocation(tree, { ...allocation, set2: [...allocation.set2, 999_999_999] })
+    expect(r.unresolvedIds).toEqual([])
+    expect(r.unresolvedBySet.set2).toEqual([999_999_999])
+  })
+
+  it('has no unresolved ids in any recorded fixture', () => {
+    // Fails when a fixture allocates a node the shipped tree data lacks. A new
+    // fixture is picked up by listing it here.
+    for (const file of ['athrynas-v43.json']) {
+      const m = unwrapCharModel(JSON.parse(readFileSync(fileURLToPath(new URL(`./fixtures/${file}`, import.meta.url)), 'utf8')))
+      const r = resolveAllocation(tree, normalizePassives(m))
+      expect({ file, ...r.unresolvedBySet, live: r.unresolvedIds }).toEqual({ file, main: [], set1: [], set2: [], live: [] })
+    }
+  })
+})

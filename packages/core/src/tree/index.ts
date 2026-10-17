@@ -171,6 +171,11 @@ export interface ResolvedAllocation {
    */
   unresolvedIds: number[]
   /**
+   * The same, per saved allocation. `unresolvedIds` covers the live allocation
+   * only; a missing node in the other weapon set would otherwise vanish.
+   */
+  unresolvedBySet: { main: number[]; set1: number[]; set2: number[] }
+  /**
    * Connected groups within the live allocation, largest first.
    *
    * More than one is NORMAL and must never be reported as a broken build. On
@@ -260,6 +265,7 @@ export function resolveAllocation(tree: PassiveTree, allocation: PassiveAllocati
     keystones: live.found.filter((n) => n.kind === NODE_KIND.keystone),
     jewelSockets: live.found.filter((n) => n.kind === NODE_KIND.jewel),
     unresolvedIds: live.missing,
+    unresolvedBySet: { main: main.missing, set1: set1.missing, set2: set2.missing },
     components: findComponents(tree, allocation.live),
   }
 }

@@ -111,3 +111,17 @@ describe('DPS pairing', () => {
     expect(c.note).toContain('nothing was compared')
   })
 })
+
+describe('unresolved passive nodes', () => {
+  it('raises a warning naming the ids when the tree data lacks an allocated node', async () => {
+    const { PassiveTree } = await import('../src/tree/index.js')
+    const tree = new PassiveTree({
+      version: 1,
+      treeName: 'PassiveTree-test',
+      nodes: [],
+      edges: [],
+    } as never)
+    const analysis = await analyzeCharacter({ type: 'x', charModel: { passiveSelection: [12345] } } as never, { tree })
+    expect(analysis.warnings.join(' ')).toMatch(/12345.*not in this tree data \(PassiveTree-test\)/)
+  })
+})
