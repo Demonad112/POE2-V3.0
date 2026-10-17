@@ -13,6 +13,7 @@
 import type { CharModel, DamageType, NinjaDefensiveStats } from '../model/types.js'
 import { DAMAGE_TYPES } from '../model/types.js'
 import { RES_CAP_DEFAULT, armourDamageReduction, chaosRawPool } from './constants.js'
+import { impliedResistances, type ImpliedResistance } from './implied.js'
 
 export interface MaxHit {
   type: DamageType
@@ -49,6 +50,11 @@ export interface DefenseSummary {
 
   maxHits: MaxHit[]
   resistances: ResistanceState[]
+  /**
+   * Resistance implied by poe.ninja's elemental maximum hits (`derived`, an
+   * inference: see ./implied.ts). Unknown whenever other mitigation applies.
+   */
+  impliedResistances: ImpliedResistance[]
 
   /** Null when the payload did not report it. */
   life: number | null
@@ -177,6 +183,21 @@ export function analyzeDefense(model: Pick<CharModel, 'defensiveStats'>): Defens
 
     maxHits,
     resistances,
+    impliedResistances: impliedResistances({
+      life,
+      energyShield,
+      physicalMaxHit: maxHits.find((m) => m.type === 'physical')?.value ?? null,
+      maxHits: {
+        fire: maxHits.find((m) => m.type === 'fire')?.value ?? null,
+        cold: maxHits.find((m) => m.type === 'cold')?.value ?? null,
+        lightning: maxHits.find((m) => m.type === 'lightning')?.value ?? null,
+      },
+      displayed: {
+        fire: resistances.find((r) => r.type === 'fire')?.value ?? null,
+        cold: resistances.find((r) => r.type === 'cold')?.value ?? null,
+        lightning: resistances.find((r) => r.type === 'lightning')?.value ?? null,
+      },
+    }),
 
     life,
     energyShield,
@@ -220,3 +241,4 @@ export function projectArmour(
 }
 
 export * from './constants.js'
+export * from './implied.js'

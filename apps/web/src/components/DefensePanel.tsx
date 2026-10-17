@@ -161,6 +161,19 @@ export function DefensePanel({ d, bare = false }: { d: DefenseSummary; bare?: bo
           }
         />
 
+        {d.impliedResistances.some((r) => r.status === 'implied' && r.gap && r.gap.min > 0.5) ? (
+          <p className="rounded-lg border border-warn/40 px-3 py-2 text-[11px] leading-relaxed text-warn">
+            <ProvenanceBadge provenance="derived" /> poe.ninja’s elemental maximum hits imply lower resistances than shown:{' '}
+            {d.impliedResistances
+              .filter((r) => r.status === 'implied' && r.implied)
+              .map((r) => `${cap(r.type)} ${r.implied!.min === r.implied!.max ? r.implied!.min : `${r.implied!.min}–${r.implied!.max}`}% against ${r.displayed ?? '?'}% shown`)
+              .join(', ')}
+            . Assumes the hit pool is life + energy shield with no other mitigation (true here: the physical maximum hit equals it). The
+            cause is not established; it may be a resistance penalty poe.ninja applies and the sheet omits. Treat it as a check on how much margin
+            you really have, not a correction.
+          </p>
+        ) : null}
+
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <Stat label="Life" value={fmt(d.life)} />
           <Stat label="Energy Shield" value={fmt(d.energyShield)} />
