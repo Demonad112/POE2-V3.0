@@ -1,3 +1,5 @@
+import { existsSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { defineConfig, devices } from '@playwright/test'
 
 /**
@@ -17,6 +19,25 @@ const basePath = isCI && repo ? `/${repo}` : ''
 const port = 4321
 const deployed = process.env.E2E_BASE_URL
 
+/**
+ * Claude Code cloud sessions ship a Chromium whose revision rarely matches the
+ * one this Playwright version wants, and `playwright install` is not allowed
+ * there. So, in a cloud session only (never on GitHub Actions), launch the
+ * preinstalled browser directly. Locally and in CI this is `undefined` and
+ * Playwright uses its own download as before.
+ */
+function cloudChromium(): string | undefined {
+  const root = process.env.PLAYWRIGHT_BROWSERS_PATH
+  if (isCI || process.env.CLAUDE_CODE_REMOTE !== 'true' || !root || !existsSync(root)) return undefined
+  const dir = readdirSync(root)
+    .filter((d) => /^chromium-\d+$/.test(d))
+    .sort()
+    .pop()
+  const exe = dir ? join(root, dir, 'chrome-linux', 'chrome') : undefined
+  return exe && existsSync(exe) ? exe : undefined
+}
+const executablePath = cloudChromium()
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -26,6 +47,7 @@ export default defineConfig({
   use: {
     baseURL: deployed ?? `http://localhost:${port}${basePath}/`,
     trace: 'retain-on-failure',
+    ...(executablePath ? { launchOptions: { executablePath } } : {}),
   },
   projects: [
     { name: 'mobile', use: { ...devices['Pixel 7'], browserName: 'chromium' } },

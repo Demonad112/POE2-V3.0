@@ -73,7 +73,7 @@ All additive: new optional fields or pure functions, unknown stays `null`/`unkno
 |---|---|---|---|---|
 | 5 | Ailment immunity, freeze exposure | `defense/` | Merged (#39) | Not wired into defence output; no freeze exposure; field names unverified |
 | 6 | Main skill from the export, next to the current primary | `dps` summary | Merged (#40) | Matches skills by name only |
-| 7 | Skills/auras in the inactive weapon set | `model/slots.ts` | Open (#41) | Does not flag a primary skill in the inactive set; payload field unverified |
-| 8 | Mapping / Bossing focus view | `recommend/focus.ts`, `FOCUS_CATEGORY_WEIGHTS` in `thresholds.ts` | Core only | Weights are judgement; no web toggle yet; default order unchanged |
-| 9 | Changed since last report | `progress/changed.ts` over `latestDiff` | Core only | Needs two stored snapshots, else `available: false`; no web panel yet |
-| 10 | Duplicate-family note | `DamageReview.familyNotes` | Core only | Explains why a same-family support is not suggested; the existing filter is unchanged; not shown in the web yet |
+| 7 | Skills/auras in the inactive weapon set | `model/slots.ts` | Merged (#41); primary-in-inactive-set flag added in #44 | Payload field unverified |
+| 8 | Mapping / Bossing focus view | `recommend/focus.ts`, `FOCUS_CATEGORY_WEIGHTS` in `thresholds.ts` | Merged; web toggle in `Recommendations.tsx` (#45) | Weights are judgement; default order unchanged |
+| 9 | Changed since last report | `progress/changed.ts` over `latestDiff` | Merged; web panel `ChangedSincePanel.tsx` (#45) | Needs two stored snapshots, else `available: false` |
+| 10 | Duplicate-family note | `DamageReview.familyNotes` | Merged; shown in `DamageReview.tsx` (#45) | Explains why a same-family support is not suggested; the existing filter is unchanged |
