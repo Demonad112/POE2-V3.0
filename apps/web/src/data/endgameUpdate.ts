@@ -58,6 +58,13 @@ export const patchDeltas: PatchDelta[] = [
     source: patchSource(),
   },
   {
+    id: "delta-hotfix-055c",
+    system: "Hotfix 0.5.5c (2026-09-18)",
+    before: "Not covered by this guide.",
+    now: "A hotfix landed on 2026-09-18. Its changes, including whether the Soul Core Limit is per character or per item type, have not been read against the notes here.",
+    source: digestSource("Dated in the project handoff only. The contents of the hotfix were not checked, so treat any 0.5.5 figure in this guide as possibly superseded."),
+  },
+  {
     id: "delta-delirium",
     system: "Delirium scaling and fog",
     before: "Pack count scaled to 200% Deliriousness; Grand Mirror spread fog to 8 to 16 maps.",

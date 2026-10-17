@@ -40,3 +40,12 @@ test('a workbench edit is saved and restored after a reload', async ({ page }) =
     timeout: 15_000,
   })
 })
+
+test('the defences checklist lists resistances and never reads missing ailment proof as a fail', async ({ page }) => {
+  await page.goto(importUrl)
+  await expect(page.getByRole('heading', { name: /Athrynas/ }).first()).toBeVisible({ timeout: 30_000 })
+  const list = page.locator('#defence-checklist')
+  await expect(list.locator('[data-check="res-fire"]')).toBeVisible({ timeout: 15_000 })
+  await expect(list.locator('[data-check="max-hit"]')).toBeVisible()
+  await expect(list.locator('[data-check^="ail-"][data-status="fail"]')).toHaveCount(0)
+})
