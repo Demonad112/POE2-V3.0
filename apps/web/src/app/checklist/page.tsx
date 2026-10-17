@@ -7,6 +7,9 @@ import { CommonMistakesPanel } from "@/components/checklist/CommonMistakesPanel"
 import { GearShoppingList } from "@/components/checklist/GearShoppingList";
 import { GlossaryPanel } from "@/components/checklist/GlossaryPanel";
 import { MechanicsPrimer } from "@/components/checklist/MechanicsPrimer";
+import { PatchChangesPanel } from "@/components/checklist/PatchChangesPanel";
+import { TrialOfChaosPanel } from "@/components/checklist/TrialOfChaosPanel";
+import { EssenceCraftingPanel } from "@/components/checklist/EssenceCraftingPanel";
 import { NextStepCard } from "@/components/checklist/NextStepCard";
 import { ChecklistTools } from "@/components/checklist/ChecklistTools";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -34,6 +37,9 @@ export default function ChecklistPage() {
 
       <div className="flex flex-col gap-3">
         <MechanicsPrimer />
+        <PatchChangesPanel />
+        <TrialOfChaosPanel />
+        <EssenceCraftingPanel />
         <GlossaryPanel />
         <CommonMistakesPanel />
       </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AtlasSequenceTracker } from "@/components/atlas/AtlasSequenceTracker";
 import { WarningPanel } from "@/components/shared/WarningPanel";
 import { BiomePanel } from "@/components/atlas/BiomePanel";
+import { RegexPanel } from "@/components/atlas/RegexPanel";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AtlasMapProvider } from "@/components/atlas/AtlasMapContext";
 import { AtlasTreeMap } from "@/components/atlas/AtlasTreeMap";
@@ -40,6 +41,8 @@ export default function AtlasPage() {
             <AtlasGuideTabs />
 
             <BiomePanel />
+
+            <RegexPanel />
           </div>
         </div>
       </div>

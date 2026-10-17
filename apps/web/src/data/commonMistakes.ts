@@ -101,7 +101,7 @@ export const commonMistakes: CommonMistake[] = [
     id: "m-atlas-trap-nodes",
     title: "Taking Atlas trap nodes (no respec)",
     description:
-      "Atlas points can't be refunded. Skip Man Trap (buggy Rogue Exile spawns outside the Essence), Survival of the Fittest if you'll farm Abyss (it merges rares, and Abyss drops one Omen per rare), and the hive-seeded Breach node unless you farm hives. The three small gold-found nodes are optional to path around. Full list on the Atlas page.",
+      "Atlas points can't be refunded. Group 1, never take: Reactive Hiveseeding (blocks Unstable Breaches), Survival of the Fittest (merges rares, so fewer Omens and Grand Expedition drops), The Lost Architect and Escalating Rivalry (Rogue Exiles flee with your loot). Group 2, bugged or situational: Man Trap, Mysterious Transference, Living Metal, Armaments of Evil and the childhood-fears Delirium node. The three small gold-found nodes are optional to path around. Full list on the Atlas page.",
     appliesToStage: ["atlas", "roadmap"],
     relatedMechanics: ["abyss", "breach"],
     source: videoSource(["uMHfOL8sT6I@07:37", "uMHfOL8sT6I@08:23", "5Vp_3gUFbwI@09:12"]),

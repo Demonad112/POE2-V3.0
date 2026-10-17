@@ -53,7 +53,7 @@ export const biomes: Biome[] = [
 export const biomeCityPairs = [
   { city: "Vaal cities", biomes: "Forest or Water" },
   { city: "Faridun cities", biomes: "Desert or Mountain" },
-  { city: "Third city type (name unclear in captions)", biomes: "Grass or Swamp" },
+  { city: "Ezomyte cities", biomes: "Grass or Swamp" },
 ];
 
 export const BIOME_LOADOUT = "Grass + Forest + Mountain or Desert";
