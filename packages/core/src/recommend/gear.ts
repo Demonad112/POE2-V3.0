@@ -51,6 +51,12 @@ import {
   type ItemAnalysis,
 } from '../gear/analyze.js'
 import type { ModTiers } from '../gear/tiers.js'
+import {
+  applyLedger,
+  resistanceTotals,
+  type LedgerChange,
+  type LedgerStat,
+} from '../constraints/ledger.js'
 import type { Evidence, Recommendation } from './types.js'
 
 /** The resistance cap, and the yardstick significance is measured against. */
@@ -238,6 +244,9 @@ export function gearRecommendations({ items, defense, tiers }: GearRecommendatio
   const shortfalls = summarizeSwaps(swaps, defense)
 
   const out: Recommendation[] = []
+  /** What each emitted swap changes, for the cumulative check below. */
+  const changes: LedgerChange[] = []
+  const unknownRolls = new Set<string>()
 
   // --- resistance rebalancing, per shortfall --------------------------------
   for (const shortfall of shortfalls) {
@@ -275,8 +284,24 @@ export function gearRecommendations({ items, defense, tiers }: GearRecommendatio
       },
     ]
 
+    const id = `gear-swap-${shortfall.type}`
+    const deltas: LedgerChange['deltas'] = {}
+    for (const lost of best.removes) {
+      if (lost.value === null) {
+        unknownRolls.add(id)
+        continue
+      }
+      const stat = `${lost.type}Resistance` as LedgerStat
+      deltas[stat] = (typeof deltas[stat] === 'number' ? (deltas[stat] as number) : 0) - lost.value
+    }
+    // The new line rolls anywhere in its tier range, so the gain is a range.
+    const gained = `${shortfall.type}Resistance` as LedgerStat
+    const prior = typeof deltas[gained] === 'number' ? (deltas[gained] as number) : 0
+    deltas[gained] = { min: prior + candidate.min, max: prior + candidate.max }
+    changes.push({ id, label: `Recraft ${best.replace.text} on ${best.itemName}`, deltas })
+
     out.push({
-      id: `gear-swap-${shortfall.type}`,
+      id,
       category: 'gear',
       action:
         `Recraft the ${best.replace.text} suffix on ${best.itemName} into "${candidate.affix ?? candidate.id}" ` +
@@ -314,6 +339,43 @@ export function gearRecommendations({ items, defense, tiers }: GearRecommendatio
       provenance: 'ninja',
       score: score(Math.min(1, candidate.closesShortfall / RESIST_CAP), 'gear', needed ?? 1),
     })
+  }
+
+  // --- cumulative check ------------------------------------------------------
+  // Each swap above is judged alone against the overcap, but they are taken
+  // together: two swaps that each give up "wasted" fire spend the same overcap
+  // twice. Check the sum against the real uncapped totals and say so.
+  if (changes.length) {
+    const totals = resistanceTotals(defense)
+    const together = applyLedger(totals, changes)
+    for (const rec of out) {
+      const change = changes.find((c) => c.id === rec.id)
+      if (!change) continue
+      const notes: string[] = []
+      const solo = applyLedger(totals, [change]).violations
+      for (const v of solo) notes.push(`Alone: ${v.message}`)
+      if (changes.length > 1) {
+        for (const v of together.violations) {
+          if (!v.changes.includes(rec.id)) continue
+          const soloSame = solo.find((s) => s.stat === v.stat)
+          // Only worth saying when taking the other swaps too makes it worse.
+          if (!soloSame || soloSame.afterWorst !== v.afterWorst) {
+            notes.push(`With the other recraft findings: ${v.message}`)
+          }
+        }
+      }
+      if (unknownRolls.has(rec.id)) {
+        notes.push('The roll on the removed line is not known, so what it costs is not included in this check.')
+      }
+      if (notes.length) {
+        // The reassurance that the loss is "smaller than it looks" holds only
+        // while the overcap covers it; when the check fails it is wrong.
+        const base = notes.some((n) => n.includes('floor'))
+          ? (rec.tradeoff ?? '').replace(/ That is already[\s\S]*$/, '')
+          : (rec.tradeoff ?? '')
+        rec.tradeoff = `${base} Constraint check: ${notes.join(' ')}`.trim()
+      }
+    }
   }
 
   // --- unused affix slots ---------------------------------------------------

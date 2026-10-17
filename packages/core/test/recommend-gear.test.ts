@@ -232,3 +232,20 @@ describe('when the affix data cannot classify a modifier', () => {
     expect(rec.rationale).toContain('9 active items')
   })
 })
+
+describe('cumulative constraint check on recraft findings', () => {
+  const recs = enriched.recommendations.recommendations
+  const swaps = recs.filter((r) => r.id.startsWith('gear-swap-'))
+
+  it('says when the recrafts together take a resistance below its cap', () => {
+    // Both swaps give up a fire suffix of roughly 40% from a character 24%
+    // over cap: each is below cap alone and far below together.
+    expect(swaps.length).toBeGreaterThanOrEqual(2)
+    for (const swap of swaps) {
+      expect(swap.tradeoff).toContain('Constraint check')
+      expect(swap.tradeoff).toMatch(/fire resistance from 99 to 15/)
+      // The reassurance is withdrawn once the check fails.
+      expect(swap.tradeoff).not.toContain('smaller than the number suggests')
+    }
+  })
+})

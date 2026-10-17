@@ -161,6 +161,13 @@ export interface GearSwap {
   itemName: string
   /** The mod to remove. */
   replace: { id: string | null; text: string; tier: number | null; reason: string }
+  /**
+   * Resistance the character loses when this mod is replaced. This is the
+   * mod's WHOLE rolled value, not the wasted part: recrafting removes the line,
+   * so a 30% mod on a character 24% over cap costs 6 points below the cap.
+   * `value` is null when the roll is not known.
+   */
+  removes: { type: 'fire' | 'cold' | 'lightning' | 'chaos'; value: number | null }[]
   /** What to put there instead, best reachable first. */
   candidates: {
     id: string
@@ -265,6 +272,17 @@ function wasteFor(
     }
   }
   return null
+}
+
+/** What replacing a wasteful resistance mod takes away, per resistance type. */
+function removedResistances(mod: ItemModAnalysis): GearSwap['removes'] {
+  if (!mod.waste) return []
+  const value = mod.rolled.find((r) => r.id === mod.waste!.stat)?.value ?? null
+  if (mod.waste.stat === ALL_ELEMENTAL_RESIST) {
+    return (['fire', 'cold', 'lightning'] as const).map((type) => ({ type, value }))
+  }
+  const type = Object.entries(RESIST_STAT).find(([, id]) => id === mod.waste!.stat)?.[0]
+  return type ? [{ type: type as 'fire' | 'cold' | 'lightning' | 'chaos', value }] : []
 }
 
 // ---------------------------------------------------------------------------
@@ -515,6 +533,7 @@ export function findResistanceSwaps(
           tier: mod.tier,
           reason: mod.waste.reason,
         },
+        removes: removedResistances(mod),
         candidates: options.slice(0, 4),
         cost: item.corrupted
           ? 'This item is corrupted, so its affixes cannot be changed. The swap needs a replacement item.'
