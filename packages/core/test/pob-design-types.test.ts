@@ -9,6 +9,12 @@ import type {
   RangedItemMeasurement,
   RespecMeasurement,
 } from '../src/pob/mutation.js'
+import type {
+  SupportRemovalEntry,
+  SupportRemovalProbe,
+  SupportRemovalReport,
+  SupportValueLabel,
+} from '../src/pob/support-removal.js'
 
 // Compile-time checks of the design-only shapes (docs/pob-mutation-design.md).
 // Nothing here runs a probe: no implementation exists.
@@ -45,5 +51,22 @@ describe('mutation probe shapes (types only)', () => {
 
   it('rpc names stay behind the assumed surface', () => {
     expectTypeOf<PobMutationRpc['restore_state']['params']>().toEqualTypeOf<{ token: string }>()
+  })
+})
+
+describe('support removal shapes (types only)', () => {
+  it('a delta exists only for a measured entry', () => {
+    expectTypeOf<SupportRemovalEntry['metric']>().toEqualTypeOf<{ before: number; after: number } | null>()
+    expectTypeOf<SupportRemovalEntry['outcome']>().toEqualTypeOf<
+      'measured' | 'no-measurable-effect' | 'main-skill-changed' | 'breaks-skill' | 'unmeasured'
+    >()
+  })
+
+  it('the probe returns the common envelope', () => {
+    expectTypeOf<SupportRemovalProbe['measureRemovals']>().returns.resolves.toEqualTypeOf<ProbeResult<SupportRemovalReport>>()
+  })
+
+  it('a support value is simulated, nominal or unknown, nothing else', () => {
+    expectTypeOf<SupportValueLabel>().toEqualTypeOf<'pob-sim' | 'nominal' | 'unknown'>()
   })
 })

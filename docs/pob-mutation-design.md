@@ -174,3 +174,132 @@ No fixtures are committed by this task. Needed later (a separate task records th
 
 - Risk: high. The addon changes are the dependency (licence, maintenance, an unverified override path). Silent state corruption is the worst failure, hence fingerprint proof and readback on every call. Item text for runes / soul cores / anoints in PoE2 exports is unverified. Wall-clock cost is unmeasured.
 - Estimate: shared primitives **M**; C1 + C3 rune/quality **L**; C2 anoint **M** (after C1); C4 respec **L**; C5 unique **M** (after C1, plus the dataset, which is a separate **L**).
+
+---
+
+## 2. A3: gem-removal simulation (`SupportRemovalProbe`)
+
+Interfaces: `packages/core/src/pob/support-removal.ts` (`SupportRemovalRequest`, `SupportRemovalEntry`, `SupportInteraction`, `SupportRemovalReport`, `SupportRemovalProbe`, `SupportValueLabel`, `SupportMeasurementRejection`), `ProbeResult` from `mutation.ts`.
+
+```ts
+interface SupportRemovalProbe {
+  measureRemovals(request: SupportRemovalRequest): Promise<ProbeResult<SupportRemovalReport>>
+}
+```
+
+This replaces the sketch `measureRemoval(skill, support, expected): MeasuredResult`: a single-gem call cannot report interactions, cost-side effects or a changed selection, and re-doing the baseline per call multiplies cost.
+
+### 2.1 What is mutated
+
+One field: **`enabled` on one `<Gem>` of one `<Skill>` group**, in the active SkillSet. Both attributes appear in the recorded export (`<Skill … enabled="true" mainActiveSkill="1">`, `<Gem … nameSpec="Mobility" enabled="true" count="1"/>`), and `readPobMainSkill` / `readPobSkillGroups` already treat `enabled="false"` as "not socketed". Mutation: `apply_step{ op:'set_gem_field', group, gem, expectName, field:'enabled', value:false }` (**assumption**: method and params).
+
+Why this field and not the alternatives:
+
+| Alternative | Rejected because |
+|---|---|
+| Delete the gem from the group | Shifts every later gem index and can shift `mainActiveSkill`; restoring exact order is a second source of error |
+| Disable the whole `<Skill>` group | Removes the skill, not the support |
+| `count` | Not a supported "off" state for a support; means multiple copies |
+| `enableGlobal1/2` | Present in the export (global effect toggles); their meaning for supports was not verified |
+
+The addon must check `expectName` against the gem at `(group, gem)` and fail with `gem-mismatch` otherwise. Revert is `restore_state` (or setting `enabled:true`); the fingerprint of the `skills` scope proves it.
+
+Group scope in the first version: the group the export marks main (`mainSocketGroup`). Supports in other groups say nothing about the headline `TotalDPS`; measuring them needs A8's selection switch (section 5) and is a later extension. The request still carries `group` so that extension needs no interface change.
+
+### 2.2 Procedure (one report)
+
+1. `snapshot_state{skills}`; `state_fingerprint`; read `get_skill_groups` (gems and current `main`).
+2. `get_calcs`; run `checkBaseline(expected, stats)` including `TotalDPS`. Fail: return `withheld` with the gate reason; **no mutating call has been made**.
+3. For each support (leave-one-out): disable it; `recalculate`; read the metric, the cost stats (`SupportCostStat`), and `main`; re-enable.
+4. Interactions (below), then `restore_state`, then `state_fingerprint` must equal step 1; otherwise `failed: revert-failed`.
+5. Return one `SupportRemovalReport`.
+
+Cost: with n supports, leave-one-out is n measurements; all pairs add n(n-1)/2. Typical n = 5 gives 5 plus 10. On the override-less path each measurement is about 3 RPC calls (`apply_step` disable, read, re-enable), so a full report is about 3·(n + n(n-1)/2) + 5 fixed calls (45 + 5 at n = 5). With `batch_measure` it is one connection. Wall time per `recalculate` is unmeasured (see section 0).
+
+### 2.3 Interaction effects
+
+Leave-one-out gives each support's **marginal** value given all the others are present. It is not its standalone value. Two supports that scale each other (one only matters when the other is socketed) each show a marginal delta that includes the other's contribution, and the sum of marginals does not equal the loss from removing both.
+
+- `interactions: 'all-pairs'`: for n ≤ 6 (15 pairs) disable each pair and compute `synergy = ln(both/base) − ln(a/base) − ln(b/base)`. Zero means independent. `|synergy|` above a threshold sets `flagged` (threshold is an owner decision; not invented here).
+- `interactions: { top: k }`: pairs among the k supports with the largest marginal delta. `interactionCoverage` is `'partial'`, and the report says so.
+- `interactions: 'none'`: `interactionCoverage: 'none'`. Entries are labelled "marginal given the others, interactions not measured". They are never labelled "standalone value".
+- A flagged pair is displayed as a pair. Neither gem is named "lowest value" on its own figure.
+- Removal of an unflagged support is still a *single-change* measurement: it does not predict the effect of removing two at once. The card says "removing this one".
+
+### 2.4 Minus-cost and cost-side supports
+
+A support can have a cost multiplier below 100 % or a reservation effect. Its value is then efficiency, and its DPS delta is about zero. A DPS-only probe would call it worthless.
+
+- Alongside `TotalDPS` the probe reads `ManaCost`, `ManaPerSecondCost`, `LifeCost`, `ESCost`, `SoulCost`, `Spirit`, `SpiritUnreserved`, `Speed` (`SupportCostStat`). These keys exist in the recorded export's `PlayerStat` list; that the live `get_calcs` returns the same keys is **assumed**.
+- `cost[]` carries before and after for each. `costOnly` is true when the DPS delta is inside the gate tolerance and a cost stat moved outside it.
+- Cost and damage are **never** merged into one number. The card shows both. Which one outranks the other is an owner decision.
+- A support whose value is only cost, with no stat moved at all (for example a Spirit effect PoB does not model), is `no-measurable-effect`, not valueless.
+
+### 2.5 When removal changes the main-skill selection
+
+`TotalDPS` belongs to the selected active skill and part. A removal can change that (the support grants or converts a skill, the selected gem becomes invalid, or the addon re-picks the default). Comparing `TotalDPS` across two different skills is meaningless.
+
+- After every removal read `main: MainSelectionReadback { group, activeIndex, skillPart, skillName }` and compare with step 1.
+- Different: outcome `main-skill-changed`, `metric: null`, no delta shown, both skill names in `reason`. The removal is not retried with the old selection forced; whether to force it is an owner decision.
+- `TotalDPS` is 0 or the skill is unusable: outcome `breaks-skill`. The support is *required*; it is not shown as a large measured gain from keeping it.
+- An addon that cannot report `main` makes the whole probe `failed: rpc-unsupported` for this feature (the selection cannot be verified, so no number is trusted).
+
+### 2.6 Replacing "nominal, not measured"
+
+Current state, verified in code: `reviewDamage` (`recommend/damage.ts`) names no lowest-value support and pushes the note "Support values are nominal (each gem's own figures), not measured on this build, so no support is named as the lowest-value one. Removing each in Path of Building would measure it." Nominal `supportValue` stays as the fallback.
+
+The labels change only when a measurement is **injected**. `reviewDamage` would accept an optional `SupportMeasurementInput { report }` (not wired in this task). A report is used for a given support only when every condition holds; otherwise the existing text is kept and the first failing condition is recorded as a `SupportMeasurementRejection`:
+
+| Condition | Rejection if false |
+|---|---|
+| a report was injected | `no-report` |
+| `report.status === 'measured'` | `status-not-measured` |
+| `baselineGate.ok` | `baseline-gate-failed` |
+| `reverted` | `not-reverted` |
+| `fingerprintBefore` equals the analysed build's (same PoB commit, config hash, content) | `build-differs-from-analysed` |
+| `report.group` is the analysed main group | `group-not-the-analysed-main-group` |
+| the gem is in `entries` | `gem-not-in-report` |
+| its outcome is `measured` or `no-measurable-effect` | `entry-unmeasured` / `main-skill-changed` |
+| the report is not `partial` for the claim being made | `partial-report` |
+
+When all hold: the support's figure is labelled `pob-sim` (`SupportValueLabel`), with the DPS change, the cost changes and the interaction coverage. A **lowest-value support** may be named only when (a) every enabled offensive support in the group has a measured entry, (b) none is in a flagged interaction, and (c) the naming states "least DPS lost when removed (this build, this configuration)". Otherwise the text is "lowest among those measured" or, with no qualifying report, the nominal note as today. The nominal path is never relabelled `pob-sim`.
+
+The measurement is under the export's own configuration (conditionals on). That is stated on the card; a sensitivity range (`measureSensitivity`) can bracket it later but is not required.
+
+### 2.7 PoB-side requirement
+
+`snapshot_state`/`restore_state`/`state_fingerprint` (scope `skills`), `get_skill_groups` with per-gem `enabled`, `apply_step{set_gem_field}` with `expectName`, and a main-selection readback. All **assumptions**; none exist in the addon today (the bridge has passive-node and custom-mod simulation only).
+
+### 2.8 Baseline expectations that gate it
+
+`ninjaBaselineExpectations(stats, mainSkillDps)` with `mainSkillDps` set. A report without a `TotalDPS` expectation is refused (`withheld`): the delta is a DPS delta and the baseline DPS must reproduce poe.ninja's figure for that skill. Additional per-entry sanity: after re-enabling, `TotalDPS` equals the baseline within the gate's absolute tolerance, else `revert-failed`.
+
+### 2.9 Failure and `unknown` behaviour
+
+| Condition | Result |
+|---|---|
+| Gate fails | `withheld`; nominal text stays |
+| `rpc-unsupported` | `failed`; nominal text stays |
+| `gem-mismatch` | that entry `unmeasured`, others continue |
+| Selection changed | entry `main-skill-changed`, no delta |
+| Budget ends | `partial: true`; unmeasured entries listed; no lowest-value naming |
+| Revert not proven | `failed: revert-failed`; entire report discarded |
+
+### 2.10 Test plan
+
+Fake transport with scripted replies, no live PoB; no fixtures committed here.
+
+- Gate failure: zero mutating calls; `withheld`.
+- Leave-one-out arithmetic: scripted `TotalDPS` per removal gives the entries; entries ordered as requested.
+- Interaction: scripted values where `both ≠ a·b` flag a pair; independence gives synergy ≈ 0 and `flagged: false`.
+- Minus-cost support: DPS unchanged, `ManaCost` lower: `costOnly: true`, outcome not `no-measurable-effect` for cost.
+- Selection change: scripted `main` differs: `main-skill-changed`, `metric: null`.
+- `TotalDPS` 0: `breaks-skill`.
+- Revert: scripted fingerprint mismatch: `failed: revert-failed`.
+- Consumer rules (when wired): each `SupportMeasurementRejection` row is one test; a stale fingerprint keeps the nominal note byte-for-byte.
+- Needed recorded fixtures (later task): `get_skill_groups` and `get_calcs` for a build with a minus-cost support and one with a skill-converting support; the golden for the nominal path must remain unchanged when no report is injected.
+
+### 2.11 Risk and estimate
+
+- Risk: medium. The mutation is small and reversible; the real risks are an addon that returns stale `get_calcs` after a gem toggle (caught by the cost and `TotalDPS` readbacks and the post-restore equality) and wall time for pairs (budgeted).
+- Estimate: probe **M** after the section 0 primitives and `set_gem_field`; analyzer wiring and wording **S**.

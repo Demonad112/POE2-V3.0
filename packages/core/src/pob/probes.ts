@@ -38,10 +38,11 @@ export interface MeasuredResult {
   baselineFailed: string | null
 }
 
-/** Remove one socketed support and report the DPS change (A3). */
-export interface SupportRemovalProbe {
-  measureRemoval(skill: string, support: string, expected: readonly BaselineExpectation[]): Promise<MeasuredResult>
-}
+/**
+ * Disable each socketed support in a group in turn and report the change (A3).
+ * Design: docs/pob-mutation-design.md, section 2.
+ */
+export type { SupportRemovalProbe } from './support-removal.js'
 
 /**
  * Replace or modify an equipped item or gem and report the change (C1, C3, C5).
