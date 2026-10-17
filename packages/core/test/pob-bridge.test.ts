@@ -206,6 +206,36 @@ describe('PobBridge transport', () => {
     expect(err.reason).toBe('bad-response')
   })
 
+  it('gives up once the per-call budget is spent instead of timing out on every port', async () => {
+    const timeouts: number[] = []
+    const bridge = new PobBridge({
+      timeoutMs: 100,
+      callBudgetMs: 150,
+      transport: async (_port, _payload, t) => {
+        timeouts.push(t)
+        await new Promise((r) => setTimeout(r, t))
+        throw new Error('timed out')
+      },
+    })
+    const err = (await bridge.call('ping').catch((e: unknown) => e)) as PobBridgeError
+    expect(err.reason).toBe('timeout')
+    expect(timeouts.length).toBeLessThan(4)
+    expect(timeouts[1]!).toBeLessThanOrEqual(100)
+  })
+
+  it('refuses a call once its signal is aborted', async () => {
+    const ctl = new AbortController()
+    ctl.abort()
+    const bridge = new PobBridge({ transport: async () => '{}\n', signal: ctl.signal })
+    const err = (await bridge.call('ping').catch((e: unknown) => e)) as PobBridgeError
+    expect(err.reason).toBe('aborted')
+  })
+
+  it('reports the PoB version from ping', async () => {
+    const bridge = new PobBridge({ transport: new FakePob().transport })
+    expect(await bridge.version()).toBe('2.51.0')
+  })
+
   it('ping returns null instead of throwing when PoB is not there', async () => {
     const bridge = new PobBridge({ transport: async () => Promise.reject(new Error('nope')) })
     expect(await bridge.ping()).toBeNull()

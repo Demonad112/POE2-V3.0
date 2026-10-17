@@ -5,7 +5,9 @@
  *
  * ## Where the key lives
  *
- * In the reader's own browser, in localStorage, and nowhere else. This site is a
+ * In the reader's own browser, in sessionStorage (gone when the tab closes, which
+ * limits what an XSS can read later), and nowhere else. The provider choice, which
+ * is not secret, stays in localStorage. This site is a
  * static export with no server: Next inlines every `NEXT_PUBLIC_*` value into the
  * published bundle, so a key committed to repository secrets would be readable by
  * anyone who opened devtools. There is deliberately no arrangement where a
@@ -60,9 +62,15 @@ export function Chat({ analysis, pob }: { analysis?: Analysis; pob?: PobAnalysis
 
   useEffect(() => {
     try {
-      const storedKey = localStorage.getItem(KEY_STORAGE)
+      // A key saved by an earlier version lived in localStorage: carry it over once, then drop it.
+      const legacyKey = localStorage.getItem(KEY_STORAGE)
+      if (legacyKey) {
+        if (!sessionStorage.getItem(KEY_STORAGE)) sessionStorage.setItem(KEY_STORAGE, legacyKey)
+        localStorage.removeItem(KEY_STORAGE)
+      }
+      const storedKey = sessionStorage.getItem(KEY_STORAGE)
       const storedProvider = localStorage.getItem(PROVIDER_STORAGE) as ProviderId | null
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from localStorage, an external system, on mount
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from browser storage, an external system, on mount
       if (storedKey) setApiKey(storedKey)
       if (storedProvider && storedProvider in PROVIDERS) setProvider(storedProvider)
     } catch {
@@ -82,8 +90,8 @@ export function Chat({ analysis, pob }: { analysis?: Analysis; pob?: PobAnalysis
     setApiKey(nextKey)
     setProvider(nextProvider)
     try {
-      if (nextKey) localStorage.setItem(KEY_STORAGE, nextKey)
-      else localStorage.removeItem(KEY_STORAGE)
+      if (nextKey) sessionStorage.setItem(KEY_STORAGE, nextKey)
+      else sessionStorage.removeItem(KEY_STORAGE)
       localStorage.setItem(PROVIDER_STORAGE, nextProvider)
     } catch {
       /* storage unavailable — session-only */

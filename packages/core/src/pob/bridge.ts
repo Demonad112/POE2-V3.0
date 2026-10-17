@@ -45,7 +45,7 @@ export const POB_DEFAULT_PORTS = [49085, 49086, 49087, 49088] as const
 /** Sends one newline-delimited JSON-RPC request and returns the raw reply. */
 export type PobTransport = (port: number, payload: string, timeoutMs: number) => Promise<string>
 
-export type PobErrorReason = 'not-running' | 'timeout' | 'bad-response' | 'command-failed'
+export type PobErrorReason = 'not-running' | 'timeout' | 'bad-response' | 'command-failed' | 'aborted'
 
 export class PobBridgeError extends Error {
   override name = 'PobBridgeError'
@@ -65,7 +65,15 @@ const NOT_RUNNING =
 export interface PobBridgeOptions {
   transport: PobTransport
   ports?: readonly number[]
+  /** Timeout for one attempt on one port. */
   timeoutMs?: number
+  /**
+   * Total time one `call` may spend across all ports. Without it an unreachable
+   * PoB costs `timeoutMs` per port. Defaults to twice `timeoutMs`.
+   */
+  callBudgetMs?: number
+  /** Cancels the in-flight call and refuses new ones. */
+  signal?: AbortSignal
 }
 
 /** What `ping` reports. Fields are whatever the addon sends; none are relied on. */
@@ -91,6 +99,8 @@ export class PobBridge {
   private readonly transport: PobTransport
   private readonly ports: readonly number[]
   private readonly timeoutMs: number
+  private readonly callBudgetMs: number
+  private readonly signal: AbortSignal | undefined
   private requestId = 0
   /** The port that last answered, tried first next time. */
   private preferredPort: number | null = null
@@ -99,6 +109,8 @@ export class PobBridge {
     this.transport = options.transport
     this.ports = options.ports ?? POB_DEFAULT_PORTS
     this.timeoutMs = options.timeoutMs ?? 5000
+    this.callBudgetMs = options.callBudgetMs ?? this.timeoutMs * 2
+    this.signal = options.signal
   }
 
   /** The port that answered most recently, or null if nothing has answered. */
@@ -115,11 +127,23 @@ export class PobBridge {
       ? [this.preferredPort, ...this.ports.filter((p) => p !== this.preferredPort)]
       : [...this.ports]
 
+    const deadline = Date.now() + this.callBudgetMs
     let lastError: unknown = null
     for (const port of order) {
+      if (this.signal?.aborted) {
+        throw new PobBridgeError('aborted', 'The Path of Building call was cancelled before it completed.')
+      }
+      const remaining = deadline - Date.now()
+      if (remaining <= 0) {
+        const detail = lastError instanceof Error ? ` (${lastError.message})` : ''
+        throw new PobBridgeError(
+          'timeout',
+          `Gave up on Path of Building after ${this.callBudgetMs} ms without an answer on any port${detail}.`,
+        )
+      }
       let raw: string
       try {
-        raw = await this.transport(port, payload, this.timeoutMs)
+        raw = await this.transport(port, payload, Math.min(this.timeoutMs, remaining))
       } catch (err) {
         lastError = err
         continue
@@ -160,6 +184,16 @@ export class PobBridge {
     } catch {
       return null
     }
+  }
+
+  /**
+   * The Path of Building version the addon reports, or null when it is
+   * unreachable or does not say. Callers compare it with the version their data
+   * or export came from; nothing here does.
+   */
+  async version(): Promise<string | null> {
+    const ping = await this.ping()
+    return ping?.pob_version ?? ping?.version ?? null
   }
 
   /** Load a Path of Building export code into the running instance. */

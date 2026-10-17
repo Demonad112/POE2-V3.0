@@ -84,6 +84,8 @@ export interface RankReport {
    * unvalidated and says so in `warnings`.
    */
   baselineGate: BaselineGateResult | null
+  /** Version Path of Building reported at the start of the run; null when it did not say. */
+  pobVersion: string | null
 }
 
 /** Side effects worth surfacing: a real move in something other than the metric. */
@@ -101,7 +103,16 @@ function sideEffectsOf(result: SimulationResult, metric: string): StatDelta[] {
 export async function rankNodesByMeasuredGain(
   bridge: PobBridge,
   candidates: NodeCandidate[],
-  options: { metric?: string; expected?: readonly BaselineExpectation[] } = {},
+  options: {
+    metric?: string
+    expected?: readonly BaselineExpectation[]
+    /** Version the build or data came from; a different PoB version is flagged, not refused. */
+    expectedPobVersion?: string
+    /** Stops between candidates; partial results are returned with `halted` set. */
+    signal?: AbortSignal
+    /** Total wall-clock budget for the candidate loop. Unset means no limit. */
+    budgetMs?: number
+  } = {},
 ): Promise<RankReport> {
   const metric = options.metric ?? DEFAULT_METRIC
   const warnings: string[] = []
@@ -109,11 +120,21 @@ export async function rankNodesByMeasuredGain(
   const skipped: SkippedNode[] = []
 
   if (candidates.length === 0) {
-    return { metric, baseline: null, ranked, skipped, halted: false, warnings: ['No candidate nodes were given.'], baselineGate: null }
+    return { metric, baseline: null, ranked, skipped, halted: false, warnings: ['No candidate nodes were given.'], baselineGate: null, pobVersion: null }
   }
 
   // The baseline serves two purposes: it is what every delta is relative to,
   // and re-reading it at the end detects drift the per-node reverts missed.
+  const pobVersion = await bridge.version()
+  if (options.expectedPobVersion) {
+    if (pobVersion === null) {
+      warnings.push(`Path of Building did not report a version, so it cannot be compared with ${options.expectedPobVersion}.`)
+    } else if (pobVersion !== options.expectedPobVersion) {
+      warnings.push(
+        `Path of Building reports version ${pobVersion}, not ${options.expectedPobVersion}; passive tree and skill data may differ.`,
+      )
+    }
+  }
   const baselineCalcs = await bridge.getCalcs()
   const baselineRaw = baselineCalcs[metric]
   const baseline = typeof baselineRaw === 'number' ? baselineRaw : null
@@ -129,6 +150,7 @@ export async function rankNodesByMeasuredGain(
       skipped,
       halted: true,
       baselineGate: null,
+      pobVersion,
       warnings: [
         `Path of Building does not report a numeric "${metric}", so there is nothing to rank by. ` +
           `It currently reports: ${numeric.join(', ')}.`,
@@ -150,6 +172,7 @@ export async function rankNodesByMeasuredGain(
         halted: true,
         warnings: [baselineGate.reason ?? 'The simulation baseline could not be validated.'],
         baselineGate,
+        pobVersion,
       }
     }
   } else {
@@ -157,7 +180,15 @@ export async function rankNodesByMeasuredGain(
   }
 
   let halted = false
+  const deadline = options.budgetMs === undefined ? Infinity : Date.now() + options.budgetMs
   for (const candidate of candidates) {
+    if (options.signal?.aborted || Date.now() >= deadline) {
+      warnings.push(
+        `${options.signal?.aborted ? 'Cancelled' : 'Time budget reached'} with ${candidates.length - ranked.length - skipped.length} candidates unmeasured. Results below are partial.`,
+      )
+      halted = true
+      break
+    }
     let result: SimulationResult
     try {
       result = await simulatePassiveNode(bridge, candidate.id, candidate.name)
@@ -166,7 +197,7 @@ export async function rankNodesByMeasuredGain(
       skipped.push({ nodeId: candidate.id, name: candidate.name ?? null, reason })
       // A connection that has dropped will not come back within this run, and
       // retrying it 30 more times helps nobody.
-      if (err instanceof PobBridgeError && err.reason === 'not-running') {
+      if (err instanceof PobBridgeError && (err.reason === 'not-running' || err.reason === 'timeout' || err.reason === 'aborted')) {
         warnings.push('Lost the connection to Path of Building part-way through. Results below are partial.')
         halted = true
         break
@@ -227,5 +258,5 @@ export async function rankNodesByMeasuredGain(
     )
   }
 
-  return { metric, baseline, ranked, skipped, halted, warnings, baselineGate }
+  return { metric, baseline, ranked, skipped, halted, warnings, baselineGate, pobVersion }
 }
