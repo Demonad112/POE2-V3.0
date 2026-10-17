@@ -58,4 +58,15 @@ describe('migrateSnapshots', () => {
     expect(appendSnapshot(history, next)).toBe(history)
     expect(appendSnapshot([v1 as CharacterSnapshot], next)).toHaveLength(1) // v1 row without schema vs stamped next
   })
+
+  it('leaves old rows without a game version and does not invent one', () => {
+    const r = migrateSnapshots([v1])
+    expect('gameVersion' in r.snapshots[0]!).toBe(false)
+  })
+
+  it('does not treat a game-version stamp alone as a change', () => {
+    const history = migrateSnapshots([v1]).snapshots
+    const stamped: CharacterSnapshot = { ...v1, schema: SNAPSHOT_SCHEMA, gameVersion: '0.5.5', at: '2026-10-02T00:00:00.000Z' }
+    expect(appendSnapshot(history, stamped)).toBe(history)
+  })
 })

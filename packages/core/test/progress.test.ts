@@ -37,6 +37,11 @@ const analysis = await analyzeCharacter(raw, { tree })
 const base = toSnapshot(analysis, '2026-07-24T00:00:00.000Z')
 
 describe('taking a snapshot', () => {
+  it('stamps the game version, and records null when none is given', () => {
+    expect(base.gameVersion).toBeNull()
+    expect(toSnapshot(analysis, base.at, undefined, '0.5.5').gameVersion).toBe('0.5.5')
+  })
+
   it('records the figures worth trending and nothing else', () => {
     expect(base).toMatchObject({
       at: '2026-07-24T00:00:00.000Z',

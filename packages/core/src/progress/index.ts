@@ -28,6 +28,11 @@ export interface CharacterSnapshot {
   at: string
   /** When poe.ninja last reindexed the character. Null when it did not say. */
   updatedUtc: string | null
+  /**
+   * Game patch the snapshot was taken under (e.g. "0.5.5"). Null when the caller did not
+   * say; absent on rows written before the stamp existed. Not part of the unchanged check.
+   */
+  gameVersion?: string | null
   /** account/name — history is per character, not per browser. */
   key: string
   /** Null (not 0) for every figure below that the source did not report. */
@@ -64,6 +69,7 @@ export function toSnapshot(
   analysis: Pick<Analysis, 'identity' | 'defense' | 'dps' | 'passives'>,
   at: string,
   keystones: KeystoneEffects = NO_KEYSTONE_EFFECTS,
+  gameVersion: string | null = null,
 ): CharacterSnapshot {
   const { identity, defense, dps, passives } = analysis
   const res = (type: string): number | null => defense.resistances.find((r) => r.type === type)?.value ?? null
@@ -73,6 +79,7 @@ export function toSnapshot(
     schema: SNAPSHOT_SCHEMA,
     at,
     updatedUtc: identity.updatedUtc,
+    gameVersion,
     key: snapshotKey(identity),
     level: identity.level ?? null,
     life: defense.life,
@@ -236,7 +243,7 @@ export function appendSnapshot(history: CharacterSnapshot[], next: CharacterSnap
   const unchanged =
     last !== undefined &&
     (Object.keys(next) as Array<keyof CharacterSnapshot>)
-      .filter((k) => k !== 'at' && k !== 'updatedUtc' && k !== 'schema')
+      .filter((k) => k !== 'at' && k !== 'updatedUtc' && k !== 'schema' && k !== 'gameVersion')
       .every((k) => last[k] === next[k])
 
   // Return the ORIGINAL array when nothing was recorded, so a caller can detect
