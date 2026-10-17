@@ -303,3 +303,117 @@ Fake transport with scripted replies, no live PoB; no fixtures committed here.
 
 - Risk: medium. The mutation is small and reversible; the real risks are an addon that returns stale `get_calcs` after a gem toggle (caught by the cost and `TotalDPS` readbacks and the post-restore equality) and wall time for pairs (budgeted).
 - Estimate: probe **M** after the section 0 primitives and `set_gem_field`; analyzer wiring and wording **S**.
+
+---
+
+## 3. D2: trade-query stat mapping and snapshot tests (spec)
+
+No network is used in this task or in the tests this spec describes. No trade stat id is stated here: every id is *to be captured*.
+
+Interfaces: `packages/core/src/pob/trade-stat-map.ts` (`TradeStatMapEntry`, `TradeStatMapFile`, `UnverifiedPolicy`, `ResolvedTradeStatMap`, `TradeVariantCompleteness`, `TradeStatsSnapshot`, `TradeQuerySnapshotCase`). It sits under `pob/` only because this task is limited to that folder; it moves next to `trade/query.ts` when built.
+
+```ts
+interface TradeStatMapEntry {
+  internalId: string; tradeId: string | null; category: TradeStatCategory
+  verified: boolean            // false by default
+  evidence: { snapshotId: string; tradeText: string } | null
+  valueTransform: { scale: number; offset: number } | null
+  coverageNote: string | null
+}
+interface TradeStatMapFile { schemaVersion: 1; gameVersion: string | null; snapshotId: string | null; entries: Record<string, TradeStatMapEntry> }
+// resolution (not implemented): TradeStatMapFile + UnverifiedPolicy -> ResolvedTradeStatMap { map, excluded, includedUnverified }
+```
+
+`buildTradeQueries(target, map: TradeStatMap)` already takes a flat `Record<internalId, tradeId>` and reports `unmapped`. This spec keeps that signature: the file is *resolved* into that record, so the existing builder and its tests do not change. What is new is only provenance (`verified`, `evidence`) and the completeness flags in section 3.3.
+
+### 3.1 Where it lives
+
+| Artefact | Path (proposed) | Notes |
+|---|---|---|
+| Mapping table | `packages/data/curated/trade-stat-map.json` | Hand-maintained plus captured ids. Deliberately **not** under `generated/` (no script regenerates it, and a data refresh must not overwrite verification state). `PROVENANCE.md` gets a section naming the snapshot id and game version |
+| Recorded stats snapshot | `packages/core/test/fixtures/trade/stats-snapshot.json` | `TradeStatsSnapshot`; trimmed to the entries the map names. Committed in the later fixtures task, not here |
+| Query samples | `packages/core/test/fixtures/trade/saved-query-*.json` | One real query JSON per shape, saved from the site by the owner, to check the query shape |
+| Expected queries | `packages/core/test/golden/trade/*.json` | Snapshot-test outputs (section 3.4) |
+| Capture procedure | `docs/DATA-REFRESH.md` section (to be added) | Manual steps; no script in CI |
+
+The core receives the resolved map by injection, as today (`TradeStatMap`). Loading the JSON is the caller's I/O (web: static import; MCP: file read).
+
+### 3.2 Stats needed (internal ids; trade ids to be captured)
+
+Internal ids below are present in this repo: the first four come from `RESIST_STAT` (`gear/analyze.ts`); the rest were found by search in `packages/data/generated/mods.json`. Trade ids are `null` for all.
+
+| Internal id | Purpose (ledger stat) | Trade id | Note |
+|---|---|---|---|
+| `base_fire_damage_resistance_%` | fire resistance, **must-keep** (today's `constraintsFromHoldingUp` emits only resistances) | to be captured | single-resistance trade stat; a hybrid "Fire and Cold" affix is a different trade stat (`coverageNote`) |
+| `base_cold_damage_resistance_%` | cold | to be captured | same |
+| `base_lightning_damage_resistance_%` | lightning | to be captured | same |
+| `base_chaos_damage_resistance_%` | chaos | to be captured | same |
+| `base_resist_all_elements_%` | all-elements resistance | to be captured | one trade stat for the all-elements line |
+| `base_maximum_life` | wanted | to be captured | |
+| `base_maximum_mana` | wanted | to be captured | |
+| `base_maximum_energy_shield` | wanted | to be captured | |
+| `base_spirit` | Spirit (ledger `spirit`) | to be captured | `base_spirit_from_equipment` also exists; which one the item mod uses is to be checked in the data |
+| `base_movement_velocity_+%` | movement speed (ledger `movementSpeed`) | to be captured | |
+| `additional_strength`, `additional_dexterity`, `additional_intelligence` | attributes | to be captured | hybrid ids (`additional_strength_and_dexterity`, …) are separate stats |
+| Pseudo "total resistance" stats | optional, would match hybrids | to be captured, or marked absent | **Assumption:** the PoE2 trade site has such pseudo stats; not verified. If absent, the hybrid limitation stays documented |
+
+Not needed now, but the same table would take them: rune and soul-core stat lines, item level, rarity, socket filters (these are filter groups, not stat ids).
+
+### 3.3 How a missing mapping degrades
+
+| Case | Behaviour |
+|---|---|
+| No entry for the internal id | Excluded; listed in `unmapped` with reason `no-entry` (existing behaviour, new reason code) |
+| Entry with `tradeId: null` | Excluded; reason `no-trade-id` |
+| Entry with `verified: false` | Policy `exclude` (**default**): excluded, reason `unverified`. Policy `include-flagged`: used, listed in `includedUnverified`, and the variant's `assumptions` gets "stat id not verified against a recorded snapshot" |
+| Wanted stat excluded | Query still built without it; `unmapped` names it (existing) |
+| **Must-keep stat excluded** | The query would admit items that break a resistance cap. The variant sets `mustKeepComplete: false` and lists `droppedMustKeep`. The UI must not present it as a safe search; whether to hide it or label it is an owner decision |
+| All stats excluded | The variant has an empty `stats` array and `allVerified: true` vacuously; the builder must report `mustKeepComplete`/`unmapped` so the UI shows "cannot build" instead of an open search. The caller treats zero filters as not buildable |
+| Value units differ | `valueTransform` applied to `min`; absent means identity. Not assumed to be needed |
+
+A variant's `allVerified` is true only when every filter used came from a `verified: true` entry. The default flow therefore never shows a wrong-id search as verified.
+
+`verified: true` is set only by a human after the schema test passes (below); a script never flips it.
+
+### 3.4 Snapshot-test plan
+
+Fixtures are *recorded*, never fetched by a test. Recording procedure (owner, once per game version, outside CI):
+
+1. Open the trade site's item-search page for the game; save the stats listing response (the endpoint is an **assumption**: the PoE2 trade site's stats listing, to be read from the browser's network tab, not guessed here) as raw JSON.
+2. Run a one-off trimming step that keeps only entries whose text matches the stats in 3.2 and writes `stats-snapshot.json` with `snapshotId` (content hash), `capturedAt`, `sourceUrl`, `gameVersion`.
+3. For each shape, build a search on the site by hand, copy its saved query JSON (the "search JSON" the site exposes) into `saved-query-*.json`.
+4. Fill `tradeId`, `category`, `evidence` for each entry; leave `verified: false`.
+5. Run the tests below; after review set `verified: true` for the entries that pass.
+
+Tests (all offline, deterministic, no timestamps in outputs):
+
+| Test | Input | Expected |
+|---|---|---|
+| Map schema | `trade-stat-map.json` + snapshot | every entry's `internalId` equals its key; `schemaVersion` is 1; `verified: true` implies `evidence` present and the snapshot contains `tradeId` with text equal to `evidence.tradeText`; `verified: false` is allowed and listed; no duplicate `tradeId` across two different internal ids unless `coverageNote` explains it |
+| Resolution | map file with entries: verified, unverified, null id, absent | `exclude` policy: only the verified id in `map`, the other three in `excluded` with their reasons; `include-flagged`: verified and unverified in `map`, unverified in `includedUnverified` |
+| Query snapshot, exact/wider/best-value | `TradeTarget` cases below, resolved map | each case's three variants equal the committed `golden/trade/<case>.json` (`toMatchFileSnapshot`), keys in builder order |
+| Shape check | `saved-query-*.json` vs builder output for the equivalent target | same top-level keys (`query.status.option`, `query.stats[].type/filters/value`, `sort`), same group nesting. This is what turns the shape from an assumption into a recorded fact |
+| Completeness flags | must-keep unmapped | `mustKeepComplete: false`, `droppedMustKeep` names it, variant JSON omits the filter |
+| Safety property | any case | every `filters[].id` is a value of the resolved map; no id appears that is not in the snapshot |
+
+Query cases (inputs):
+
+1. One resistance must-keep (fire 15), no wanted: three variants collapse to one `and` group.
+2. Two resistance must-keeps from `constraintsFromHoldingUp` on the committed Athrynas fixture for one ring slot, plus life wanted.
+3. Three wanted mods (life, ES, movement speed) with one must-keep: checks `count` minimums 2 and 1.
+4. One wanted mod unmapped: query built, `unmapped` lists it.
+5. One must-keep unmapped: `mustKeepComplete: false`.
+6. One unverified entry: `exclude` vs `include-flagged` outputs differ as in 3.3.
+7. Base type given: `query.type` set.
+8. Empty target: no filters; the builder's current behaviour is pinned.
+
+New golden files are created only by the later fixtures task. This task changes no golden.
+
+### 3.5 Baseline expectations and failure behaviour
+
+D2 simulates nothing, so `checkBaseline` does not apply. The equivalent gate is the snapshot: a mapping is trusted only while `verified` is true **and** its `snapshotId` equals the committed snapshot's. A game-version change makes the snapshot stale; the schema test then fails until the owner re-records (the version is stored in `gameVersion` so the failure message can say why). No price is estimated, as today.
+
+### 3.6 Risk and estimate
+
+- Risk: low-medium. A wrong id silently searches for the wrong stat, hence `verified: false` by default, exclusion of unverified entries by default, and the visible must-keep completeness flag. The query shape and the stats endpoint are unverified until the owner records them. Hybrid affixes fall outside single-stat filters.
+- Estimate: schema, resolution and flags **S**; recording and verifying the map **S** (manual, owner); snapshot tests **S**; optional pseudo-stat support **M** (depends on what the site offers).

@@ -15,6 +15,13 @@ import type {
   SupportRemovalReport,
   SupportValueLabel,
 } from '../src/pob/support-removal.js'
+import type {
+  ResolvedTradeStatMap,
+  TradeStatMapEntry,
+  TradeVariantCompleteness,
+  UnverifiedPolicy,
+} from '../src/pob/trade-stat-map.js'
+import type { TradeStatMap } from '../src/trade/query.js'
 
 // Compile-time checks of the design-only shapes (docs/pob-mutation-design.md).
 // Nothing here runs a probe: no implementation exists.
@@ -68,5 +75,21 @@ describe('support removal shapes (types only)', () => {
 
   it('a support value is simulated, nominal or unknown, nothing else', () => {
     expectTypeOf<SupportValueLabel>().toEqualTypeOf<'pob-sim' | 'nominal' | 'unknown'>()
+  })
+})
+
+describe('trade stat mapping shapes (types only)', () => {
+  it('an id can be absent but is never an empty placeholder', () => {
+    expectTypeOf<TradeStatMapEntry['tradeId']>().toEqualTypeOf<string | null>()
+    expectTypeOf<TradeStatMapEntry['verified']>().toEqualTypeOf<boolean>()
+  })
+
+  it('a resolved map feeds the existing builder unchanged', () => {
+    expectTypeOf<ResolvedTradeStatMap['map']>().toMatchTypeOf<TradeStatMap>()
+  })
+
+  it('unverified entries are excluded unless the caller opts in', () => {
+    expectTypeOf<UnverifiedPolicy>().toEqualTypeOf<'exclude' | 'include-flagged'>()
+    expectTypeOf<TradeVariantCompleteness['mustKeepComplete']>().toEqualTypeOf<boolean>()
   })
 })
