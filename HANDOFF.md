@@ -21,8 +21,8 @@ Background context for the next session. Verify anything you rely on; this file 
 
 ## Next tasks
 
-1. Remaining audit items: B-4 (primary skill is highest total DPS, not the played skill), B-5, B-6, B-7, then H-2, A-1/A-2.
-2. Roadmap item 12 (primary-skill selection, same as audit B-4) is core work. The defences checklist (item 10) is done in web: `lib/defenceChecklist.ts`, shown above the character notes; it restates existing figures and reports unknown where the payload cannot settle a check.
+1. Remaining audit items: B-5, B-6, B-7, then H-2, A-1/A-2.
+2. Roadmap item 12 / audit B-4 is done: `primary` is the export's main skill when it is a hit skill, else highest DPS (`DpsSummary.primarySource`). The defences checklist (item 10) is done in web: `lib/defenceChecklist.ts`, shown above the character notes; it restates existing figures and reports unknown where the payload cannot settle a check.
 3. Refresh script for `packages/data/generated` instead of a runtime RePoE loader (Batch 3b(b), skipped on purpose).
 
 Later, gated on a decision about a PoB worker (`docs/pob-worker-design.md`): roadmap items 13 to 19.

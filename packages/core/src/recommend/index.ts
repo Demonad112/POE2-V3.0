@@ -12,7 +12,7 @@
 
 import type { CharModel } from '../model/types.js'
 import { analyzeDefense, knownResistances, resistanceShortfalls, type DefenseSummary } from '../defense/index.js'
-import { analyzeDps, type DpsSummary } from '../dps/index.js'
+import { analyzeDps, type AnalyzeDpsOptions, type DpsSummary } from '../dps/index.js'
 import { NO_KEYSTONE_EFFECTS, type KeystoneEffects } from '../keystones/index.js'
 import { indexBreakdowns, projectStat, statSources, type BreakdownIndex } from '../model/breakdowns.js'
 import { normalizePassives, inactiveSetNodes, type PassiveAllocation } from '../model/passives.js'
@@ -609,11 +609,15 @@ const RULES: readonly ((ctx: Context) => Recommendation[])[] = [
  * fires, and nothing is suppressed. That is the right default — a correction
  * that cannot be corroborated must not be applied.
  */
-export function recommend(model: CharModel, keystones: KeystoneEffects = NO_KEYSTONE_EFFECTS): RecommendationReport {
+export function recommend(
+  model: CharModel,
+  keystones: KeystoneEffects = NO_KEYSTONE_EFFECTS,
+  options: AnalyzeDpsOptions = {},
+): RecommendationReport {
   const ctx: Context = {
     model,
     defense: analyzeDefense(model),
-    dps: analyzeDps(model),
+    dps: analyzeDps(model, options),
     breakdowns: indexBreakdowns(model),
     passives: normalizePassives(model),
     items: normalizeItems(model),

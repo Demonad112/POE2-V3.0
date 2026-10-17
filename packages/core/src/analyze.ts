@@ -137,8 +137,9 @@ function recommendationsFor(
   model: CharModel,
   options: AnalyzeOptions,
   keystones: KeystoneEffects,
+  preferredSkill: string | null,
 ): RecommendationReport {
-  const report = recommend(model, keystones)
+  const report = recommend(model, keystones, { preferredSkill })
   if (!options.tiers) return report
 
   const gear = gearRecommendations({
@@ -196,7 +197,7 @@ export async function analyzeCharacter(
   }
 
   const defense = analyzeDefense(model)
-  const baseDps = analyzeDps(model)
+  const baseDps = analyzeDps(model, { preferredSkill: exportMain })
   const mainSkill = mainSkillNote(baseDps, exportMain)
   const dps: DpsSummary = mainSkill ? { ...baseDps, mainSkill } : baseDps
   const passives = normalizePassives(model)
@@ -248,7 +249,7 @@ export async function analyzeCharacter(
     attribution: attributeToItems(breakdowns, items, defense),
     keystones,
     model,
-    recommendations: recommendationsFor(model, options, keystones),
+    recommendations: recommendationsFor(model, options, keystones, exportMain),
     assessment: assessBuild({
       defense,
       dps,

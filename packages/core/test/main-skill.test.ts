@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import { analyzeCharacter } from '../src/analyze.js'
+import { analyzeDps } from '../src/dps/index.js'
 import { mainSkillNote } from '../src/dps/main-skill.js'
 import { decodePobExport } from '../src/pob/export.js'
 import { readPobMainSkill } from '../src/pob/main-skill.js'
@@ -62,7 +63,7 @@ describe('mainSkillNote', () => {
     expect(n.exportMainTotalDps).toBe(100)
   })
 
-  it('flags a difference without changing anything', () => {
+  it('flags an export main skill that is not the primary', () => {
     const n = mainSkillNote(dps('Snipe', [['Snipe', 200], ['Ice Shot', 100]]), 'Ice Shot')!
     expect(n.agrees).toBe(false)
     expect(n.primary).toBe('Snipe')
@@ -76,11 +77,29 @@ describe('mainSkillNote', () => {
   })
 })
 
+describe('analyzeDps preferredSkill', () => {
+  const model = (...entries: [string, number][]) =>
+    ({ skills: entries.map(([name, dps]) => ({ dps: [{ name, dps }], allGems: [] })) }) as never
+
+  it('prefers the named hit skill over a higher-DPS one', () => {
+    const d = analyzeDps(model(['Snipe', 200], ['Ice Shot', 100]), { preferredSkill: 'ice shot' })
+    expect(d.primary?.name).toBe('Ice Shot')
+    expect(d.primarySource).toBe('export-main')
+  })
+
+  it('falls back to the highest-DPS hit skill when the name is absent or not a hit', () => {
+    expect(analyzeDps(model(['Snipe', 200]), { preferredSkill: 'Ice Shot' }).primary?.name).toBe('Snipe')
+    expect(analyzeDps(model(['Snipe', 200])).primarySource).toBe('highest-dps')
+  })
+})
+
 describe('analyzeCharacter main skill', () => {
-  it('adds the note on the recorded character and leaves primary unchanged', async () => {
+  it('makes the export main skill primary on the recorded character', async () => {
     const raw = JSON.parse(readFileSync(here('./fixtures/athrynas-v43.json'), 'utf8'))
     const a = await analyzeCharacter(raw)
     expect(a.dps.mainSkill?.exportMain).toBe('Ice Shot')
-    expect(a.dps.mainSkill?.agrees).toBe(a.dps.primary?.name === 'Ice Shot')
+    expect(a.dps.primary?.name).toBe('Ice Shot')
+    expect(a.dps.primarySource).toBe('export-main')
+    expect(a.dps.mainSkill?.agrees).toBe(true)
   })
 })

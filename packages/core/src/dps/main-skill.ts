@@ -1,8 +1,9 @@
 /**
  * Shows the skill the PoB export marks as main beside the analyzer's primary.
  *
- * Informational only: `DpsSummary.primary` (highest hit DPS) is never changed
- * and nothing is re-ranked. A difference is flagged, not corrected.
+ * `analyzeDps` already prefers this skill as `primary` when it is a hit skill.
+ * When it is not (no damage block, or dot-only), `primary` stays the highest-DPS
+ * hit skill and the difference is flagged here, not corrected.
  */
 
 import type { DpsSummary } from './index.js'
@@ -35,6 +36,6 @@ export function mainSkillNote(dps: Pick<DpsSummary, 'skills' | 'primary'>, expor
       ? `The Path of Building export marks ${exportMain} as the main skill; no skill with hit damage was found to compare it with.`
       : agrees
         ? `The Path of Building export also marks ${exportMain} as the main skill.`
-        : `The Path of Building export marks ${exportMain} as the main skill, but the highest-damage skill is ${primary}. The analysis is unchanged and still uses ${primary}.`
+        : `The Path of Building export marks ${exportMain} as the main skill, but it has no hit damage in the payload, so the analysis still uses ${primary}, the highest-damage skill.`
   return { exportMain, primary, agrees, exportMainTotalDps: entry?.totalDps ?? null, message, basisNote: MAIN_SKILL_BASIS_NOTE }
 }

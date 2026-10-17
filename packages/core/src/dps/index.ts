@@ -59,8 +59,13 @@ export interface SkillDamage {
 
 export interface DpsSummary {
   skills: SkillDamage[]
-  /** Highest-total-DPS skill that actually hits. Null when none do. */
+  /**
+   * The skill the PoB export marks as main when it is a hit skill here (matched
+   * by name), otherwise the highest-total-DPS skill that hits. Null when none do.
+   */
   primary: SkillDamage | null
+  /** Why `primary` was chosen. */
+  primarySource: 'export-main' | 'highest-dps'
   /** Skills that hit, ranked. */
   hitSkills: SkillDamage[]
   /** Buffs/heralds/auras — dot-only. */
@@ -70,8 +75,7 @@ export interface DpsSummary {
   unresolved: string | null
   /**
    * The skill the attached PoB export marks as main, beside `primary`. Set by
-   * `analyzeCharacter` when an export decodes; absent otherwise. Never changes
-   * `primary`.
+   * `analyzeCharacter` when an export decodes; absent otherwise.
    */
   mainSkill?: MainSkillNote | null
 }
@@ -135,7 +139,12 @@ function toSkillDamage(entry: NinjaSkillDps, skill: NinjaSkill): SkillDamage | n
   }
 }
 
-export function analyzeDps(model: Pick<CharModel, 'skills'>): DpsSummary {
+export interface AnalyzeDpsOptions {
+  /** Name of the skill the PoB export marks as main. Matched by name, ignoring case. */
+  preferredSkill?: string | null
+}
+
+export function analyzeDps(model: Pick<CharModel, 'skills'>, options: AnalyzeDpsOptions = {}): DpsSummary {
   const raw = Array.isArray(model.skills) ? model.skills : []
   const skills: SkillDamage[] = []
 
@@ -151,9 +160,13 @@ export function analyzeDps(model: Pick<CharModel, 'skills'>): DpsSummary {
   const hitSkills = skills.filter((s) => !s.isDotOnly && s.dps > 0)
   const supportSkills = skills.filter((s) => s.isDotOnly)
 
+  const wanted = options.preferredSkill?.trim().toLowerCase()
+  const preferred = wanted ? hitSkills.find((s) => s.name.toLowerCase() === wanted) : undefined
+
   return {
     skills,
-    primary: hitSkills[0] ?? null,
+    primary: preferred ?? hitSkills[0] ?? null,
+    primarySource: preferred ? 'export-main' : 'highest-dps',
     hitSkills,
     supportSkills,
     provenance: 'ninja',
