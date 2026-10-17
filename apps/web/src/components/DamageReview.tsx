@@ -43,9 +43,9 @@ function CandidateRow({ c, ratio }: { c: GemCandidate; ratio?: number }) {
         <span className="text-xs font-medium text-ink">{c.name}</span>
         {c.lineage ? <Tag tone="accent">lineage</Tag> : null}
         {ratio !== undefined ? (
-          <span className="tabular text-[11px] text-good">{pct(ratio)} DPS vs current</span>
+          <span className="tabular text-[11px] text-good">{pct(ratio)} DPS vs current (nominal)</span>
         ) : c.value.offensive && c.value.quantified && c.value.dps !== 1 ? (
-          <span className="tabular text-[11px] text-good">{pct(c.value.dps)} on its own</span>
+          <span className="tabular text-[11px] text-good">{pct(c.value.dps)} on its own (nominal)</span>
         ) : (
           <span className="text-[11px] text-ink-mute">effect not quantified — see its description</span>
         )}
@@ -216,7 +216,9 @@ export function DamageReview({
               >
                 {s.name}
                 {s.value?.quantified && s.value.offensive && s.value.dps !== 1 ? (
-                  <span className="tabular ml-1 text-good">{pct(s.value.dps)}</span>
+                  <span className="tabular ml-1 text-good">
+                    {pct(s.value.dps)} <span className="text-ink-mute">nominal</span>
+                  </span>
                 ) : s.value?.conditional.length ? (
                   <span className="ml-1 text-ink-mute">conditional</span>
                 ) : s.value && !s.value.offensive ? (
@@ -242,7 +244,7 @@ export function DamageReview({
             </div>
           ) : (
             <p className="text-[11px] text-good">
-              No compatible support beats the ones on this skill by the gems&apos; own figures.
+              No support is inapplicable, and none is named as weakest: these figures are nominal, not measured on this build.
             </p>
           )}
 

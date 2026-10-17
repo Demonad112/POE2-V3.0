@@ -374,20 +374,18 @@ export function reviewDamage(input: DamageReviewInput): DamageReview | null {
     const options = rank(1)
     if (options.length) gemSwaps.push({ replace: s, reason: s.issue!, candidates: options })
   }
-  if (!gemSwaps.length) {
-    const weakest = supports
-      .filter((s) => s.value?.offensive && s.value.quantified && s.value.conditional.length === 0)
-      .sort((a, b) => a.value!.dps - b.value!.dps)[0]
-    if (weakest) {
-      const options = rank(weakest.value!.dps)
-      if (options.length) {
-        gemSwaps.push({
-          replace: weakest,
-          reason: `${weakest.name} is your lowest-value damage support on this skill by the gems' own figures.`,
-          candidates: options,
-        })
-      }
-    }
+  // No support is named "lowest value" from the nominal figures. Those figures
+  // are each gem's own numbers weighed against the damage split; they do not say
+  // what removing the gem costs THIS build, and a gem can look weakest nominally
+  // while carrying real damage (or the reverse). A swap target is named only
+  // when a support cannot apply at all; ranking the rest needs the removal
+  // simulated in Path of Building, which is not done here.
+  const nominalOnly = supports.some((s) => s.value?.offensive && s.value.quantified && s.value.conditional.length === 0)
+  if (!gemSwaps.length && nominalOnly) {
+    notes.push(
+      'Support values are nominal (each gem’s own figures), not measured on this build, so no support is named as the lowest-value one. ' +
+        'Removing each in Path of Building would measure it.',
+    )
   }
   const unvalued = supports.filter((s) => s.value?.offensive && !s.value.quantified).map((s) => s.name)
   if (unvalued.length) {
