@@ -1,0 +1,7 @@
+{
+  "name": "context-budget",
+  "version": "0.1.0",
+  "author": { "name": "Demonad112" },
+  "description": "Context meter in the status line, warnings before the window fills, /budget breakdown, and a compaction that keeps your working state.",
+  "types": "./types/index.d.ts"
+}
