@@ -11,6 +11,7 @@
  * didn't report) drops its tile rather than showing a zero.
  */
 
+import { useSyncExternalStore } from 'react'
 import { auditSpirit, dataAge, type Analysis } from '@poe2/core'
 import { Tag, fmt, fmtCompact } from '@/components/ui'
 
@@ -49,13 +50,21 @@ function Tile({
   )
 }
 
+let mountedAt: number | null = null
+const subscribeNever = () => () => {}
+const clientNow = (): number => (mountedAt ??= Date.now())
+const serverNow = (): number | null => null
+
 export function CharacterHero({ analysis }: { analysis: Analysis }) {
   const { identity, defense, dps, pobStats } = analysis
   const primary = dps.primary
   const spirit = auditSpirit(pobStats)
   const spiritTotal = spirit?.total ?? (defense.spirit > 0 ? defense.spirit : null)
   const uncapped = defense.resistances.filter((r) => !r.capped).length
-  const age = dataAge(identity.updatedUtc, new Date())
+  // The clock is read once on the client; the server render has no `now`, so
+  // the tag is omitted there instead of mismatching on hydration.
+  const nowMs = useSyncExternalStore(subscribeNever, clientNow, serverNow)
+  const age = nowMs === null ? null : dataAge(identity.updatedUtc, new Date(nowMs))
 
   return (
     <section className="card relative overflow-hidden rounded-2xl border-accent-line/60">
@@ -75,10 +84,12 @@ export function CharacterHero({ analysis }: { analysis: Analysis }) {
             </span>
             {identity.league ? <Tag>{identity.league}</Tag> : null}
             {pobStats ? <Tag tone="good">cross-validated</Tag> : null}
-            <Tag tone={age.stale ? 'danger' : 'default'}>
-              {age.label}
-              {age.stale ? ' · re-import before buying' : ''}
-            </Tag>
+            {age ? (
+              <Tag tone={age.stale ? 'danger' : 'default'}>
+                {age.label}
+                {age.stale ? ' · re-import before buying' : ''}
+              </Tag>
+            ) : null}
           </div>
         </div>
       </div>
