@@ -1,3 +1,4 @@
 export * from './types.js'
 export * from './scoring.js'
 export * from './tradeoff.js'
+export * from './warn.js'

@@ -116,15 +116,23 @@ const FAMILY_NOTE_NAMES = 4
  * "You already use X in this family" notes. `used` maps a family to the socketed
  * gem holding it; `compatible` is every support that fits the skill. A note
  * lists the other gems of that family, so a missing suggestion is explained.
+ * With `cap`, non-lineage gems above the tier cap are left out (they would not
+ * have been suggested anyway); lineage gems are kept and marked, since they are
+ * listed apart from the ranked candidates.
  */
-export function duplicateFamilyNotes(compatible: readonly PobSupport[], used: ReadonlyMap<string, string>): string[] {
+export function duplicateFamilyNotes(
+  compatible: readonly PobSupport[],
+  used: ReadonlyMap<string, string>,
+  cap?: number,
+): string[] {
   const byFamily = new Map<string, Set<string>>()
   for (const s of compatible) {
+    if (cap !== undefined && !s.lineage && s.tier > cap) continue
     for (const f of s.family) {
       const holder = used.get(f)
       if (holder === undefined || holder.toLowerCase() === s.name.toLowerCase()) continue
       const set = byFamily.get(f) ?? new Set<string>()
-      set.add(s.name)
+      set.add(s.lineage ? `${s.name} (lineage)` : s.name)
       byFamily.set(f, set)
     }
   }
@@ -324,6 +332,7 @@ export function reviewDamage(input: DamageReviewInput): DamageReview | null {
   const familyNotes = duplicateFamilyNotes(
     typeSet ? catalog.compatible(types) : [],
     familiesSeen,
+    input.maxSupportTier,
   )
   const cap = input.maxSupportTier
   const { best, aboveCap } = bestPerFamily(

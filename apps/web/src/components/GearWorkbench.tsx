@@ -26,6 +26,7 @@ import {
   draftResistances,
   draftSize,
   draftStatDelta,
+  findResistanceSwaps,
   lineKey,
   openSlots,
   rankAffixCandidates,
@@ -572,7 +573,8 @@ export function GearWorkbench({
     if (state.status !== 'ready') return null
     const active = items.filter((i) => i.active)
     const analysed = active.map((i) => analyzeItem(i, state.tiers, defense))
-    return { active, analysed, ranking: rankReplacements(analysed, defense) }
+    const swaps = findResistanceSwaps(analysed, active, state.tiers, defense)
+    return { active, analysed, swaps, ranking: rankReplacements(analysed, defense) }
   }, [state, items, defense])
 
   const { draft, setDraft, dropped } = useGearDraft(
@@ -649,7 +651,7 @@ export function GearWorkbench({
             return item ? <ItemRow key={row.slotId} item={item} row={row} saved={savedSlots.has(row.slotLabel)} shared={shared} /> : null
           })}
         </ol>
-        <NoUpgradeSlots verdicts={slotsWithNoFlaggedUpgrade(base.analysed, recommendations)} />
+        <NoUpgradeSlots verdicts={slotsWithNoFlaggedUpgrade(base.analysed, recommendations, base.swaps)} />
       </div>
     </Panel>
   )

@@ -195,6 +195,18 @@ export function inactiveSetReport(model: Pick<CharModel, 'items' | 'useSecondWea
   return { activeSet, inactiveSet, activeSetAssumed: typeof model.useSecondWeaponSet !== 'boolean', items, skills }
 }
 
+/**
+ * A sentence when the analyzer's primary skill is listed in the inactive weapon
+ * set, else null. Null also when the payload does not say which set each skill
+ * is in: absence of a marker is not evidence the skill is live.
+ */
+export function primarySkillInInactiveSet(primary: string | null, report: Pick<InactiveSetReport, 'skills' | 'inactiveSet'>): string | null {
+  if (!primary || report.skills.status !== 'known') return null
+  const norm = (s: string) => s.trim().toLowerCase()
+  if (!report.skills.names.some((n) => norm(n) === norm(primary))) return null
+  return `${primary} is the highest-damage skill, but the payload places it in weapon set ${report.inactiveSet}, which is not the active set. Its damage may not apply to the live build.`
+}
+
 /** Only the items that contribute to the live build. */
 export function activeItems(model: Pick<CharModel, 'items' | 'useSecondWeaponSet'>): EquippedItem[] {
   return normalizeItems(model).filter((i) => i.active)
