@@ -9,7 +9,7 @@ Background context for the next session. Verify anything you rely on; this file 
 - Merged since the last handoff: audit fixes B-1 to B-3 (#38, unknown stays `null`), plan items 5-10 in core and web (#39-#45), data age on the report, the 0.5.5 Soul Core table (#47, #48), the snapshot `gameVersion` stamp (#49), and the 0.5.5 endgame progression update (#52, #54): 32-step checklist, patch changes, Trial of Chaos, essence crafting, Atlas regex strings and trap-node groups, boss resistances.
 - Web has the focus toggle, "Changed since last report" panel, family notes, ailment immunities, main-skill note and inactive weapon set.
 - Cloud sessions can run Playwright e2e: `playwright.config.ts` uses the preinstalled Chromium when `CLAUDE_CODE_REMOTE=true`. 77 passed, 3 skipped on 2026-10-17.
-- Counts: core 669 (7 skipped, 3 todo), web 92, proxy 13. e2e re-run on this branch: 77 passed, 3 skipped.
+- Counts: core 669 (7 skipped, 3 todo), web 92, proxy 13. e2e re-run on this branch: 81 passed, 3 skipped.
 - Design docs, no runtime code: `docs/pob-mutation-design.md` (C1-C5, A3, D2, A8; 13 open assumptions in §5, 12 owner decisions in §6, build order in §7) with type-only interfaces in `packages/core/src/pob/{mutation,support-removal,trade-stat-map,per-skill-dps}.ts` and 15 compile-time tests. Decision 1 (addon route: extend, fork or headless wrapper) gates all PoB mutation work.
 
 ## This branch (audit batch)
@@ -20,7 +20,7 @@ Background context for the next session. Verify anything you rely on; this file 
 - A-1: User-Agent is a public repo URL (`UPSTREAM_CONTACT` / `POE2_UPSTREAM_CONTACT` override it), never an email. The browser client sends none. A-2: retry on 429/503 (proxy also 502/504), `Retry-After` honoured up to 2 s (proxy) / 5 s (client); proxy edge cache `s-maxage=300`. No ETag handling.
 - I-1: README counts updated. Snapshots already carry a `schema` field (`progress/migrate.ts`); an earlier version of this file said they did not.
 
-- Batch 2: C-2 (call budget + `AbortSignal` on the bridge and ranking), C-3 (`version()`, `RankReport.pobVersion`, `expectedPobVersion`), H-3 (chat key in `sessionStorage`), I-3 secret scan (gitleaks job in `ci.yml`, not yet run on GitHub). A-7 was already shown in `CharacterHero`.
+- Batch 2: C-2 (call budget + `AbortSignal` on the bridge and ranking), C-3 (`version()`, `RankReport.pobVersion`, `expectedPobVersion`), H-3 (chat key in `sessionStorage`), I-3 secret scan (gitleaks job in `ci.yml`, not yet run on GitHub). I-5: `e2e/a11y.spec.ts` (axe) added; two known rules excluded in the spec (`nested-interactive` on checklist steps, `color-contrast` on phase-nav captions), both need a design call. A-7 was already shown in `CharacterHero`.
 
 ## Known risks and unverified items
 
@@ -34,7 +34,7 @@ Background context for the next session. Verify anything you rely on; this file 
 
 ## Next tasks
 
-1. Audit items still open: C-1 and E-1 (need a PoB worker), F-2, I-3 coverage tooling, I-4, I-5; see `docs/analyzer-audit.md`. Re-run e2e for the gear workbench.
+1. Audit items still open: C-1 and E-1 (need a PoB worker), F-2, I-3 coverage tooling, I-4, the two a11y exclusions; see `docs/analyzer-audit.md`. Re-run e2e for the gear workbench.
 2. Roadmap item 12 / audit B-4 is done: `primary` is the export's main skill when it is a hit skill, else highest DPS (`DpsSummary.primarySource`). The defences checklist (item 10) is done in web: `lib/defenceChecklist.ts`, shown above the character notes; it restates existing figures and reports unknown where the payload cannot settle a check.
 3. Refresh script for `packages/data/generated` instead of a runtime RePoE loader (Batch 3b(b), skipped on purpose).
 

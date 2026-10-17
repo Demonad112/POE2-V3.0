@@ -86,7 +86,7 @@ export function NavBar() {
 
   return (
     <nav className="sticky top-0 z-20 flex items-center gap-1 border-b border-accent-line/40 bg-surface/75 px-3 py-2.5 shadow-[0_8px_24px_-16px_rgb(0_0_0/0.6)] backdrop-blur-xl sm:px-4">
-      <Link href="/" className="mr-2 flex shrink-0 items-center gap-2 lg:mr-5">
+      <Link href="/" aria-label="PoE2 Endgame Companion" className="mr-2 flex shrink-0 items-center gap-2 lg:mr-5">
         <svg viewBox="0 0 24 24" className="size-5 shrink-0" fill="none">
           <path
             d="M12 2 L20 12 L12 22 L4 12 Z"
