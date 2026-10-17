@@ -53,12 +53,9 @@ export const patchDeltas: PatchDelta[] = [
   {
     id: "delta-expedition",
     system: "Runes of Aldur and Expedition",
-    before: "League-only mechanic with no Expedition Tablets; needed Aldur's Saga.",
-    now: "Core from Act 4. Expedition Tablets stack 1 to 4 per map. Aldur's Saga is removed and its modifiers roll on Grand Expeditions through Logbooks. Expedition Tablets do not drop in Runes of Aldur.",
-    source: patchSource({
-      verified: "conflicting",
-      note: "The spec says Aldur's Saga is removed; the guide's Expedition strategy says it stays Runes of Aldur-only. Check the league you are playing.",
-    }),
+    before: "League-only mechanic with no Expedition Tablets; needed Aldur's Saga, which stays Runes of Aldur-only.",
+    now: "Core from Act 4. Expedition Tablets stack 1 to 4 per map. Expedition Tablets do not drop in Runes of Aldur.",
+    source: patchSource(),
   },
   {
     id: "delta-delirium",

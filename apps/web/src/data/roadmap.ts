@@ -381,9 +381,6 @@ export const roadmapSteps: RoadmapStep[] = [
     title: "Close out the remaining tree",
     description:
       "Once the Fortress is complete, remaining points go to generic quantity/rarity/pack-size, then the mechanic sub-trees you still want. Recommended close-out order: Ritual → Vaal Temple → Delirium (hardest last). Fubgun's alternative: pick the one mechanic you'll farm right after the first Divinity kill and earn currency with its tablets while you hunt Halls.",
-    tips: [
-      "Day 1 to 2 trade order (Fubgun, P4wnyhof): Abyss with Rogue Exiles first for the fastest currency and jewellery, then Expedition or Breach, then Delirium, then Ritual, then Vaal Temple.",
-    ],
     relatedMistakeIds: ["m-spread-atlas-points"],
     source: video05Source(["VSeDfybR3Cc@25:21", "-R5KjDJQu9w@06:02"]),
   },
