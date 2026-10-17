@@ -21,6 +21,10 @@ export type Provenance =
   | 'pob-export'
   /** Tier 3: computed by this codebase. MUST be surfaced as an estimate. */
   | 'estimate'
+  /** Arithmetic on observed values, labelled as such (e.g. an implied resistance). */
+  | 'derived'
+  /** A game-data figure for what something grants in isolation, not measured on this build. */
+  | 'nominal'
 
 /** A value that knows where it came from. */
 export interface Sourced<T> {

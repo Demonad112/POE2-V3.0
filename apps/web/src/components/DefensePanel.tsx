@@ -2,6 +2,7 @@
 
 import type { DefenseSummary } from '@poe2/core'
 import { Hero, Panel, Stat, Tag, fmt } from './ui'
+import { ProvenanceBadge } from './shared/ProvenanceBadge'
 
 const DMG_VAR: Record<string, string> = {
   physical: 'var(--dmg-physical)',
@@ -131,7 +132,12 @@ export function DefensePanel({ d, bare = false }: { d: DefenseSummary; bare?: bo
   return (
     <Panel
       title="Defence"
-      subtitle="Led by the smallest hit that kills — not by an averaged pool."
+      subtitle={
+        <>
+          Led by the smallest hit that kills — not by an averaged pool. <ProvenanceBadge provenance="ninja" /> maximum hits, resistances and
+          evade chance are poe.ninja’s own figures.
+        </>
+      }
       bare={bare}
     >
       <div className="space-y-5">

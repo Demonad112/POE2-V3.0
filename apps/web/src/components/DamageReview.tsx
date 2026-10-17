@@ -30,6 +30,7 @@ import type { ModTiersState } from '@/lib/useModTiers'
 import type { SupportCatalogState } from '@/lib/useSupportCatalog'
 import { useSupportTierCap } from '@/hooks/useSupportTierCap'
 import { Empty, Panel, Tag } from './ui'
+import { ProvenanceBadge } from './shared/ProvenanceBadge'
 
 function pct(ratio: number): string {
   const p = (ratio - 1) * 100
@@ -217,7 +218,7 @@ export function DamageReview({
                 {s.name}
                 {s.value?.quantified && s.value.offensive && s.value.dps !== 1 ? (
                   <span className="tabular ml-1 text-good">
-                    {pct(s.value.dps)} <span className="text-ink-mute">nominal</span>
+                    {pct(s.value.dps)} <ProvenanceBadge provenance="nominal" />
                   </span>
                 ) : s.value?.conditional.length ? (
                   <span className="ml-1 text-ink-mute">conditional</span>

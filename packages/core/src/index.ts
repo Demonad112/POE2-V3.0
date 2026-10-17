@@ -6,6 +6,7 @@
  */
 
 export * from './model/types.js'
+export * from './model/provenance.js'
 export * from './model/slots.js'
 export * from './model/passives.js'
 export * from './model/breakdowns.js'
