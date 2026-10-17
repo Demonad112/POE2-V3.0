@@ -65,7 +65,12 @@ export interface DefenseSummary {
   physicalDamageReductionAgainstHit: number | null
 
   evasion: number
-  evadeChance: number
+  /**
+   * poe.ninja's evade chance, read as given. Null when the payload carries none:
+   * never 0, which would read as "cannot evade". Not derived locally; see
+   * `evadeChance()` in constants.ts for why that formula is not used.
+   */
+  evadeChance: number | null
   blockChance: number
 
   /** 0.5 mechanics V1 had no model for. */
@@ -184,7 +189,7 @@ export function analyzeDefense(model: Pick<CharModel, 'defensiveStats'>): Defens
       typeof physReduction?.takenDamage === 'number' ? physReduction.takenDamage : null,
 
     evasion: num(s, 'evasionRating') ?? 0,
-    evadeChance: num(s, 'evadeChance') ?? 0,
+    evadeChance: num(s, 'evadeChance'),
     blockChance: num(s, 'blockChance') ?? 0,
 
     deflectionRating: num(s, 'deflectionRating') ?? 0,

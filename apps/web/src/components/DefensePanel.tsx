@@ -159,7 +159,7 @@ export function DefensePanel({ d, bare = false }: { d: DefenseSummary; bare?: bo
           <Stat label="Life" value={fmt(d.life)} />
           <Stat label="Energy Shield" value={fmt(d.energyShield)} />
           <Stat label="Ward" value={fmt(d.ward)} hint="0.5 mechanic" />
-          <Stat label="Evasion" value={fmt(d.evasion)} hint={`${fmt(d.evadeChance)}% evade`} />
+          <Stat label="Evasion" value={fmt(d.evasion)} hint={d.evadeChance === null ? 'evade chance not reported' : `${fmt(d.evadeChance)}% evade (poe.ninja)`} />
           <Stat
             label="Armour"
             value={fmt(d.armour)}

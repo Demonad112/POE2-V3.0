@@ -114,6 +114,7 @@ export function reconcile(model: CharModel, pobStats: Record<string, number> = {
   checks.push(check('energyShield', defense.energyShield, pob('EnergyShield'), 'pob-export'))
   checks.push(check('armour', defense.armour, pob('Armour'), 'pob-export'))
   checks.push(check('evasion', defense.evasion, pob('Evasion'), 'pob-export'))
+  checks.push(check('evadeChance', defense.evadeChance, pob('EvadeChance'), 'pob-export'))
 
   for (const [statKey, pobKey] of [
     ['physicalMaximumHit', 'PhysicalMaximumHitTaken'],
