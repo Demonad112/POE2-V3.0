@@ -23,7 +23,7 @@ const pob = await analyzeFromPob(model.pathOfBuildingExport!)
 describe('analysing from a Path of Building code', () => {
   it('reads the identity the code carries', () => {
     expect(pob.identity).toMatchObject({ level: 86, className: 'Ranger', ascendancy: 'Deadeye' })
-    expect(pob.provenance).toBe('pob')
+    expect(pob.provenance).toBe('pob-export')
   })
 
   it('agrees with poe.ninja on the survivability headline', () => {

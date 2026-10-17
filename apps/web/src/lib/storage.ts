@@ -24,24 +24,69 @@ let cache: PersistedState = DEFAULT_STATE;
 let cacheInitialized = false;
 const listeners = new Set<() => void>();
 
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  !!v && typeof v === "object" && !Array.isArray(v);
+const strings = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+
+/**
+ * Keep whatever a payload from another top-level version still holds, slice by
+ * slice, each checked against the shape this version reads. A slice that does
+ * not fit falls back to its default; the rest of the player's progress survives.
+ */
+function salvage(parsed: Record<string, unknown>): PersistedState {
+  const checklist = isRecord(parsed.checklist) ? parsed.checklist : {};
+  const atlas = isRecord(parsed.atlas) ? parsed.atlas : {};
+  const dashboard = isRecord(parsed.dashboard) ? parsed.dashboard : {};
+  const quiz = isRecord(dashboard.lastQuizAnswers) ? dashboard.lastQuizAnswers : {};
+  const character = isRecord(parsed.character) ? parsed.character : {};
+  return {
+    ...DEFAULT_STATE,
+    checklist: {
+      completedStepIds: strings(checklist.completedStepIds),
+      completedActionItemKeys: strings(checklist.completedActionItemKeys),
+      ...(typeof checklist.hideCompleted === "boolean" ? { hideCompleted: checklist.hideCompleted } : {}),
+      ...(typeof checklist.highestTier === "number" ? { highestTier: checklist.highestTier } : {}),
+    },
+    atlas: {
+      allocatedClusterIds: strings(atlas.allocatedClusterIds),
+      allocatedForkIds: strings(atlas.allocatedForkIds),
+    },
+    dashboard: {
+      lastQuizAnswers: Object.fromEntries(
+        Object.entries(quiz).filter((e): e is [string, string] => typeof e[1] === "string"),
+      ),
+      ...(typeof dashboard.pinnedStrategyId === "string" ? { pinnedStrategyId: dashboard.pinnedStrategyId } : {}),
+    },
+    character: { snapshots: migrateSnapshots(character.snapshots).snapshots },
+    ...(isRecord(parsed.gear) && Array.isArray(parsed.gear.shoppingList)
+      ? { gear: parsed.gear as unknown as NonNullable<PersistedState["gear"]> }
+      : {}),
+    ...(isRecord(parsed.gems) ? { gems: parsed.gems as NonNullable<PersistedState["gems"]> } : {}),
+  };
+}
+
 /**
  * Parse a stored payload. Pure, so it can be tested without a window.
  *
- * A payload from a different top-level version is still discarded. Character
- * snapshots are versioned on their own and migrated here, so a change to their
- * shape never costs the player their checklist or Atlas progress.
+ * A payload from a different top-level version is salvaged slice by slice
+ * rather than discarded, so a version bump never costs the player their
+ * checklist, Atlas or history. Only unreadable or non-object payloads reset.
+ * Character snapshots are versioned on their own and migrated here.
  */
 export function parsePersisted(raw: string | null): PersistedState {
   if (!raw) return DEFAULT_STATE;
   try {
-    const parsed = JSON.parse(raw) as PersistedState;
-    if (!parsed || parsed.version !== STORAGE_VERSION) return DEFAULT_STATE;
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed)) return DEFAULT_STATE;
+    if (parsed.version !== STORAGE_VERSION) return salvage(parsed);
+    const state = parsed as unknown as PersistedState;
     return {
       ...DEFAULT_STATE,
-      ...parsed,
+      ...state,
       character: {
-        ...parsed.character,
-        snapshots: migrateSnapshots(parsed.character?.snapshots).snapshots,
+        ...state.character,
+        snapshots: migrateSnapshots(state.character?.snapshots).snapshots,
       },
     };
   } catch {

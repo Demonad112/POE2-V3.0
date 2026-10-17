@@ -26,6 +26,8 @@ export interface ResponseLike {
   json(): Promise<unknown>
   /** Present on real fetch. Required to read an SSE stream without hanging. */
   body?: ReadableStream<Uint8Array> | null
+  /** Present on real fetch. Read for `Retry-After` on a throttled response. */
+  headers?: { get(name: string): string | null }
 }
 
 export type FetchLike = (
@@ -59,10 +61,27 @@ export interface NinjaClientOptions {
    */
   proxyBaseUrl?: string
   timeoutMs?: number
+  /**
+   * Sent as `User-Agent` on direct calls so poe.ninja can see who is asking and
+   * how to reach them. Server-side only: a browser cannot set it, and a custom
+   * header would force a CORS preflight, so it is ignored when `proxyBaseUrl`
+   * is set. The deployer chooses the contact; the library names none.
+   */
+  userAgent?: string
+  /** Extra attempts after a 429 or 503. Default 2. */
+  retries?: number
+  /** First backoff in ms, doubled each attempt; a `Retry-After` header overrides it. Default 500. */
+  retryDelayMs?: number
 }
 
 const DEFAULT_BASE = 'https://poe.ninja'
 const DEFAULT_TIMEOUT = 20_000
+const DEFAULT_RETRIES = 2
+const DEFAULT_RETRY_DELAY = 500
+/** Longest a `Retry-After` is honoured for; past this the caller sees the 429. */
+const MAX_RETRY_WAIT = 5_000
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
 /** Extract the payload of the first `data:` line, or null if the stream ends. */
 function firstDataLine(buffer: string): string | null {
@@ -103,18 +122,39 @@ export class NinjaClient {
   private readonly baseUrl: string
   private readonly proxyBaseUrl: string | null
   private readonly timeoutMs: number
+  private readonly userAgent: string | null
+  private readonly retries: number
+  private readonly retryDelayMs: number
 
   constructor(opts: NinjaClientOptions) {
     this.fetch = opts.fetch
     this.baseUrl = (opts.baseUrl ?? DEFAULT_BASE).replace(/\/+$/, '')
     this.proxyBaseUrl = opts.proxyBaseUrl ? opts.proxyBaseUrl.replace(/\/+$/, '') : null
     this.timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT
+    this.userAgent = opts.userAgent && !this.proxyBaseUrl ? opts.userAgent : null
+    this.retries = Math.max(0, opts.retries ?? DEFAULT_RETRIES)
+    this.retryDelayMs = Math.max(0, opts.retryDelayMs ?? DEFAULT_RETRY_DELAY)
   }
 
   private async get(url: string): Promise<ResponseLike> {
+    for (let attempt = 0; ; attempt++) {
+      const res = await this.getOnce(url)
+      if ((res.status !== 429 && res.status !== 503) || attempt >= this.retries) return res
+      const header = Number(res.headers?.get('retry-after'))
+      const wait = Number.isFinite(header) && header > 0 ? header * 1000 : this.retryDelayMs * 2 ** attempt
+      // A server asking for longer than we will wait is answered with its own 429.
+      if (wait > MAX_RETRY_WAIT) return res
+      await sleep(wait)
+    }
+  }
+
+  private async getOnce(url: string): Promise<ResponseLike> {
     const signal = typeof AbortSignal?.timeout === 'function' ? AbortSignal.timeout(this.timeoutMs) : undefined
+    const init: { signal?: AbortSignal; headers?: Record<string, string> } = {}
+    if (signal) init.signal = signal
+    if (this.userAgent) init.headers = { 'user-agent': this.userAgent }
     try {
-      return await this.fetch(url, signal ? { signal } : {})
+      return await this.fetch(url, init)
     } catch (err) {
       const name = (err as { name?: string })?.name
       if (name === 'TimeoutError' || name === 'AbortError') {

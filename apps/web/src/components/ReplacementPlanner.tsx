@@ -17,6 +17,7 @@
 import { useMemo, useState } from 'react'
 import {
   planReplacement,
+  type AttributionReport,
   type DefenseSummary,
   type EquippedItem,
   type ItemAnalysis,
@@ -39,6 +40,7 @@ export function ReplacementPlanner({
   analysed,
   items,
   defense,
+  attribution,
   tiers,
   characterName = '',
   attributes,
@@ -47,6 +49,7 @@ export function ReplacementPlanner({
   analysed: ItemAnalysis[]
   items: EquippedItem[]
   defense: DefenseSummary
+  attribution: AttributionReport
   tiers: ModTiers
   /** Names the saved shopping-list entry. */
   characterName?: string
@@ -65,11 +68,12 @@ export function ReplacementPlanner({
         items: analysed,
         rawItems: items,
         defense,
+        attribution,
         tiers,
         omitResistances: omit,
         ...(cap82 ? { maxIlvl: 82 } : {}),
       }),
-    [target, analysed, items, defense, tiers, omit, cap82],
+    [target, analysed, items, defense, attribution, tiers, omit, cap82],
   )
 
   const holding = plan.resistances.filter((r) => r.deficitIfRemoved > 0)

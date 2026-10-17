@@ -102,3 +102,7 @@ NEXT_PUBLIC_NINJA_PROXY_BASE = https://your-proxy.vercel.app
 Until it is set, the web app runs in **paste-only mode**: URL import shows a
 clear "no import service configured" message and directs the user to paste
 character JSON instead, which needs no server at all.
+
+## Being a polite client
+
+Every call to poe.ninja goes through `api/_upstream.js`: a descriptive `User-Agent` (the public repo URL, overridable with `UPSTREAM_CONTACT` for a fork; never put a personal address here), and a bounded retry on 429/502/503/504 that honours `Retry-After` up to 2 s. The character response is edge-cached for 300 s, about poe.ninja's own refresh interval. There is no ETag handling: the function keeps no state between invocations, and the edge cache already absorbs repeat reads.

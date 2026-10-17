@@ -23,7 +23,8 @@
  * fill a gap that does not exist would mean inventing numbers in a project whose
  * first rule is not to.
  *
- * Everything here is read, never derived. `provenance` is `pob` throughout so a
+ * Everything here is read, never derived. `provenance` is `pob-export` throughout
+ * — these figures come from the stats block embedded in the export — so a
  * reader always knows which engine produced the figure, and `missing` names what
  * a code cannot supply rather than substituting a guess.
  */
@@ -51,7 +52,7 @@ export interface PobResistance {
 }
 
 export interface PobAnalysis {
-  provenance: 'pob'
+  provenance: 'pob-export'
   identity: {
     level: number | null
     className: string | null
@@ -191,7 +192,7 @@ export async function analyzeFromPob(code: string): Promise<PobAnalysis> {
   }
 
   return {
-    provenance: 'pob',
+    provenance: 'pob-export',
     identity: {
       level: build.level ?? null,
       className: build.className ?? null,

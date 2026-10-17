@@ -34,6 +34,7 @@ import {
   stripModMarkup,
   tierOptions,
   type AffixKind,
+  type AttributionReport,
   type DefenseSummary,
   type DraftResistance,
   type EquippedItem,
@@ -362,6 +363,7 @@ interface Shared {
   analysed: ItemAnalysis[]
   items: EquippedItem[]
   defense: DefenseSummary
+  attribution: AttributionReport
   characterName: string
   attributes?: Partial<Record<'str' | 'dex' | 'int', number>>
 }
@@ -536,6 +538,7 @@ function ItemRow({ item, row, saved, shared }: { item: ItemAnalysis; row: Replac
                 analysed={shared.analysed}
                 items={shared.items}
                 defense={shared.defense}
+                attribution={shared.attribution}
                 tiers={tiers}
                 characterName={shared.characterName}
                 {...(shared.attributes ? { attributes: shared.attributes } : {})}
@@ -553,6 +556,7 @@ function ItemRow({ item, row, saved, shared }: { item: ItemAnalysis; row: Replac
 export function GearWorkbench({
   items,
   defense,
+  attribution,
   state,
   characterName,
   recommendations = [],
@@ -561,6 +565,7 @@ export function GearWorkbench({
 }: {
   items: EquippedItem[]
   defense: DefenseSummary
+  attribution: AttributionReport
   state: ModTiersState
   characterName: string
   recommendations?: Recommendation[]
@@ -574,8 +579,8 @@ export function GearWorkbench({
     const active = items.filter((i) => i.active)
     const analysed = active.map((i) => analyzeItem(i, state.tiers, defense))
     const swaps = findResistanceSwaps(analysed, active, state.tiers, defense)
-    return { active, analysed, swaps, ranking: rankReplacements(analysed, defense) }
-  }, [state, items, defense])
+    return { active, analysed, swaps, ranking: rankReplacements(analysed, defense, attribution) }
+  }, [state, items, defense, attribution])
 
   const { draft, setDraft, dropped } = useGearDraft(
     characterName,
@@ -618,6 +623,7 @@ export function GearWorkbench({
     analysed: base.analysed,
     items: base.active,
     defense,
+    attribution,
     characterName,
     ...(attributes ? { attributes } : {}),
   }

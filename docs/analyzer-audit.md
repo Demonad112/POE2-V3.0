@@ -31,7 +31,9 @@ Static export: `apps/web/out` is 7.1 MB; the largest JS chunk is 228 KB.
 | `apps/mcp/TOOLS.md` regeneration | n/a | unchanged |
 | Playwright e2e | not run at baseline | **not verified here**: the preinstalled Chromium does not match the version Playwright expects (`chromium_headless_shell-1248` missing). Not installed, per the environment notes. |
 
-No existing test was edited or removed. New code: `constraints/holding-up.ts` (D-1), `upgrade/` (F-1, F-3, G-1, G-2), `trade/query.ts`, `pob/sensitivity.ts` (C-4), `cache/key.ts` (H-1), `progress/migrate.ts` plus its use in `apps/web/src/lib/storage.ts` (H-2 for snapshots), and `test/golden*` (I-2). Findings not addressed here (B-1 to B-7, A-*, C-1 to C-3, E-1, F-2, H-3, I-1, I-3 to I-5) are left for separate changes, as the audit task asked only for reporting on them.
+No existing test was edited or removed. New code: `constraints/holding-up.ts` (D-1), `upgrade/` (F-1, F-3, G-1, G-2), `trade/query.ts`, `pob/sensitivity.ts` (C-4), `cache/key.ts` (H-1), `progress/migrate.ts` plus its use in `apps/web/src/lib/storage.ts` (H-2 for snapshots), and `test/golden*` (I-2). Findings not addressed here (B-1 to B-7, A-*, C-1 to C-3, E-1, F-2, H-3, I-1, I-3 to I-5) were left for separate changes, as the audit task asked only for reporting on them.
+
+Since fixed in separate changes: B-1 to B-7, H-2, A-1, A-2 and I-1. B-5 now reads what an item holds up from poe.ninja's breakdown and reports unknown for a resistance the breakdown cannot attribute. H-2 salvages persisted slices across a storage version change. A-2 adds a bounded retry on 429/503 in the proxy and client and lengthens the proxy's edge cache to 300 s; conditional requests (ETag) are not done, because the proxy keeps no state between invocations and the edge cache already absorbs repeat reads.
 
 ## Decisions on ambiguous points
 
