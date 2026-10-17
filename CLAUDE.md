@@ -31,4 +31,4 @@ Path of Exile 2 character analyser. Reads poe.ninja's computed character data an
 ## Quick Reference
 - Analyzer audit: `docs/analyzer-audit.md`; gap roadmap: `docs/mvp-gap-roadmap.md`; session state: `HANDOFF.md`.
 - Data refresh: `docs/DATA-REFRESH.md`. Design: `docs/DESIGN.md`. Guide copy: `docs/GUIDE_CONTENT.md`.
-- Cloud container: the Playwright e2e run failed to launch here (Chromium version mismatch); report it "not verified".
+- Cloud sessions: `playwright.config.ts` auto-uses the preinstalled Chromium (`CLAUDE_CODE_REMOTE=true`, never on GitHub Actions), so `npm run build`, then `npm run e2e -w @poe2/web` works. Do not run `playwright install`.
