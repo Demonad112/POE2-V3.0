@@ -39,6 +39,7 @@ export function AuditPanel({
     !report.jewels.length &&
     !report.emptySockets.length &&
     !report.soulCoreLimits.length &&
+    !report.soulCoreChanges.length &&
     !report.gemQuality.length &&
     !report.attributes.length &&
     !report.spirit
@@ -89,6 +90,29 @@ export function AuditPanel({
                     {c.socketed} socketed ({c.slotLabels.join(', ')}) · limit {c.limit} · {c.excess} wasted
                     {c.limitSource === 'patch-0.5.5' ? ' · limit per 0.5.5 patch notes' : ''}
                   </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {report.soulCoreChanges.length ? (
+          <section>
+            <h3 className="mb-1.5 text-[11px] font-medium tracking-wide text-ink-dim uppercase">
+              Soul Cores whose value changed in 0.5.5
+            </h3>
+            <ul className="space-y-1">
+              {report.soulCoreChanges.map((c) => (
+                <li key={c.name} className="rounded-md bg-surface-sunken px-3 py-2 text-[11px] text-ink">
+                  <span className="font-medium">{c.name}</span>
+                  <span className="ml-2 text-ink-mute">{c.slotLabels.join(', ')}</span>
+                  <ul className="mt-1 space-y-0.5 text-ink-dim">
+                    {c.changes.map((ch) => (
+                      <li key={ch.now}>
+                        {ch.where}: {ch.now} <span className="text-ink-mute">(was {ch.before})</span>
+                      </li>
+                    ))}
+                  </ul>
                 </li>
               ))}
             </ul>

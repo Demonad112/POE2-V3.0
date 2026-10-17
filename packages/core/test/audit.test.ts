@@ -13,10 +13,13 @@ import { importPobExport } from '../src/pob/export.js'
 import { ModTiers, type ModTierData } from '../src/gear/tiers.js'
 import {
   MAX_GEM_QUALITY,
+  SOUL_CORE_LIMITS,
+  SOUL_CORE_VALUE_CHANGES,
   TIGHT_ATTRIBUTE_MARGIN,
   auditAttributes,
   auditCharacter,
   auditGemQuality,
+  auditSoulCoreChanges,
   auditSoulCoreLimits,
   auditSpirit,
   findEmptySockets,
@@ -254,5 +257,29 @@ describe('soul core limits', () => {
 
   it('finds nothing on the real pre-0.5.5 character', () => {
     expect(audit.soulCoreLimits).toEqual([])
+  })
+})
+
+describe('soul core value changes', () => {
+  const gear = (slotLabel: string, names: string[], active = true) =>
+    ({
+      slotId: 0,
+      slotLabel,
+      active,
+      raw: { itemData: { socketedItems: names.map((n) => ({ typeLine: n, baseType: n })) } },
+    }) as unknown as Parameters<typeof auditSoulCoreChanges>[0][number]
+
+  it('lists a socketed core the 0.5.5 notes changed, with old and new values', () => {
+    const [r] = auditSoulCoreChanges([gear('Helmet', ['Soul Core of Tzamoto'])])
+    expect(r?.name).toBe('Soul Core of Tzamoto')
+    expect(r?.changes).toContainEqual({ where: 'Helmet', now: '+2% to Maximum Cold Resistance', before: '+1%' })
+  })
+
+  it('ignores unlisted cores and the inactive weapon set', () => {
+    expect(auditSoulCoreChanges([gear('Helmet', ['Soul Core of Nobody']), gear('Weapon 2', ['Soul Core of Tzamoto'], false)])).toEqual([])
+  })
+
+  it('every limited core also has a recorded value change', () => {
+    for (const name of Object.keys(SOUL_CORE_LIMITS)) expect(SOUL_CORE_VALUE_CHANGES[name]).toBeDefined()
   })
 })
