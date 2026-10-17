@@ -22,7 +22,7 @@ Ranked by value per effort.
 | 9 | Zero-for-unknown cleanup | n/a | B-1, B-2, B-3 in the audit | Bug | Make unknown resists, life and snapshot figures `null` end to end | M | Medium: changes types used across web and MCP | Yes, and required by "never invent a number" |
 | 10 | Defences checklist | Resists under cap, max-hit risk, freeze exposure, immunities | Resists, max hit, one-shot ratio exist; freeze exposure and ailment immunities do not | Two checks | Read ailment-immunity stats from the payload if present; otherwise "unknown" | S | Medium: field names unverified | Yes if read from payload only |
 | 11 | Ladder comparison table | "What, ladder uses it %, for you" | Quartile bands for DPS, EHP, pool only | Per-item and per-gem usage | Needs the ladder rows to carry gear and skills; the proxy decodes only some columns | M | Medium | Yes: observed figures only |
-| 12 | Better primary-skill selection | Uses the exported main skill | Highest total DPS (B-4) | Selection | Prefer the skill PoB marks as main when the export is present | S | Medium | Yes |
+| 12 | Better primary-skill selection | Uses the exported main skill | Highest total DPS (B-4) | Selection | Prefer the skill PoB marks as main when the export is present | S | Medium | Yes | (Done: `primarySource`.)
 
 ## B. Needs the PoB transport or a server worker
 
