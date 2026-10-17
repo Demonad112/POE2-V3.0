@@ -79,9 +79,9 @@
     ]
   },
   "recommendations": [
-    "weapon-ilvl-lag",
-    "one-shot-chaos",
     "res-chaos-under-cap",
+    "one-shot-chaos",
+    "weapon-ilvl-lag",
     "res-cold-under-cap",
     "anoint-unused"
   ],

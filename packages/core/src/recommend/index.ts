@@ -35,9 +35,13 @@ export * from './damage.js'
 export * from './focus.js'
 export * from './axis.js'
 
-/** Relative cost weights used for ranking. Free work is worth doing first. */
+/**
+ * Relative cost weights used for ranking. Free work is worth doing first: it
+ * spends nothing, so it is weighted at half the cheapest paid kind. This is a
+ * cost term (a documented preference), not a per-recommendation significance.
+ */
 const COST_WEIGHT: Record<Cost['kind'], number> = {
-  free: 1,
+  free: 0.5,
   passive: 2,
   gear: 4,
   currency: 5,
@@ -174,7 +178,8 @@ function resistanceRules(ctx: Context): Recommendation[] {
       unit: 'percent',
       // A point of missing resistance matters more the closer it is to cap
       // being the only gap; normalise against the full 75-point cap.
-      significance: Math.min(1, res.underCap / res.max) + (cost.kind === 'free' ? 0.15 : 0),
+      // The free-reallocation preference lives in COST_WEIGHT, not here.
+      significance: Math.min(1, res.underCap / res.max),
     }
 
     out.push(
@@ -296,7 +301,8 @@ function oneShotRule(ctx: Context): Recommendation[] {
         to: highest.value,
         delta: highest.value - lowest.value,
         unit: 'flat',
-        significance: Math.min(1, (ratio - 1) / 3),
+        // Share of the safest vector's hit that this vector is missing.
+        significance: Math.min(1, Math.max(0, 1 - 1 / ratio)),
       },
       cost,
       tradeoff: null,
@@ -406,21 +412,30 @@ function anointRule(ctx: Context): Recommendation[] {
     })
   }
 
+  // One anoint is one extra notable. Measure it against the passives the
+  // character has allocated; with no passive count there is no scale, so the
+  // impact stays unknown rather than invented.
+  const allocated = counts.passives
+  const impact: Impact | null =
+    typeof allocated === 'number' && allocated > 0
+      ? {
+          stat: 'anoints',
+          label: 'Anoints Used',
+          from: 0,
+          to: 1,
+          delta: 1,
+          unit: 'points',
+          significance: Math.min(1, 1 / allocated),
+        }
+      : null
+
   return [
     make({
       id: 'anoint-unused',
       category: 'efficiency',
       action: 'Anoint the amulet — the slot is empty.',
       rationale: `No anoint is allocated at level ${level}. An anoint grants a passive notable without spending a skill point, so an empty one is strictly wasted power.`,
-      impact: {
-        stat: 'anoints',
-        label: 'Anoints Used',
-        from: 0,
-        to: 1,
-        delta: 1,
-        unit: 'points',
-        significance: 0.45,
-      },
+      impact,
       cost: {
         kind: 'currency',
         amount: 1,
@@ -465,7 +480,8 @@ function weaponTierRule(ctx: Context): Recommendation[] {
         to: median,
         delta: gap,
         unit: 'points',
-        significance: Math.min(1, gap / 20),
+        // The gap as a share of the kit's median item level.
+        significance: Math.min(1, Math.max(0, gap / median)),
       },
       cost: {
         kind: 'gear',
