@@ -16,6 +16,11 @@ import { analyzeDefense } from '../defense/index.js'
 import { analyzeDps } from '../dps/index.js'
 import { indexBreakdowns, verifyTotal } from '../model/breakdowns.js'
 
+/**
+ * `unmapped` is a stat whose id has no known name. It is shown with its values
+ * but never judged: there is no way to know how poe.ninja derives it, so a
+ * disagreement is not evidence of anything.
+ */
 export type DriftSeverity = 'match' | 'minor' | 'major'
 
 export interface DriftCheck {
@@ -27,7 +32,7 @@ export interface DriftCheck {
   otherSource: 'pob-export' | 'local-formula' | 'breakdown-arithmetic'
   /** |other - ninja| / |ninja|, or null when either side is missing. */
   relativeDelta: number | null
-  severity: DriftSeverity | 'unresolved'
+  severity: DriftSeverity | 'unresolved' | 'unmapped'
   note: string
 }
 
@@ -35,14 +40,19 @@ export interface DriftCheck {
 const MINOR_THRESHOLD = 0.005
 /** Above this the disagreement is worth surfacing prominently. */
 const MAJOR_THRESHOLD = 0.05
+/** Absolute difference treated as integer rounding however small the values are. */
+const ROUNDING_UNITS = 1
 
 function classify(ninja: number | null, other: number | null): { severity: DriftCheck['severity']; relativeDelta: number | null } {
   if (ninja === null || other === null) return { severity: 'unresolved', relativeDelta: null }
   if (ninja === 0 && other === 0) return { severity: 'match', relativeDelta: 0 }
   const denom = Math.abs(ninja) || Math.abs(other)
-  const rel = Math.abs(other - ninja) / denom
+  const diff = Math.abs(other - ninja)
+  const rel = diff / denom
   if (rel <= MINOR_THRESHOLD) return { severity: 'match', relativeDelta: rel }
-  if (rel <= MAJOR_THRESHOLD) return { severity: 'minor', relativeDelta: rel }
+  // Both sides round to whole numbers, so one unit apart is rounding, not a
+  // disagreement: 52 against 53 is 1.9% but never "major".
+  if (rel <= MAJOR_THRESHOLD || diff <= ROUNDING_UNITS) return { severity: 'minor', relativeDelta: rel }
   return { severity: 'major', relativeDelta: rel }
 }
 
@@ -77,6 +87,8 @@ export interface ReconciliationReport {
   minor: number
   major: number
   unresolved: number
+  /** Checks on stat ids with no known name. Reported, never counted as agreement or disagreement. */
+  unmapped: number
   /** True when nothing disagreed materially. */
   clean: boolean
 }
@@ -136,6 +148,18 @@ export function reconcile(model: CharModel, pobStats: Record<string, number> = {
   for (const stat of breakdowns.all) {
     if (stat.derivation === 'empty') continue
     const verification = verifyTotal(stat)
+    if (stat.confidence === null) {
+      checks.push({
+        stat: `breakdown:${stat.key}`,
+        ninja: stat.total,
+        other: verification.expected,
+        otherSource: 'breakdown-arithmetic',
+        relativeDelta: null,
+        severity: 'unmapped',
+        note: `poe.ninja stat id ${stat.key.replace(/^stat_/, '')} has no known name, so how it is derived is unknown. Shown, not judged.`,
+      })
+      continue
+    }
     checks.push(
       check(
         `breakdown:${stat.key}`,
@@ -154,6 +178,7 @@ export function reconcile(model: CharModel, pobStats: Record<string, number> = {
   const minor = checks.filter((c) => c.severity === 'minor').length
   const major = checks.filter((c) => c.severity === 'major').length
   const unresolved = checks.filter((c) => c.severity === 'unresolved').length
+  const unmapped = checks.filter((c) => c.severity === 'unmapped').length
 
-  return { checks, matches, minor, major, unresolved, clean: major === 0 && minor === 0 }
+  return { checks, matches, minor, major, unresolved, unmapped, clean: major === 0 && minor === 0 }
 }

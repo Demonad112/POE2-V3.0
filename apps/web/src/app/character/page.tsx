@@ -323,7 +323,7 @@ export default function Home() {
       panels.push({
         id: 'reconciliation',
         title: 'Cross-validation',
-        summary: `${r.matches} agree${r.major ? ` · ${r.major} major` : ''}${r.minor ? ` · ${r.minor} minor` : ''}`,
+        summary: `${r.matches} agree${r.minor ? ` · ${r.minor} minor` : ''}${r.unmapped ? ` · ${r.unmapped} unmapped` : ''}`,
         badge: r.major > 0 ? <StatusChip tone="danger">{r.major} major</StatusChip> : undefined,
         content: <Reconciliation report={r} bare />,
       })

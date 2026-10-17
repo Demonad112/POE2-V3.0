@@ -240,10 +240,23 @@ export async function analyzeCharacter(
     warnings,
   }
 
-  if (analysis.reconciliation && analysis.reconciliation.major > 0) {
-    warnings.push(
-      `${analysis.reconciliation.major} stat${analysis.reconciliation.major === 1 ? '' : 's'} disagree between poe.ninja and the attached Path of Building export. See the reconciliation report before trusting those figures.`,
-    )
+  // Only identified stats count. A stat id with no known name is `unmapped` in
+  // the report and never raises a banner; a total that disagrees with poe.ninja's
+  // own breakdown parts is a different claim from a disagreement with PoB.
+  if (analysis.reconciliation) {
+    const majors = analysis.reconciliation.checks.filter((c) => c.severity === 'major')
+    const vsPob = majors.filter((c) => c.otherSource === 'pob-export').length
+    const vsOwn = majors.length - vsPob
+    if (vsPob > 0) {
+      warnings.push(
+        `${vsPob} stat${vsPob === 1 ? '' : 's'} disagree between poe.ninja and the attached Path of Building export. See the reconciliation report before trusting those figures.`,
+      )
+    }
+    if (vsOwn > 0) {
+      warnings.push(
+        `${vsOwn} stat total${vsOwn === 1 ? '' : 's'} do${vsOwn === 1 ? 'es' : ''} not match poe.ninja’s own breakdown arithmetic. See the reconciliation report.`,
+      )
+    }
   }
 
   // An allocated keystone that the character's own stats contradict is worth

@@ -16,6 +16,8 @@ export function Reconciliation({ report, bare = false }: { report: Reconciliatio
   // Stats where one side simply had nothing to compare. Surfaced explicitly so
   // "everything agrees" is never read as "everything was checked".
   const unverifiable = report.checks.filter((c) => c.severity === 'unresolved' && c.other === null)
+  // Stat ids with no known name: shown with their values, never judged.
+  const unmapped = report.checks.filter((c) => c.severity === 'unmapped')
 
   return (
     <Panel
@@ -27,6 +29,7 @@ export function Reconciliation({ report, bare = false }: { report: Reconciliatio
           {report.minor ? <Tag tone="warn">{report.minor} minor</Tag> : null}
           {report.major ? <Tag tone="danger">{report.major} major</Tag> : null}
           {report.unresolved ? <Tag>{report.unresolved} unverifiable</Tag> : null}
+          {report.unmapped ? <Tag>{report.unmapped} unmapped</Tag> : null}
         </div>
       }
       bare={bare}
@@ -65,6 +68,26 @@ export function Reconciliation({ report, bare = false }: { report: Reconciliatio
           ))}
         </ul>
       )}
+
+      {unmapped.length ? (
+        <div className="mt-3">
+          <p className="text-[11px] leading-relaxed text-ink-mute">
+            Stat ids with no known name. Shown, not judged: how poe.ninja derives them is unknown, so a difference here is not a disagreement.
+          </p>
+          <ul className="mt-2 space-y-2">
+            {unmapped.map((c) => (
+              <li key={c.stat} className="rounded-lg bg-surface-sunken px-3 py-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-mono text-xs text-ink">{c.stat}</span>
+                  <span className="tabular text-xs text-ink-dim">
+                    {fmt(c.ninja)} vs {c.other === null ? 'n/a' : fmt(c.other)}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <button
         type="button"
