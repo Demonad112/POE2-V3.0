@@ -202,7 +202,7 @@ export async function analyzeCharacter(
     ? keystoneEffectsOf(resolveAllocation(options.tree, passives).keystones, defense)
     : NO_KEYSTONE_EFFECTS
 
-  const reconciliation = pobStats ? reconcile(model, pobStats) : null
+  const reconciliation = pobStats ? reconcile(model, pobStats, { pobMainSkill: exportMain }) : null
   const dpsAgrees = pobDpsAgreement(reconciliation)
 
   const analysis: Analysis = {

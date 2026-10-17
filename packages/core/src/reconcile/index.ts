@@ -101,7 +101,22 @@ export interface ReconciliationReport {
  * object when no export is available — the checks then report `unresolved`
  * rather than fabricating a comparison.
  */
-export function reconcile(model: CharModel, pobStats: Record<string, number> = {}): ReconciliationReport {
+export interface ReconcileOptions {
+  /**
+   * The skill the export marks as main, which is the skill PoB's `TotalDPS`
+   * belongs to. Null when the export does not say. When this option is given,
+   * the DPS check pairs PoB's figure with poe.ninja's figure for THAT skill; when
+   * it is omitted (older callers), the check pairs it with poe.ninja's highest
+   * hit-DPS skill as before.
+   */
+  pobMainSkill?: string | null
+}
+
+export function reconcile(
+  model: CharModel,
+  pobStats: Record<string, number> = {},
+  options: ReconcileOptions = {},
+): ReconciliationReport {
   const defense = analyzeDefense(model)
   const dps = analyzeDps(model)
   const breakdowns = indexBreakdowns(model)
@@ -111,7 +126,37 @@ export function reconcile(model: CharModel, pobStats: Record<string, number> = {
     typeof pobStats[key] === 'number' && Number.isFinite(pobStats[key]) ? pobStats[key] : null
 
   // --- poe.ninja vs Path of Building's own engine -------------------------
-  if (dps.primary) {
+  // PoB's TotalDPS belongs to the skill the export had selected, so that is the
+  // skill poe.ninja's figure must be taken from. Pairing it with another skill
+  // would report a disagreement that is only two different skills.
+  if ('pobMainSkill' in options) {
+    const wanted = options.pobMainSkill
+    if (!wanted) {
+      if (dps.primary) {
+        checks.push({
+          ...check(`dps:${dps.primary.name}`, dps.primary.dps, null, 'pob-export'),
+          note: 'The export does not say which skill it computed TotalDPS for, so no skill was compared.',
+        })
+      }
+    } else {
+      const norm = (s: string) => s.trim().toLowerCase()
+      const skill = dps.skills.find((s) => norm(s.name) === norm(wanted) && s.dps > 0)
+      checks.push(
+        skill
+          ? check(
+              `dps:${skill.name}`,
+              skill.dps,
+              pob('TotalDPS'),
+              'pob-export',
+              `poe.ninja’s DPS for ${skill.name} vs the TotalDPS PoB computed for it (the skill the export marks as main).`,
+            )
+          : {
+              ...check(`dps:${wanted}`, null, pob('TotalDPS'), 'pob-export'),
+              note: `The export marks ${wanted} as main, but poe.ninja reports no hit damage for a skill of that name, so nothing was compared.`,
+            },
+      )
+    }
+  } else if (dps.primary) {
     checks.push(
       check(
         `dps:${dps.primary.name}`,
