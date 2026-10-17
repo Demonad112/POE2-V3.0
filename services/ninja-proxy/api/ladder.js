@@ -35,6 +35,8 @@
 // columns (`skills`, `keypassives`) carry neither shape — they are per-row
 // lists — and are left undecoded since nothing here reads them.
 
+import { politeFetch } from "./_upstream.js";
+
 const NINJA_BASE = "https://poe.ninja";
 
 // --- schema-less protobuf ---------------------------------------------------
@@ -259,7 +261,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const idxRes = await fetch(`${NINJA_BASE}/poe2/api/data/index-state`);
+    const idxRes = await politeFetch(`${NINJA_BASE}/poe2/api/data/index-state`);
     if (!idxRes.ok) {
       res.status(502).json({ error: `index-state returned ${idxRes.status}` });
       return;
@@ -275,7 +277,7 @@ export default async function handler(req, res) {
     if (className) params.set("class", className);
     const searchUrl = `${NINJA_BASE}/poe2/api/builds/${snap.version}/search?${params}`;
 
-    const searchRes = await fetch(searchUrl);
+    const searchRes = await politeFetch(searchUrl);
     if (!searchRes.ok) {
       res.status(502).json({ error: `builds search returned ${searchRes.status}` });
       return;

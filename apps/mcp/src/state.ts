@@ -101,6 +101,9 @@ export const client = new NinjaClient({
   // Server-side, so poe.ninja is reachable directly — no proxy needed. The
   // browser build cannot do this; see services/ninja-proxy.
   fetch: (input, init) => fetch(input, init as RequestInit),
+  // Identifies this tool to poe.ninja with a contact. A public repository URL,
+  // never a personal address; POE2_UPSTREAM_CONTACT overrides it for a fork.
+  userAgent: `poe2-endgame-companion (+${process.env.POE2_UPSTREAM_CONTACT ?? 'https://github.com/Demonad112/poe2-v3.0'})`,
 })
 
 /**

@@ -183,3 +183,47 @@ describe('URL parsing', () => {
     expect(normalizeAccount(' Demonad112-2589 ')).toBe('Demonad112-2589')
   })
 })
+
+describe('NinjaClient politeness', () => {
+  const profile = (status: number, retryAfter?: string): ResponseLike => ({
+    ok: status >= 200 && status < 300,
+    status,
+    text: async () => '{}',
+    json: async () => ({}),
+    headers: { get: (n) => (n.toLowerCase() === 'retry-after' ? (retryAfter ?? null) : null) },
+  })
+
+  it('sends the configured User-Agent on direct calls only', async () => {
+    const direct = vi.fn<Parameters<FetchLike>, ReturnType<FetchLike>>(async () => profile(200))
+    await new NinjaClient({ fetch: direct, userAgent: 'tool (+https://example.test)' }).listCharacters('a#1').catch(() => {})
+    expect(direct.mock.calls[0]![1]?.headers).toEqual({ 'user-agent': 'tool (+https://example.test)' })
+
+    const proxied = vi.fn<Parameters<FetchLike>, ReturnType<FetchLike>>(async () => profile(200))
+    await new NinjaClient({ fetch: proxied, proxyBaseUrl: 'https://p.test', userAgent: 'tool' })
+      .fetchCharacter('a#1', 'l', 'c')
+      .catch(() => {})
+    expect(proxied.mock.calls[0]![1]?.headers).toBeUndefined()
+  })
+
+  it('retries a 429 after Retry-After and then succeeds', async () => {
+    const fetchMock = vi
+      .fn<Parameters<FetchLike>, ReturnType<FetchLike>>()
+      .mockResolvedValueOnce(profile(429, '0.001'))
+      .mockResolvedValueOnce(profile(200))
+    const res = await new NinjaClient({ fetch: fetchMock, proxyBaseUrl: 'https://p.test', retryDelayMs: 1 }).fetchCharacter(
+      'a#1',
+      'l',
+      'c',
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(res).toEqual({})
+  })
+
+  it('gives up after the configured retries and reports the status', async () => {
+    const fetchMock = vi.fn<Parameters<FetchLike>, ReturnType<FetchLike>>(async () => profile(503))
+    await expect(
+      new NinjaClient({ fetch: fetchMock, proxyBaseUrl: 'https://p.test', retries: 1, retryDelayMs: 1 }).fetchCharacter('a#1', 'l', 'c'),
+    ).rejects.toMatchObject({ reason: 'bad-response' })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+})

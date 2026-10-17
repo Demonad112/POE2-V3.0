@@ -17,6 +17,8 @@
  * ../README.md.
  */
 
+import { politeFetch } from './_upstream.js'
+
 const NINJA = 'https://poe.ninja'
 const TIMEOUT_MS = 20_000
 
@@ -33,7 +35,7 @@ function cors(res) {
  * moment we have what we need. Buffering the whole body would hang.
  */
 async function readVersion(url, signal) {
-  const upstream = await fetch(url, { signal, headers: { accept: 'text/event-stream' } })
+  const upstream = await politeFetch(url, { signal, headers: { accept: 'text/event-stream' } })
   if (upstream.status === 404) return { error: 'not-found' }
   if (!upstream.ok || !upstream.body) return { error: `upstream ${upstream.status}` }
 
@@ -99,12 +101,12 @@ export default async function handler(req, res) {
     }
 
     const modelUrl = `${NINJA}/poe2/api/profile/characters/${e(acct)}/${e(league)}/${e(character)}/model/${versionResult.version}`
-    const model = await fetch(modelUrl, { signal: controller.signal })
+    const model = await politeFetch(modelUrl, { signal: controller.signal })
     if (model.status === 404) return res.status(404).json({ error: 'Character model not found.' })
     if (!model.ok) return res.status(502).json({ error: `poe.ninja returned ${model.status} for the model.` })
 
     res.setHeader('Content-Type', 'application/json; charset=utf-8')
-    res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=600')
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
     return res.status(200).send(await model.text())
   } catch (err) {
     const aborted = err?.name === 'AbortError'
