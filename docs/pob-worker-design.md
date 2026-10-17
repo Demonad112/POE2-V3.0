@@ -33,7 +33,7 @@ Results use the `UpgradeReport` types in core: every simulated card has `source:
 
 ## Measured recommendations (design only, from `docs/analyzer-triage.md`)
 
-Interfaces: `packages/core/src/pob/probes.ts`. Nothing implements them.
+Interfaces: `packages/core/src/pob/probes.ts`. Nothing implements them. The RPC surface, request/result shapes, failure modes, ordering and open decisions are specified in `docs/pob-mutation-design.md`.
 
 | Item | Needs | Output | Notes |
 |---|---|---|---|

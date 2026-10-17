@@ -536,3 +536,59 @@ Fake transport; no fixtures committed here.
 
 - Risk: medium. Switching the selection touches the user's `mainSocketGroup`; revert is proven by fingerprint. Per-skill config effects (stages, parts, charges) may make PoB's non-main figures differ from poe.ninja's for reasons the repo cannot see; the table reports differences, never a cause.
 - Estimate: probe **M** (after section 0 and `set_main_selection`); config readback verification and names **S** (needs one live session); comparison table and reconcile integration **S**.
+
+---
+
+## 5. Open assumptions
+
+Nothing below was checked against the addon, a live PoB, or the trade site. Each must be verified or recorded before the dependent code is written.
+
+| # | Assumption | Used by |
+|---|---|---|
+| 1 | The addon can be extended with `snapshot_state`, `restore_state`, `state_fingerprint`, `get_items`, `get_skill_groups`, `apply_step`, `batch_measure` (all names, params, results) | all |
+| 2 | The addon can reach PoB's calculator override (`calc_with_override`) for items and tree nodes without mutating | C1-C5 |
+| 3 | `get_calcs` returns the cost keys seen in the export's `PlayerStat` list (`ManaCost`, `SoulCost`, `Spirit`, …) | A3 |
+| 4 | An anoint is an enchant line "Allocates <notable>" on the amulet; runes and soul cores are insertable by rewriting item text | C2, C3 |
+| 5 | A hybrid item or a weapon-type change can be expressed as several slot edits applied atomically, and PoB rejects or empties the conflicting slot in a way the addon can report | C1, C5 |
+| 6 | Weapon-set and ascendancy passive points are separate pools that `set_passive_node` does not address | C4 |
+| 7 | `get_full_dps` lists skills per group only for groups with `includeInFullDPS`; its reply shape is unknown | A8 |
+| 8 | `get_config_input` / `set_config_input` exist and behave as `bridgeProbe` assumes; names for enemy level, resistance penalty and boss type are unknown | X4, A8 |
+| 9 | `mainSocketGroup` is part of what a `skills` fingerprint covers and is restored by `restore_state` | A3, A8 |
+| 10 | `recalculate` cost per call is small enough for 15 to 50 calls per report (**unmeasured**) | all |
+| 11 | The trade site has a stats listing the owner can record, a saved-query JSON the owner can copy, and (optionally) pseudo total-resistance stats; no trade stat id is known | D2 |
+| 12 | The unique-item and anoint-recipe datasets that C2/C5 need can be sourced; neither is in the repo | C2, C5 |
+| 13 | poe.ninja's per-skill `dps` is comparable to PoB `TotalDPS` for the same-named skill | A8 |
+
+## 6. Decision needed from owner
+
+1. **Addon route.** Extend the existing community addon, fork it, or run a PoB headless wrapper? (`docs/pob-worker-design.md` lists the options; assumption 1 and 2 depend on it.)
+2. **Override-first or mutate-first.** Require `calc_with_override` (no revert risk, may not exist) before items work, or accept `mutate-revert` with fingerprint proof from day one?
+3. **Interaction threshold** for flagging supports (`synergy` size), and whether `all-pairs` is the default up to 6 supports.
+4. **Cost vs damage** for supports: show both side by side (as designed) or define a ranking rule between them?
+5. **Forced selection** when a removal changes the main skill: report only (as designed) or re-measure with the original selection forced?
+6. **Must-keep unmapped** trade filters: hide the query, or show it labelled "not a safe search"? And whether `include-flagged` unverified ids may ever be user-visible.
+7. **Recording duty** for D2: who records the trade stats snapshot and saved queries, and per game version or per league?
+8. **Divergence tolerance** for per-skill DPS: keep 1 % / 5 %, or set others?
+9. **Unmeasurable respec nodes**: refuse to refund them always (as designed), or allow when `ConfigReadback` shows the config models the condition?
+10. **Datasets** for unique swaps and anoint recipes: source and ownership. Until they exist C2 and C5 are interface-only.
+11. **Gold and price sources**: none exist; costs remain `unpriced` / `unknown` unless one is chosen.
+12. **Per-skill scope**: `'ninja-listed'` only, or all enabled skills including those with no poe.ninja counterpart?
+
+## 7. Recommended build order
+
+| Step | Build | Why now | Size | Unlocks |
+|---|---|---|---|---|
+| 0 | Decision 1; **record** `get_calcs`, `get_skill_groups`-equivalent and a config readback from a live PoB (fixtures task) | Everything depends on verifying assumptions 1-3, 8-10 | S | all |
+| 1 | D2 mapping schema, resolution, tests, owner records snapshot | No PoB needed, offline, independent; removes a dead end early | S + owner time | trade search for existing findings |
+| 2 | Section 0 primitives: snapshot / restore / fingerprint, readbacks | Every probe's revert proof | M | 3-7 |
+| 3 | `ConfigReadback` (verify `get_config_input`) | Cheap; lets the baseline gate say why it failed | S | explains gate failures, A8 |
+| 4 | A3 `SupportRemovalProbe` + analyzer wiring | Smallest mutation (one field), highest-value finding; replaces a nominal label | M + S | A3 |
+| 5 | A8 `set_main_selection` + per-skill table | Reuses step 2-3; no new item semantics | M | A8 |
+| 6 | C3 gem quality/level (`set_gem_field` already exists from step 4) | Almost free after A3 | S | C3 part |
+| 7 | Item mutation (`calc_with_override` or `set_item`): C1, then C3 runes/soul cores | Largest addon work; needs socket and weapon-set handling | L | C1, C3 |
+| 8 | C2 anoint ranking | Item mutation plus candidate list | M | C2 |
+| 9 | C5 unique swap | Needs the unique dataset | M + dataset L | C5 |
+| 10 | C4 respec | Largest search space, weapon-set pools, no gold data | L | C4 |
+| 11 | `batch_measure` | Optimisation; add once real call counts are known | M | cost of 4-10 |
+
+Each step ships with its fake-transport tests first and its recorded-fixture tests when the fixtures exist; nothing is shown to users until its gate and revert proof pass on a recorded build.
