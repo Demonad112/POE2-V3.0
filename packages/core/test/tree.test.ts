@@ -167,3 +167,16 @@ describe('allocation coverage', () => {
     }
   })
 })
+
+describe('ailment immunities on the recorded character', () => {
+  it('are read from the allocated tree when the tree data is given', async () => {
+    const { analyzeCharacter } = await import('../src/analyze.js')
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/athrynas-v43.json', import.meta.url)), 'utf8'))
+    const without = await analyzeCharacter(raw)
+    const withTree = await analyzeCharacter(raw, { tree })
+    expect(without.ailments.every((a) => a.status !== 'unknown' || /tree data was not loaded/.test(a.reason))).toBe(true)
+    // Every immune result must name a source line that really is on the tree or gear.
+    for (const a of withTree.ailments) if (a.status === 'immune') expect(a.sources.length).toBeGreaterThan(0)
+    expect(withTree.ailments).toHaveLength(7)
+  })
+})

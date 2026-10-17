@@ -33,8 +33,8 @@ export function CharacterNotes({ analysis }: { analysis: Analysis }) {
           ))}
         </div>
         <p className="mt-1 text-[11px] text-ink-mute">
-          Only unconditional “cannot be …” lines on equipped gear count. Unknown means no such line was found, not that you
-          are vulnerable.
+          Only unconditional “cannot be …” lines on equipped gear and allocated passive or ascendancy nodes count. Unknown means
+          no such line was found, not that you are vulnerable.
         </p>
       </div>
 

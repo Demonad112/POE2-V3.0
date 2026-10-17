@@ -37,9 +37,9 @@ export interface CharacterNotes {
   primaryInInactiveSet: string | null
 }
 
-export function characterNotes(analysis: Pick<Analysis, 'items' | 'dps' | 'inactiveSet'>): CharacterNotes {
+export function characterNotes(analysis: Pick<Analysis, 'items' | 'dps' | 'inactiveSet'> & Partial<Pick<Analysis, 'ailments'>>): CharacterNotes {
   return {
-    ailments: ailmentImmunities(analysis.items),
+    ailments: analysis.ailments ?? ailmentImmunities(analysis.items),
     mainSkill: analysis.dps.mainSkill ?? null,
     inactiveSet: analysis.inactiveSet,
     primaryInInactiveSet: primarySkillInInactiveSet(analysis.dps.primary?.name ?? null, analysis.inactiveSet),

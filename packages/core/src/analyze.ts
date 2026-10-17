@@ -24,6 +24,7 @@ import { readPobMainSkill } from './pob/main-skill.js'
 import { mainSkillNote } from './dps/main-skill.js'
 import { assessBuild, type BuildAssessment } from './score/index.js'
 import { resolveAllocation, type PassiveTree } from './tree/index.js'
+import { ailmentImmunities, type AilmentStatus } from './defense/ailments.js'
 import type { LadderSummary } from './ninja/ladder.js'
 import type { CharModel, CharModelResponse } from './model/types.js'
 
@@ -53,6 +54,8 @@ export interface Analysis {
   items: EquippedItem[]
   /** What sits in the inactive weapon set; informational, nothing here counts towards the build. */
   inactiveSet: InactiveSetReport
+  /** Ailment immunities from equipped gear and, when the tree data was given, allocated nodes. */
+  ailments: AilmentStatus[]
   breakdowns: BreakdownIndex
   /**
    * What each equipped item is holding up, and what the sheet would read
@@ -234,6 +237,7 @@ export async function analyzeCharacter(
     passives,
     items,
     inactiveSet: inactiveSetReport(model),
+    ailments: ailmentImmunities(items, resolvedTree ? resolvedTree.live : null),
     breakdowns,
     attribution: attributeToItems(breakdowns, items, defense),
     keystones,

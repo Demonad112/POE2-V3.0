@@ -41,3 +41,32 @@ describe('ailmentImmunities', () => {
     expect(r.find((a) => a.ailment === 'freeze')!.status).toBe('unknown')
   })
 })
+
+describe('ailmentImmunities from the passive tree', () => {
+  const node = (name: string, stats: string[], ascendancy: string | null = null) => ({ name, stats, ascendancy })
+
+  it('reads allocated passive and ascendancy nodes and names them', () => {
+    const r = ailmentImmunities([], [node('Unflinching', ['Cannot be Shocked']), node('Ice Wall', ['Immune to Ignite'], 'Stormweaver')])
+    const shock = r.find((a) => a.ailment === 'shock')!
+    expect(shock.status === 'immune' && shock.sources[0]).toMatchObject({ slotLabel: 'Passive tree', itemName: 'Unflinching' })
+    const ignite = r.find((a) => a.ailment === 'ignite')!
+    expect(ignite.status === 'immune' && ignite.sources[0]?.slotLabel).toBe('Ascendancy (Stormweaver)')
+  })
+
+  it('ignores conditional tree lines', () => {
+    const r = ailmentImmunities([], [node('A', ['Immune to Shock if a majority of your Socketed Support Gems are Green', 'Immune to Freeze and Chill while affected by Ice Archon'])])
+    expect(r.every((a) => a.status === 'unknown')).toBe(true)
+  })
+
+  it('does not count light-stun immunity as stun immunity', () => {
+    const r = ailmentImmunities([], [node('B', ['Cannot be Light Stunned'])])
+    expect(r.find((a) => a.ailment === 'stun')!.status).toBe('unknown')
+  })
+
+  it('says why when the tree was not read', () => {
+    const none = ailmentImmunities([], null).find((a) => a.ailment === 'freeze')!
+    const read = ailmentImmunities([], []).find((a) => a.ailment === 'freeze')!
+    expect(none.status === 'unknown' && none.reason).toMatch(/tree data was not loaded/)
+    expect(read.status === 'unknown' && read.reason).toMatch(/allocated passive/)
+  })
+})
