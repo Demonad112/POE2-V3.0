@@ -297,6 +297,7 @@ export interface SoulCoreValueChange {
 export const SOUL_CORE_VALUE_CHANGES: Readonly<Record<string, readonly SoulCoreValueChange[]>> = Object.freeze({
   "Atmohua's Soul Core of Retreat": [
     { where: 'Body Armour', now: '40% increased Max Energy Shield from Focus', before: 'Ailment and Stun Threshold from 15% of max Energy Shield' },
+    { where: 'Focus', now: '30% increased Max Energy Shield from Body Armour', before: 'Ailment and Stun Threshold from 15% of max Energy Shield' },
   ],
   "Cholotl's Soul Core of War": [
     { where: 'Bow', now: '20% chance to Chain an additional time from terrain', before: '20% increased Projectile Speed' },
