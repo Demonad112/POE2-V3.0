@@ -43,7 +43,7 @@ Two consequences that surprise people, both deliberate:
 
 | | |
 |---|---|
-| `packages/core` | Pure analysis. No I/O, no framework — `fetch` and the Path of Building transport are injected. 569 tests. |
+| `packages/core` | Pure analysis. No I/O, no framework — `fetch` and the Path of Building transport are injected. 664 tests. |
 | `packages/data` | Generated game data artifacts and the scripts that extract them. See [PROVENANCE.md](packages/data/PROVENANCE.md). |
 | `apps/web` | Static Next.js export on GitHub Pages. Five routes. |
 | `apps/mcp` | 30-tool Model Context Protocol server over stdio. See [TOOLS.md](apps/mcp/TOOLS.md). |
@@ -122,7 +122,7 @@ Verification, all of which should pass before any change is called done:
 
 ```bash
 npm run typecheck                  # builds core first; the script handles it
-npm test                           # 569 tests (core) + 76 (web)
+npm test                           # 664 tests (core) + 92 (web)
 npm run build                      # core -> dist, then the web static export
 node scripts/verify-mcp.mjs        # drives the real MCP binary over stdio
 npm run tools -w @poe2/mcp         # regenerates TOOLS.md; CI fails if stale

@@ -4,13 +4,21 @@ Background context for the next session. Verify anything you rely on; this file 
 
 ## State (as of 2026-10-17)
 
-- `main` is at the merge of PR #57 (design only: PoB mutation RPCs, gem-removal sim, trade stat mapping, per-skill DPS). PR #58 (audit B-4 / roadmap 12: primary skill prefers the PoB export's main skill, plus this handoff) is open as a draft; check its CI and merge it first. PR #56 (an older HANDOFF refresh) may be superseded by this file.
+- `main` includes PR #57 (design only: PoB mutation RPCs, gem-removal sim, trade stat mapping, per-skill DPS) and PR #58 (audit B-4 / roadmap 12: primary skill prefers the PoB export's main skill). The audit's remaining items B-5, B-6, B-7, H-2, A-1, A-2 and I-1 are done on branch `ccr-17ce96af-0bnpf4` (draft PR); see below.
 - Web work (#52, #54, #55) and the analyzer/design work (#57, #58) now run in one session.
 - Merged since the last handoff: audit fixes B-1 to B-3 (#38, unknown stays `null`), plan items 5-10 in core and web (#39-#45), data age on the report, the 0.5.5 Soul Core table (#47, #48), the snapshot `gameVersion` stamp (#49), and the 0.5.5 endgame progression update (#52, #54): 32-step checklist, patch changes, Trial of Chaos, essence crafting, Atlas regex strings and trap-node groups, boss resistances.
 - Web has the focus toggle, "Changed since last report" panel, family notes, ailment immunities, main-skill note and inactive weapon set.
 - Cloud sessions can run Playwright e2e: `playwright.config.ts` uses the preinstalled Chromium when `CLAUDE_CODE_REMOTE=true`. 77 passed, 3 skipped on 2026-10-17.
-- Counts: core 658 (7 skipped, 3 todo), web 91, proxy 6. e2e last run 77 passed, 3 skipped (before #58, no web change since).
+- Counts: core 664 (7 skipped, 3 todo), web 92, proxy 13. e2e last run 77 passed, 3 skipped (before this branch; it changes `GearWorkbench` and `ReplacementPlanner` props, so re-run e2e).
 - Design docs, no runtime code: `docs/pob-mutation-design.md` (C1-C5, A3, D2, A8; 13 open assumptions in §5, 12 owner decisions in §6, build order in §7) with type-only interfaces in `packages/core/src/pob/{mutation,support-removal,trade-stat-map,per-skill-dps}.ts` and 15 compile-time tests. Decision 1 (addon route: extend, fork or headless wrapper) gates all PoB mutation work.
+
+## This branch (audit batch)
+
+- B-5: `planReplacement`, `removalDeficits` and `rankReplacements` take the `AttributionReport` (required). What an item holds up comes from poe.ninja's breakdown, so rune, implicit and enchant resistance now count. A resistance whose breakdown is not `trustworthy` is unknown: no impact entry, a note on the plan, `removalCostUnknown` on the ranking row. `resistancesFrom` is replaced by `resistanceGrants`.
+- B-6: offence grades, `OFFENCE_WEIGHT` and the A/B/C tier cutoffs moved to `thresholds.ts`. B-7: `analyzeFromPob` tags `pob-export`.
+- H-2: `parsePersisted` salvages each slice of a payload from another storage version, validated by shape, instead of resetting. No version-to-version migrations exist yet; add one when the shape changes. A newer app's payload is read by an older one and rewritten without its unknown fields.
+- A-1: User-Agent is a public repo URL (`UPSTREAM_CONTACT` / `POE2_UPSTREAM_CONTACT` override it), never an email. The browser client sends none. A-2: retry on 429/503 (proxy also 502/504), `Retry-After` honoured up to 2 s (proxy) / 5 s (client); proxy edge cache `s-maxage=300`. No ETag handling.
+- I-1: README counts updated. Snapshots already carry a `schema` field (`progress/migrate.ts`); an earlier version of this file said they did not.
 
 ## Known risks and unverified items
 
@@ -24,7 +32,7 @@ Background context for the next session. Verify anything you rely on; this file 
 
 ## Next tasks
 
-1. Remaining audit items: B-5, B-6, B-7, then H-2, A-1/A-2.
+1. Audit items still open: A-7 (data age), C-1 to C-3, E-1, F-2, H-3, I-3 to I-5; see `docs/analyzer-audit.md`. Re-run e2e for the gear workbench.
 2. Roadmap item 12 / audit B-4 is done: `primary` is the export's main skill when it is a hit skill, else highest DPS (`DpsSummary.primarySource`). The defences checklist (item 10) is done in web: `lib/defenceChecklist.ts`, shown above the character notes; it restates existing figures and reports unknown where the payload cannot settle a check.
 3. Refresh script for `packages/data/generated` instead of a runtime RePoE loader (Batch 3b(b), skipped on purpose).
 
