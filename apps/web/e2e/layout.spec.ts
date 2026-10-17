@@ -22,7 +22,7 @@ test.describe('desktop layout', () => {
   test('findings flow into two columns', async ({ page }) => {
     await page.goto(`character/?import=${encodeURIComponent(PROFILE_URL)}`)
     await expect(page.getByRole('heading', { name: /Athrynas/ }).first()).toBeVisible({ timeout: 30_000 })
-    const cards = page.locator('section:has(> div > h2:text-is("Findings")) > ul > li')
+    const cards = page.locator('section:has(> div h2:text-is("Findings")) > ul > li')
     expect(await cards.count()).toBeGreaterThan(1)
     const [a, b] = [await cards.nth(0).boundingBox(), await cards.nth(1).boundingBox()]
     expect(Math.abs(a!.y - b!.y)).toBeLessThan(2)

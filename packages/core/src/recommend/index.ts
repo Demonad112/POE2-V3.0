@@ -11,7 +11,7 @@
  */
 
 import type { CharModel } from '../model/types.js'
-import { analyzeDefense, type DefenseSummary } from '../defense/index.js'
+import { analyzeDefense, knownResistances, resistanceShortfalls, type DefenseSummary } from '../defense/index.js'
 import { analyzeDps, type DpsSummary } from '../dps/index.js'
 import { NO_KEYSTONE_EFFECTS, type KeystoneEffects } from '../keystones/index.js'
 import { indexBreakdowns, projectStat, statSources, type BreakdownIndex } from '../model/breakdowns.js'
@@ -32,6 +32,8 @@ export * from './types.js'
 export * from './gear.js'
 export * from './offence.js'
 export * from './damage.js'
+export * from './focus.js'
+export * from './axis.js'
 
 /** Relative cost weights used for ranking. Free work is worth doing first. */
 const COST_WEIGHT: Record<Cost['kind'], number> = {
@@ -84,8 +86,9 @@ interface Context {
 // ---------------------------------------------------------------------------
 function resistanceRules(ctx: Context): Recommendation[] {
   const out: Recommendation[] = []
-  const under = ctx.defense.resistances.filter((r) => r.underCap > 0)
-  const over = ctx.defense.resistances.filter((r) => r.overCap > 0)
+  // Unknown resistances are neither a shortfall nor a donor.
+  const under = resistanceShortfalls(ctx.defense)
+  const over = knownResistances(ctx.defense).filter((r) => r.overCap > 0)
 
   for (const res of under) {
     // Chaos Inoculation grants outright immunity to chaos damage. A chaos
@@ -247,7 +250,7 @@ function oneShotRule(ctx: Context): Recommendation[] {
 
   const res = d.resistances.find((r) => r.type === lowest.type)
   const cost: Cost =
-    res && res.underCap > 0
+    res && (res.underCap ?? 0) > 0
       ? { kind: 'gear', amount: 1, currencyTier: 'low', detail: `Close the ${res.underCap}% ${lowest.type} resistance gap first — it is the cheapest lever on this vector.` }
       : {
           kind: 'gear',
@@ -260,7 +263,7 @@ function oneShotRule(ctx: Context): Recommendation[] {
             : `Add maximum life, energy shield, or ${lowest.type}-specific mitigation.`,
         }
 
-  if (res) {
+  if (res && res.value !== null) {
     evidence.push({
       kind: 'stat',
       stat: `${lowest.type}Resistance`,

@@ -110,6 +110,40 @@ export interface OpenSlotDamage {
   options: { text: string | null; affix: string | null; tier: number; min: number; max: number; ilvl: number }[]
 }
 
+const FAMILY_NOTE_NAMES = 4
+
+/**
+ * "You already use X in this family" notes. `used` maps a family to the socketed
+ * gem holding it; `compatible` is every support that fits the skill. A note
+ * lists the other gems of that family, so a missing suggestion is explained.
+ * With `cap`, non-lineage gems above the tier cap are left out (they would not
+ * have been suggested anyway); lineage gems are kept and marked, since they are
+ * listed apart from the ranked candidates.
+ */
+export function duplicateFamilyNotes(
+  compatible: readonly PobSupport[],
+  used: ReadonlyMap<string, string>,
+  cap?: number,
+): string[] {
+  const byFamily = new Map<string, Set<string>>()
+  for (const s of compatible) {
+    if (cap !== undefined && !s.lineage && s.tier > cap) continue
+    for (const f of s.family) {
+      const holder = used.get(f)
+      if (holder === undefined || holder.toLowerCase() === s.name.toLowerCase()) continue
+      const set = byFamily.get(f) ?? new Set<string>()
+      set.add(s.lineage ? `${s.name} (lineage)` : s.name)
+      byFamily.set(f, set)
+    }
+  }
+  return [...byFamily].map(([family, names]) => {
+    const list = [...names].sort()
+    const shown = list.slice(0, FAMILY_NOTE_NAMES).join(', ')
+    const more = list.length > FAMILY_NOTE_NAMES ? ` and ${list.length - FAMILY_NOTE_NAMES} more` : ''
+    return `You already use ${used.get(family)} (family ${family}); ${shown}${more} share it, so only one can apply.`
+  })
+}
+
 export interface DamageReview {
   skill: string
   dps: number
@@ -127,6 +161,11 @@ export interface DamageReview {
   lineageOptions: GemCandidate[]
   /** The cap candidates were held to. Null when uncapped. */
   maxSupportTier: number | null
+  /**
+   * Compatible supports left out of the candidates because a gem of their family
+   * is already socketed. Informational only: nothing here is added or removed.
+   */
+  familyNotes: string[]
   /** Support families whose best tier is above the cap — a lower tier of each was used, or none fit. */
   aboveTierCap: number
   gear: DamageGearLine[]
@@ -290,6 +329,11 @@ export function reviewDamage(input: DamageReviewInput): DamageReview | null {
   }
   const worthAdding = (c: GemCandidate) => c.value.offensive && c.value.quantified && c.value.dps > 1.0001
   const compatible = typeSet ? catalog.compatible(types).filter((s) => !s.family.some((f) => takenFamilies.has(f))) : []
+  const familyNotes = duplicateFamilyNotes(
+    typeSet ? catalog.compatible(types) : [],
+    familiesSeen,
+    input.maxSupportTier,
+  )
   const cap = input.maxSupportTier
   const { best, aboveCap } = bestPerFamily(
     compatible.filter((s) => !s.lineage),
@@ -434,6 +478,7 @@ export function reviewDamage(input: DamageReviewInput): DamageReview | null {
     strongestCompatible: candidates.slice(0, 5),
     lineageOptions,
     maxSupportTier: cap ?? null,
+    familyNotes,
     aboveTierCap: cap !== undefined ? aboveCap : 0,
     gear: gear.slice(0, 10),
     openSlots,

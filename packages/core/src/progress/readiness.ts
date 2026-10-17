@@ -23,27 +23,32 @@ export interface ReadinessCheck {
   id: string
   milestone: ReadinessMilestone
   label: string
-  have: number
+  /** Null when the snapshot did not record the figure. */
+  have: number | null
   need: number
   unit: 'percent' | 'level' | 'raw'
-  pass: boolean
+  /** Null when `have` is unknown: neither passed nor failed. */
+  pass: boolean | null
 }
 
 export interface Readiness {
   checks: ReadinessCheck[]
-  /** Milestones where every check passes. */
-  ready: Record<ReadinessMilestone, boolean>
+  /**
+   * Milestones where every check passes. False when a check fails; null when
+   * none fails but at least one figure is unknown.
+   */
+  ready: Record<ReadinessMilestone, boolean | null>
 }
 
 function check(
   id: string,
   milestone: ReadinessMilestone,
   label: string,
-  have: number,
+  have: number | null,
   need: number,
   unit: ReadinessCheck['unit'],
 ): ReadinessCheck {
-  return { id, milestone, label, have, need, unit, pass: have >= need }
+  return { id, milestone, label, have, need, unit, pass: have === null ? null : have >= need }
 }
 
 export function assessReadiness(s: CharacterSnapshot): Readiness {
@@ -57,10 +62,14 @@ export function assessReadiness(s: CharacterSnapshot): Readiness {
     check('pool-pinnacle', 'pinnacle', 'Life + ES pool for pinnacles', s.pool, POOL_PINNACLE, 'raw'),
     check('chaos-target', 'pinnacle', 'Chaos resistance at target', s.chaos, CHAOS_TARGET, 'percent'),
   ]
-  const ready = { mapping: true, ascendancy: true, pinnacle: true }
-  for (const c of checks) if (!c.pass) ready[c.milestone] = false
+  const ready: Record<ReadinessMilestone, boolean | null> = { mapping: true, ascendancy: true, pinnacle: true }
+  for (const c of checks) {
+    if (c.pass === false) ready[c.milestone] = false
+    else if (c.pass === null && ready[c.milestone] === true) ready[c.milestone] = null
+  }
   // Pinnacles also need everything mapping needs.
-  if (!ready.mapping) ready.pinnacle = false
+  if (ready.mapping === false) ready.pinnacle = false
+  else if (ready.mapping === null && ready.pinnacle === true) ready.pinnacle = null
   return { checks, ready }
 }
 

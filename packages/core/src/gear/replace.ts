@@ -21,7 +21,7 @@
  * neither closes the gap, the plan says the character needs another source.
  */
 
-import type { DefenseSummary } from '../defense/index.js'
+import { knownResistances, resistanceShortfalls, type DefenseSummary } from '../defense/index.js'
 import type { EquippedItem } from '../model/slots.js'
 import {
   AFFIX_CAPACITY,
@@ -132,7 +132,7 @@ export function resistancesFrom(item: ItemAnalysis): Record<string, number> {
 export function removalDeficits(item: ItemAnalysis, defense: DefenseSummary): Record<string, number> {
   const granted = resistancesFrom(item)
   const out: Record<string, number> = {}
-  for (const res of defense.resistances) {
+  for (const res of knownResistances(defense)) {
     out[res.type] = Math.max(0, res.max - (res.value + res.overCap - (granted[res.type] ?? 0)))
   }
   return out
@@ -228,7 +228,7 @@ export function planReplacement({
   const granted = resistancesFrom(target)
   const deficits = removalDeficits(target, defense)
   const impact = new Map<string, ResistanceImpact>()
-  for (const res of defense.resistances) {
+  for (const res of knownResistances(defense)) {
     const fromItem = granted[res.type] ?? 0
     const uncapped = res.value + res.overCap
     const deficitIfRemoved = deficits[res.type] ?? 0
@@ -323,12 +323,13 @@ export function planReplacement({
       dropped.push({ text: mod.text, reason: mod.waste.reason })
       continue
     }
-    if (resType && (impact.get(resType)?.deficitIfRemoved ?? 0) === 0) {
+    // An unknown resistance has no impact entry: it must not read as "stays capped".
+    if (resType && impact.has(resType) && (impact.get(resType)?.deficitIfRemoved ?? 0) === 0) {
       // The character stays capped without it — a free slot for something better.
       const res = defense.resistances.find((r) => r.type === resType)
       dropped.push({
         text: mod.text,
-        reason: `${resType} stays capped without this item (${res ? res.value + res.overCap : '?'}% before the cap), so the slot is free for something else.`,
+        reason: `${resType} stays capped without this item (${res && res.value !== null ? res.value + (res.overCap ?? 0) : '?'}% before the cap), so the slot is free for something else.`,
       })
       continue
     }
@@ -363,7 +364,7 @@ export function planReplacement({
 
   // 3. Shortfalls the character already had go into whatever suffixes are left.
   const existingShortfalls: ReplacementPlan['existingShortfalls'] = []
-  for (const res of defense.resistances.filter((r) => r.underCap > 0).sort((a, b) => b.underCap - a.underCap)) {
+  for (const res of resistanceShortfalls(defense).sort((a, b) => b.underCap - a.underCap)) {
     if (caused.some((c) => c.type === res.type)) continue
     const placed = slots.suffix > 0 ? placeResistance(res.type, 'existing-shortfall') !== null : false
     existingShortfalls.push({ type: res.type, points: res.underCap, placedInSpec: placed })

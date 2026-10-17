@@ -26,6 +26,7 @@ import {
   draftResistances,
   draftSize,
   draftStatDelta,
+  findResistanceSwaps,
   lineKey,
   openSlots,
   rankAffixCandidates,
@@ -41,7 +42,9 @@ import {
   type ItemModAnalysis,
   type LineEdit,
   type ModTiers,
+  type Recommendation,
   type ReplacementPriority,
+  slotsWithNoFlaggedUpgrade,
 } from '@poe2/core'
 import type { ModTiersState } from '@/lib/useModTiers'
 import { useShoppingList } from '@/hooks/useShoppingList'
@@ -552,6 +555,7 @@ export function GearWorkbench({
   defense,
   state,
   characterName,
+  recommendations = [],
   attributes,
   bare = false,
 }: {
@@ -559,6 +563,7 @@ export function GearWorkbench({
   defense: DefenseSummary
   state: ModTiersState
   characterName: string
+  recommendations?: Recommendation[]
   attributes?: Partial<Record<'str' | 'dex' | 'int', number>>
   bare?: boolean
 }) {
@@ -568,7 +573,8 @@ export function GearWorkbench({
     if (state.status !== 'ready') return null
     const active = items.filter((i) => i.active)
     const analysed = active.map((i) => analyzeItem(i, state.tiers, defense))
-    return { active, analysed, ranking: rankReplacements(analysed, defense) }
+    const swaps = findResistanceSwaps(analysed, active, state.tiers, defense)
+    return { active, analysed, swaps, ranking: rankReplacements(analysed, defense) }
   }, [state, items, defense])
 
   const { draft, setDraft, dropped } = useGearDraft(
@@ -645,7 +651,35 @@ export function GearWorkbench({
             return item ? <ItemRow key={row.slotId} item={item} row={row} saved={savedSlots.has(row.slotLabel)} shared={shared} /> : null
           })}
         </ol>
+        <NoUpgradeSlots verdicts={slotsWithNoFlaggedUpgrade(base.analysed, recommendations, base.swaps)} />
       </div>
     </Panel>
+  )
+}
+
+/**
+ * Slots with nothing flagged. Worded as "nothing flagged", not "best in slot":
+ * it reflects only what this analysis checks. Ungradable slots are listed apart
+ * so missing tier data never reads as a clean slot.
+ */
+function NoUpgradeSlots({ verdicts }: { verdicts: ReturnType<typeof slotsWithNoFlaggedUpgrade> }) {
+  if (!verdicts.length) return null
+  const clean = verdicts.filter((v) => v.status === 'nothing-flagged')
+  const ungraded = verdicts.filter((v) => v.status === 'not-evaluated')
+  return (
+    <div className="rounded-lg border border-line/70 bg-surface-sunken/60 px-3 py-2.5 text-[12px] leading-relaxed text-ink-dim">
+      {clean.length ? (
+        <p>
+          <span className="font-semibold text-ink">Nothing flagged:</span>{' '}
+          {clean.map((v) => v.slotLabel).join(', ')}. No better tier, no wasted points, and no recommendation names them.
+        </p>
+      ) : null}
+      {ungraded.length ? (
+        <p className={clean.length ? 'mt-1' : ''}>
+          <span className="font-semibold text-ink">Not graded:</span> {ungraded.map((v) => v.slotLabel).join(', ')}. No
+          mod could be matched to a tier ladder.
+        </p>
+      ) : null}
+    </div>
   )
 }

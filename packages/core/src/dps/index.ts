@@ -11,6 +11,7 @@
 
 import type { CharModel, DamageType, NinjaSkill, NinjaSkillDps, Provenance } from '../model/types.js'
 import { DAMAGE_TYPES } from '../model/types.js'
+import type { MainSkillNote } from './main-skill.js'
 
 export interface DamageSplit {
   type: DamageType
@@ -67,6 +68,12 @@ export interface DpsSummary {
   provenance: Provenance
   /** Populated when the payload carried no usable damage block at all. */
   unresolved: string | null
+  /**
+   * The skill the attached PoB export marks as main, beside `primary`. Set by
+   * `analyzeCharacter` when an export decodes; absent otherwise. Never changes
+   * `primary`.
+   */
+  mainSkill?: MainSkillNote | null
 }
 
 function splitOf(raw: number[] | undefined): DamageSplit[] {

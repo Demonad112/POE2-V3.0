@@ -194,6 +194,14 @@ export function DamageReview({
           </span>
         </div>
 
+        {review.familyNotes.length ? (
+          <ul className="space-y-1 text-[11px] leading-relaxed text-ink-dim" aria-label="Support family notes">
+            {review.familyNotes.map((n) => (
+              <li key={n}>{n}</li>
+            ))}
+          </ul>
+        ) : null}
+
         {/* Gems */}
         <section>
           <h3 className="mb-1.5 text-[11px] font-medium tracking-wide text-ink-dim uppercase">Support gems</h3>

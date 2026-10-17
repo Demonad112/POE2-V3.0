@@ -47,7 +47,7 @@ export function ReadinessPanel() {
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-semibold text-ink">Am I ready?</h2>
         <span className="text-xs text-ink-mute">
-          {name} · lvl {snapshot.level} · imported{" "}
+          {name} · {snapshot.level === null ? "level unknown" : `lvl ${snapshot.level}`} · imported{" "}
           {new Date(snapshot.at).toLocaleDateString()}
         </span>
       </div>
@@ -58,12 +58,14 @@ export function ReadinessPanel() {
               <span className="text-sm font-medium text-ink">{MILESTONE_LABELS[m]}</span>
               <span
                 className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
-                  ready[m]
-                    ? "bg-good/15 text-[var(--good)]"
-                    : "bg-danger/15 text-[var(--danger)]"
+                  ready[m] === null
+                    ? "bg-line/40 text-ink-mute"
+                    : ready[m]
+                      ? "bg-good/15 text-[var(--good)]"
+                      : "bg-danger/15 text-[var(--danger)]"
                 }`}
               >
-                {ready[m] ? "Ready" : "Not yet"}
+                {ready[m] === null ? "Unknown" : ready[m] ? "Ready" : "Not yet"}
               </span>
             </div>
             <ul className="mt-2 space-y-1 text-xs">
@@ -72,13 +74,19 @@ export function ReadinessPanel() {
                 .map((c) => (
                   <li key={c.id} className="flex justify-between gap-2">
                     <span className={c.pass ? "text-ink-mute" : "text-ink-dim"}>
-                      {c.pass ? "✓" : "✗"} {c.label}
+                      {c.pass === null ? "?" : c.pass ? "✓" : "✗"} {c.label}
                     </span>
                     <span
-                      className={`font-mono ${c.pass ? "text-[var(--good)]" : "text-[var(--danger)]"}`}
+                      className={`font-mono ${
+                        c.pass === null
+                          ? "text-ink-mute"
+                          : c.pass
+                            ? "text-[var(--good)]"
+                            : "text-[var(--danger)]"
+                      }`}
                     >
-                      {formatValue(c, c.have)}
-                      {!c.pass && ` / ${formatValue(c, c.need)}`}
+                      {c.have === null ? "unknown" : formatValue(c, c.have)}
+                      {c.pass !== true && ` / ${formatValue(c, c.need)}`}
                     </span>
                   </li>
                 ))}

@@ -12,7 +12,7 @@ import { analyzeDps, type DpsSummary } from './dps/index.js'
 import { indexBreakdowns, type BreakdownIndex } from './model/breakdowns.js'
 import { attributeToItems, type AttributionReport } from './model/attribution.js'
 import { normalizePassives, type PassiveAllocation } from './model/passives.js'
-import { normalizeItems, type EquippedItem } from './model/slots.js'
+import { inactiveSetReport, normalizeItems, type EquippedItem, type InactiveSetReport } from './model/slots.js'
 import { keystoneEffectsOf, NO_KEYSTONE_EFFECTS, type KeystoneEffects } from './keystones/index.js'
 import { gearRecommendations, mergeGearRecommendations, recommend } from './recommend/index.js'
 import type { RecommendationReport } from './recommend/types.js'
@@ -20,6 +20,8 @@ import { reconcile, type ReconciliationReport } from './reconcile/index.js'
 import type { ModTiers } from './gear/tiers.js'
 import { decodePobExport, readPlayerStats } from './pob/export.js'
 import { readPobConfig, type PobConfig } from './pob/config.js'
+import { readPobMainSkill } from './pob/main-skill.js'
+import { mainSkillNote } from './dps/main-skill.js'
 import { assessBuild, type BuildAssessment } from './score/index.js'
 import { resolveAllocation, type PassiveTree } from './tree/index.js'
 import type { LadderSummary } from './ninja/ladder.js'
@@ -49,6 +51,8 @@ export interface Analysis {
   dps: DpsSummary
   passives: PassiveAllocation
   items: EquippedItem[]
+  /** What sits in the inactive weapon set; informational, nothing here counts towards the build. */
+  inactiveSet: InactiveSetReport
   breakdowns: BreakdownIndex
   /**
    * What each equipped item is holding up, and what the sheet would read
@@ -169,10 +173,12 @@ export async function analyzeCharacter(
 
   let pobStats: Record<string, number> | null = null
   let pobConfig: PobConfig | null = null
+  let exportMain: string | null = null
   if (model.pathOfBuildingExport) {
     try {
       const xml = await decodePobExport(model.pathOfBuildingExport)
       pobStats = readPlayerStats(xml)
+      exportMain = readPobMainSkill(xml)?.name ?? null
       pobConfig = readPobConfig(xml)
     } catch (err) {
       warnings.push(
@@ -182,7 +188,9 @@ export async function analyzeCharacter(
   }
 
   const defense = analyzeDefense(model)
-  const dps = analyzeDps(model)
+  const baseDps = analyzeDps(model)
+  const mainSkill = mainSkillNote(baseDps, exportMain)
+  const dps: DpsSummary = mainSkill ? { ...baseDps, mainSkill } : baseDps
   const passives = normalizePassives(model)
   const items = normalizeItems(model)
   const breakdowns = indexBreakdowns(model)
@@ -210,6 +218,7 @@ export async function analyzeCharacter(
     dps,
     passives,
     items,
+    inactiveSet: inactiveSetReport(model),
     breakdowns,
     attribution: attributeToItems(breakdowns, items, defense),
     keystones,

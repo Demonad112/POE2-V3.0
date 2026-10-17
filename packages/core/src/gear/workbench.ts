@@ -24,7 +24,7 @@
  * and within each group, the best tier this item level can roll first.
  */
 
-import type { DefenseSummary } from '../defense/index.js'
+import { knownResistances, type DefenseSummary } from '../defense/index.js'
 import { AFFIX_CAPACITY, OCCUPIES_AFFIX_SLOT, RESIST_STAT, type ItemAnalysis, type ItemModAnalysis } from './analyze.js'
 import type { AffixKind, LadderEntry, ModTiers } from './tiers.js'
 
@@ -98,7 +98,8 @@ export interface DraftResistance {
 }
 
 export function draftResistances(defense: DefenseSummary, delta: Record<string, number>): DraftResistance[] {
-  return defense.resistances.map((r) => {
+  // Unknown resistances are left out: a draft cannot be judged against a figure we never had.
+  return knownResistances(defense).map((r) => {
     const own = delta[RESIST_STAT[r.type] ?? ''] ?? 0
     const allEle = (ELEMENTS as readonly string[]).includes(r.type) ? (delta[ALL_ELEMENTAL] ?? 0) : 0
     const maxDelta = delta[MAX_RESIST[r.type] ?? ''] ?? 0

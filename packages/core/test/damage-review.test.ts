@@ -156,4 +156,17 @@ describe('support tier cap and lineage', () => {
     )
     for (const c of lowered) expect(uncapped.strongestCompatible.some((u) => u.name === c.name)).toBe(false)
   })
+
+  it('explains skipped families in familyNotes and honours the cap', () => {
+    expect(uncapped.familyNotes.length).toBeGreaterThan(0)
+    for (const n of uncapped.familyNotes) expect(n).toMatch(/^You already use .+ \(family .+\); .+ share it, so only one can apply\.$/)
+    const capped = reviewDamage({ ...base, maxSupportTier: 1 })!
+    const text = capped.familyNotes.join(' ')
+    const aboveCap = catalog
+      .compatible(catalog.activeTypes('Ice Shot')!)
+      .filter((s) => !s.lineage && s.tier > 1)
+      .map((s) => s.name)
+    for (const name of aboveCap) expect(text).not.toContain(`${name},`)
+    expect(capped.familyNotes.length).toBeLessThanOrEqual(uncapped.familyNotes.length)
+  })
 })

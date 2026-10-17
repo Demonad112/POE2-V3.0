@@ -19,6 +19,7 @@
  */
 
 import type { ResistanceState } from './defense/index.js'
+import type { RecommendationCategory } from './recommend/types.js'
 
 /**
  * Chaos resistance has no cap-driven breakpoint in PoE2 the way the elements
@@ -87,6 +88,13 @@ export const DOT_DOMINANT = 0.6
 export const ACCURACY_MIN_GAIN = 3
 
 /**
+ * Hours after which poe.ninja's copy of a character is called out of date.
+ * A judgement, not a measurement: gear swaps made since then are invisible to
+ * the analysis, so older data deserves a re-import before buying anything.
+ */
+export const DATA_AGE_STALE_HOURS = 24
+
+/**
  * The target a resistance is judged against.
  *
  * Elemental resistances use the character's OWN maximum as poe.ninja reports
@@ -98,7 +106,7 @@ export function targetFor(res: Pick<ResistanceState, 'type' | 'max'>): number {
 }
 
 /** Whether a resistance clears its target. */
-export function isHealthy(res: Pick<ResistanceState, 'type' | 'max' | 'value'>): boolean {
+export function isHealthy(res: Pick<ResistanceState, 'type' | 'max'> & { value: number }): boolean {
   return res.value >= targetFor(res)
 }
 
@@ -114,3 +122,18 @@ export const LEVEL_THIRD_ASCENDANCY = 70
 export const LEVEL_PINNACLE_PUSH = 85
 /** The guide's "5,000+ life" pinnacle gate, read as the combined pool. */
 export const POOL_PINNACLE = 5000
+
+/** Optional view emphasis: which kind of content the reader is preparing for. */
+export type FocusMode = 'mapping' | 'bossing'
+
+/**
+ * Multipliers on a recommendation's own score, per category, for the optional
+ * Mapping / Bossing view. A judgement, not a measurement: bossing leans on
+ * survivability (one hit kills), mapping on damage and efficiency (clear speed).
+ * A category not listed keeps weight 1. The default view applies no focus.
+ */
+export const FOCUS_CATEGORY_WEIGHTS: Readonly<Record<FocusMode, Readonly<Partial<Record<RecommendationCategory, number>>>>> =
+  Object.freeze({
+    mapping: Object.freeze({ damage: 1.25, efficiency: 1.25, survivability: 0.85 }),
+    bossing: Object.freeze({ survivability: 1.25, damage: 1.1, efficiency: 0.85 }),
+  })

@@ -152,6 +152,61 @@ export function normalizeItems(model: Pick<CharModel, 'items' | 'useSecondWeapon
     .sort((a, b) => a.slotId - b.slotId)
 }
 
+export interface InactiveSetReport {
+  activeSet: WeaponSet
+  inactiveSet: WeaponSet
+  /** True when the payload had no `useSecondWeaponSet` flag, so set 1 is a default, not a reading. */
+  activeSetAssumed: boolean
+  /** Items sitting in the inactive set. They do not count towards the live build. */
+  items: { slotLabel: string; name: string; grantedSkills: string[] }[]
+  /**
+   * Skills in the inactive set. `known` only when every named skill carries an
+   * explicit weapon-set marker; the recorded capture carries none, so this is
+   * normally `unknown`, never an empty "none".
+   */
+  skills: { status: 'known'; names: string[] } | { status: 'unknown'; reason: string }
+}
+
+const grantedSkillNames = (item: EquippedItem): string[] =>
+  (item.raw.itemData?.grantedSkills ?? []).flatMap((g) => {
+    const name = (g as { name?: unknown } | null)?.name
+    return typeof name === 'string' && name ? [name] : []
+  })
+
+/** Report what sits in the inactive weapon set, so it is not mistaken for part of the live build. */
+export function inactiveSetReport(model: Pick<CharModel, 'items' | 'useSecondWeaponSet' | 'skills'>): InactiveSetReport {
+  const activeSet = activeWeaponSet(model)
+  const inactiveSet: WeaponSet = activeSet === 1 ? 2 : 1
+  const items = normalizeItems(model)
+    .filter((i) => !i.active)
+    .map((i) => ({ slotLabel: i.slotLabel, name: i.name, grantedSkills: grantedSkillNames(i) }))
+
+  const named = (Array.isArray(model.skills) ? model.skills : []).flatMap((s) => {
+    const name = s?.dps?.[0]?.name
+    return typeof name === 'string' && name.trim() ? [{ name: name.trim(), set: s.weaponSet }] : []
+  })
+  const marked = named.length > 0 && named.every((s) => s.set === 1 || s.set === 2)
+  const skills: InactiveSetReport['skills'] = marked
+    ? { status: 'known', names: named.filter((s) => s.set === inactiveSet).map((s) => s.name) }
+    : {
+        status: 'unknown',
+        reason: 'The payload does not say which weapon set each skill belongs to, so skills in the inactive set cannot be listed.',
+      }
+  return { activeSet, inactiveSet, activeSetAssumed: typeof model.useSecondWeaponSet !== 'boolean', items, skills }
+}
+
+/**
+ * A sentence when the analyzer's primary skill is listed in the inactive weapon
+ * set, else null. Null also when the payload does not say which set each skill
+ * is in: absence of a marker is not evidence the skill is live.
+ */
+export function primarySkillInInactiveSet(primary: string | null, report: Pick<InactiveSetReport, 'skills' | 'inactiveSet'>): string | null {
+  if (!primary || report.skills.status !== 'known') return null
+  const norm = (s: string) => s.trim().toLowerCase()
+  if (!report.skills.names.some((n) => norm(n) === norm(primary))) return null
+  return `${primary} is the highest-damage skill, but the payload places it in weapon set ${report.inactiveSet}, which is not the active set. Its damage may not apply to the live build.`
+}
+
 /** Only the items that contribute to the live build. */
 export function activeItems(model: Pick<CharModel, 'items' | 'useSecondWeaponSet'>): EquippedItem[] {
   return normalizeItems(model).filter((i) => i.active)

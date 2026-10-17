@@ -18,6 +18,8 @@ import { DpsMatrix } from '@/components/DpsMatrix'
 import { DamageReview } from '@/components/DamageReview'
 import { GearWorkbench } from '@/components/GearWorkbench'
 import { CharacterHero } from '@/components/character/CharacterHero'
+import { CharacterNotes } from '@/components/character/CharacterNotes'
+import { ChangedSincePanel } from '@/components/character/ChangedSincePanel'
 import { CompareCharacters } from '@/components/character/CompareCharacters'
 import { CopyLink } from '@/components/character/CopyLink'
 import { useShoppingList } from '@/hooks/useShoppingList'
@@ -253,7 +255,12 @@ export default function Home() {
             {history.snapshots.length} snapshot{history.snapshots.length === 1 ? '' : 's'}
           </StatusChip>
         ),
-        content: <Progress history={history} bare />,
+        content: (
+          <>
+            <ChangedSincePanel analysis={a} snapshots={history.snapshots} />
+            <Progress history={history} bare />
+          </>
+        ),
       },
       {
         id: 'compare',
@@ -290,6 +297,7 @@ export default function Home() {
             defense={a.defense}
             state={tiersState}
             characterName={a.identity.name}
+            recommendations={a.recommendations.recommendations}
             {...(attributes ? { attributes } : {})}
             bare
           />
@@ -395,6 +403,8 @@ export default function Home() {
                 {w}
               </p>
             ))}
+
+            <CharacterNotes analysis={analysis} />
 
             <BuildScore assessment={analysis.assessment} keystones={analysis.keystones} />
 
