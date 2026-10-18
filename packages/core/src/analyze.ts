@@ -95,7 +95,15 @@ export function unwrapCharModel(input: CharModelResponse | CharModel | unknown):
     throw new Error('Expected a poe.ninja character model object.')
   }
   const maybe = input as CharModelResponse
-  const model = maybe.charModel && typeof maybe.charModel === 'object' ? maybe.charModel : (input as CharModel)
+  let model = input as CharModel
+  // A present `charModel` key is the envelope's model. Anything but an object there
+  // (a list, a string) is a drifted payload, not a bare model to analyse.
+  if (maybe.charModel !== undefined && maybe.charModel !== null) {
+    if (typeof maybe.charModel !== 'object' || Array.isArray(maybe.charModel)) {
+      throw new Error('The poe.ninja envelope has a charModel that is not an object; the payload may have changed.')
+    }
+    model = maybe.charModel
+  }
   assertCharModelShape(model)
   return model
 }

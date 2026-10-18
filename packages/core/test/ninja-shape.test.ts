@@ -38,6 +38,11 @@ describe('unwrapCharModel shape checks', () => {
     expect(() => unwrapCharModel({ breakdowns: 'none' })).toThrow(/"breakdowns" is not an object/)
   })
 
+  it('throws when the envelope charModel is a list or a primitive', () => {
+    expect(() => unwrapCharModel({ type: 'character', charModel: [] })).toThrow(/charModel that is not an object/)
+    expect(() => unwrapCharModel({ type: 'character', charModel: 'x' })).toThrow(/charModel that is not an object/)
+  })
+
   it('throws when a numeric field is a string', () => {
     expect(() => unwrapCharModel({ level: '90' })).toThrow(/"level" is not a number/)
   })
