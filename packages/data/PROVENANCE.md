@@ -13,7 +13,7 @@ checklist, see [`docs/DATA-REFRESH.md`](../../docs/DATA-REFRESH.md). The hand-wr
 [`mod-tiers.json` from Path of Building](#mod-tiersjson-from-path-of-building)
 below.
 
-**PoB version.** No PoB release contains this data. The latest release at the time, [v0.23.1](https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2/releases/tag/v0.23.1) (2026-07-28), is 92 commits older than `ce566ea` (2026-09-10) [verified with the GitHub compare API 2026-10-18]. A PoB running v0.23.1 therefore has pre-0.5.5 data, so the app does not pass `expectedPobVersion` for it: the live baseline check against poe.ninja is the safeguard that matters. Revisit when a release newer than `ce566ea` ships.
+**PoB version.** `0.23.1`, the `manifest.xml` version at `ce566ea` [verified 2026-10-18]. The `v0.23.1` release (2026-07-28) is 92 commits older than `ce566ea` (2026-09-10) but carries the same version number, as does the current `dev` head (`bb52d6b`, 2026-10-01, also in the owner's fork). So a matching version does not prove a PoB build has the 0.5.5 data: a v0.23.1 release build predates it. `poe2_pob_rank_nodes` passes `0.23.1` as `expectedPobVersion` (a mismatch only warns); the live baseline check against poe.ninja is the real safeguard. Update the value when `manifest.xml` is bumped and the data is re-exported.
 
 The other artifacts were last generated on **2026-07-28**, before patch 0.5.5
 (2026-09-04):

@@ -78,6 +78,9 @@ export interface ToolDef {
   handler: (args: Record<string, unknown>) => Promise<unknown> | unknown
 }
 
+/** PoB `manifest.xml` version the bundled data was exported from (see packages/data/PROVENANCE.md). A different running version only adds a warning. */
+const DATA_POB_VERSION = '0.23.1'
+
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const
 const READ_ONLY_NETWORK = { ...READ_ONLY, openWorldHint: true } as const
 
@@ -1188,6 +1191,7 @@ export const TOOLS: ToolDef[] = [
       const report = await rankNodesByMeasuredGain(pobBridge(), candidates.slice(0, limit), {
         metric: args.metric ? String(args.metric) : undefined,
         expected,
+        expectedPobVersion: DATA_POB_VERSION,
       })
 
       return {
