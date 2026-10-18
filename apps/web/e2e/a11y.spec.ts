@@ -3,11 +3,8 @@ import { PROFILE_URL, expect, test } from './fixtures'
 
 // Automated WCAG A/AA rules only. This catches missing names, roles and contrast
 // regressions; it is not a substitute for a manual pass (audit I-5).
-// Known, unfixed (audit I-5): the step checkbox sits inside <summary>
-// (nested-interactive) and the phase-nav caption is low contrast on some
-// themes (color-contrast). Both need a design call, so they are excluded here
-// rather than hidden; remove an entry when its fix lands.
-const KNOWN = new Set(['nested-interactive', 'color-contrast'])
+// Add a rule id here only for a known, unfixed violation, with the reason.
+const KNOWN = new Set<string>()
 
 const pages: Array<[string, string]> = [
   ['home', ''],

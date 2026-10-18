@@ -5,7 +5,7 @@
 
 # Tools
 
-30 tools. 26 are read-only; 4 marked ⚠️ act on a running Path of Building on this machine (`poe2_pob_load_character`, `poe2_pob_simulate_node`, `poe2_pob_simulate_mods`, `poe2_pob_rank_nodes`). Nothing here ever writes to a game account, a file, or poe.ninja.
+31 tools. 27 are read-only; 4 marked ⚠️ act on a running Path of Building on this machine (`poe2_pob_load_character`, `poe2_pob_simulate_node`, `poe2_pob_simulate_mods`, `poe2_pob_rank_nodes`). Nothing here ever writes to a game account, a file, or poe.ninja.
 
 | Tool | Purpose | Parameters |
 |---|---|---|
@@ -32,6 +32,7 @@
 | `poe2_rank_affix_candidates` | The affixes that could go into one prefix or suffix slot of an equipped item, in the same order the site’s gear workbench uses. | `slot`, `kind`, `replacing`, `limit` |
 | `poe2_audit_character` | Six checks over parts of the character payload the other tools never read. | — |
 | `poe2_survivability_headroom` | How the character’s smallest fatal hit compares to base monster damage at every waystone tier (1-16) and at the boss levels Path of Building itself uses — 82, the pinnacle boss floor, and 85, the ceiling for all enemies. | — |
+| `poe2_constraint_map` | The constraint map: resistance slack against each cap, what each equipped item holds up (the minimum it must keep so a stat does not drop below its cap), and — only when a Path of Building export is attached — spare Spirit and attribute headroom against gem and item requirements. | `changes` |
 | `poe2_pob_status` | Report whether a live Path of Building instance is reachable, which build it has open, and what its engine currently computes. | `includeCalcs` |
 | `poe2_pob_load_character` ⚠️ | Push the loaded character’s Path of Building export into the running Path of Building instance, so its engine can be used for simulation. | `allocate`, `deallocate` |
 | `poe2_pob_simulate_node` ⚠️ | Allocate a passive node in the running Path of Building, measure every stat that moved, then put the tree back. | `nodeId` |
@@ -247,6 +248,14 @@ _No parameters._
 How the character’s smallest fatal hit compares to base monster damage at every waystone tier (1-16) and at the boss levels Path of Building itself uses — 82, the pinnacle boss floor, and 85, the ceiling for all enemies. Tier maps to area level as 64 + tier, taken from the waystone item bases. Reports the highest tier that is comfortable and the first that is not. The figure is against a BASE monster: rares, uniques and map modifiers hit considerably harder and are not modelled, so it is an upper bound rather than a safety verdict, and the caveats are returned alongside it so the number is never read bare.
 
 _No parameters._
+
+### `poe2_constraint_map`
+
+**What is holding the build up, and whether changes break it**
+
+The constraint map: resistance slack against each cap, what each equipped item holds up (the minimum it must keep so a stat does not drop below its cap), and — only when a Path of Building export is attached — spare Spirit and attribute headroom against gem and item requirements. Anything the data cannot establish comes back null with a reason, never as zero. Optionally pass `changes`, a list of proposed stat deltas (a number or a {min,max} range per stat, e.g. swapping an item), and the tool adds the running totals after all of them and lists every floor they break or shortfall they worsen. The check is arithmetic on the current totals, not a simulation; use the poe2_pob_* tools for a measured figure.
+
+- `changes` *(optional)* — Proposed changes to check against the current totals. Omit for the map alone.
 
 ### `poe2_pob_status`
 

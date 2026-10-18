@@ -27,7 +27,7 @@ Static export: `apps/web/out` is 7.1 MB; the largest JS chunk is 228 KB.
 | Web tests | 68 (10 files) | 72 (11 files) |
 | Proxy tests | 17 | 17 |
 | Typecheck, lint, `npm run build` | pass | pass |
-| MCP build, `scripts/verify-mcp.mjs` (30 tools) | not run at baseline | pass |
+| MCP build, `scripts/verify-mcp.mjs` (31 tools) | not run at baseline | pass |
 | `apps/mcp/TOOLS.md` regeneration | n/a | unchanged |
 | Playwright e2e | not run at baseline | **not verified here**: the preinstalled Chromium does not match the version Playwright expects (`chromium_headless_shell-1248` missing). Not installed, per the environment notes. |
 
@@ -124,7 +124,7 @@ Present: trade-off, evidence, provenance, rationale per recommendation (`recomme
 | I-1 | Low | I | README test count is stale (374 vs 441). |
 | I-2 | Med | M | One recorded fixture only; no golden outputs. Added in this branch (1 recorded + 4 derived). |
 | I-3 | Low | M | No coverage tooling and no secret scanning in CI. |
-| I-4 | Low | M | Web and MCP both import core, so analysis logic is shared (README invariant holds). The MCP server has no tool for the constraint map or upgrade scoring; adding one changes the generated `TOOLS.md` and the 30-tool contract, so it is left for a separate change. |
+| I-4 | Low | M | Web and MCP both import core, so analysis logic is shared (README invariant holds). Fixed: `poe2_constraint_map` exposes the constraint map and a ledger check of proposed changes (31 tools, `TOOLS.md` regenerated). Upgrade-card scoring (`scoreUpgrade`) still needs before/after profiles the server does not build, so it is not exposed. |
 | I-5 | Low | M | Accessibility: 44 source files use `aria-` or `role=`; there is no automated a11y check (no axe) in the e2e suite. Not audited manually here. |
 | I-6 | none | ok | Secrets: no `.env`, key or pem file is tracked (`git ls-files`); a pattern search found only code identifiers (`apiKey` fields, "token" in parsers). |
 

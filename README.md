@@ -46,7 +46,7 @@ Two consequences that surprise people, both deliberate:
 | `packages/core` | Pure analysis. No I/O, no framework — `fetch` and the Path of Building transport are injected. 664 tests. |
 | `packages/data` | Generated game data artifacts and the scripts that extract them. See [PROVENANCE.md](packages/data/PROVENANCE.md). |
 | `apps/web` | Static Next.js export on GitHub Pages. Five routes. |
-| `apps/mcp` | 30-tool Model Context Protocol server over stdio. See [TOOLS.md](apps/mcp/TOOLS.md). |
+| `apps/mcp` | 31-tool Model Context Protocol server over stdio. See [TOOLS.md](apps/mcp/TOOLS.md). |
 | `services/ninja-proxy` | Serverless functions. Needed because poe.ninja sends no CORS headers. |
 
 **The invariant:** neither app contains analysis logic. Both import

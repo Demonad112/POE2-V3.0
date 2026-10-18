@@ -35,7 +35,15 @@ export function ChecklistStep({
   if (complete && hideCompleted) return null;
 
   return (
-    <li>
+    <li className="relative">
+      {/* A sibling of <details>, not a child of <summary>: interactive content inside a summary is invalid (axe nested-interactive). */}
+      <input
+        type="checkbox"
+        checked={complete}
+        onChange={() => toggleStep(step.id)}
+        aria-label={`Done: ${step.title}`}
+        className="absolute top-[0.9rem] left-3 z-[1] size-4 accent-emerald-500"
+      />
       <details
         id={step.id}
         open={isNext && !complete}
@@ -47,14 +55,7 @@ export function ChecklistStep({
               : "border-line bg-surface-raised shadow-[var(--lift)] hover:border-line-strong"
         }`}
       >
-        <summary className="flex cursor-pointer list-none items-center gap-2.5 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
-          <input
-            type="checkbox"
-            checked={complete}
-            onChange={() => toggleStep(step.id)}
-            aria-label={`Done: ${step.title}`}
-            className="size-4 shrink-0 accent-emerald-500"
-          />
+        <summary className="flex cursor-pointer list-none items-center gap-2.5 py-2.5 pr-3 pl-10 [&::-webkit-details-marker]:hidden">
           <span className="tabular w-6 shrink-0 text-[11px] text-ink-mute">#{step.order}</span>
           <span
             className={`min-w-0 flex-1 text-sm font-medium ${complete ? "text-ink-mute line-through" : "text-ink"}`}
