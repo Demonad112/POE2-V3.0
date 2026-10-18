@@ -26,6 +26,9 @@ export {
   rankAffixCandidates,
   findResistanceSwaps,
   findTierUpgrades,
+  applyLedger,
+  holdingUp,
+  ledgerTotalsFromHoldingUp,
   itemsCarrying,
   lineKey,
   normalizeItems,
@@ -46,6 +49,7 @@ export {
   validateSetup,
   type AttributableStat,
   type GearDraft,
+  type LedgerChange,
 } from '@poe2/core'
 
 import { findMechanic, type Mechanic } from './mechanics.js'

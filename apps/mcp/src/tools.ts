@@ -18,6 +18,7 @@ import {
   NODE_KIND,
   analyzeContent,
   analyzeItem,
+  applyLedger,
   attributionForSlot,
   attributionForStat,
   auditCharacter,
@@ -29,7 +30,9 @@ import {
   findMechanicSafe,
   findResistanceSwaps,
   findTierUpgrades,
+  holdingUp,
   itemsCarrying,
+  ledgerTotalsFromHoldingUp,
   lineKey,
   normalizeItems,
   openSlots,
@@ -51,6 +54,7 @@ import {
   validateSetup,
   type AttributableStat,
   type GearDraft,
+  type LedgerChange,
 } from './deps.js'
 import {
   client,
@@ -993,6 +997,59 @@ export const TOOLS: ToolDef[] = [
     inputSchema: {},
     annotations: READ_ONLY,
     handler: () => analyzeContent(requireCharacter().analysis.defense, monsterStats()),
+  },
+
+  {
+    name: 'poe2_constraint_map',
+    title: 'What is holding the build up, and whether changes break it',
+    description:
+      'The constraint map: resistance slack against each cap, what each equipped item holds up (the minimum it must ' +
+      'keep so a stat does not drop below its cap), and — only when a Path of Building export is attached — spare ' +
+      'Spirit and attribute headroom against gem and item requirements. Anything the data cannot establish comes ' +
+      'back null with a reason, never as zero. Optionally pass `changes`, a list of proposed stat deltas (a number or ' +
+      'a {min,max} range per stat, e.g. swapping an item), and the tool adds the running totals after all of them ' +
+      'and lists every floor they break or shortfall they worsen. The check is arithmetic on the current totals, not ' +
+      'a simulation; use the poe2_pob_* tools for a measured figure.',
+    inputSchema: {
+      changes: z
+        .array(
+          z.object({
+            id: z.string().describe('Short id, quoted back in violations.'),
+            label: z.string().describe('Human label, e.g. "Swap amulet for X".'),
+            deltas: z
+              .record(
+                z.enum([
+                  'fireResistance',
+                  'coldResistance',
+                  'lightningResistance',
+                  'chaosResistance',
+                  'spirit',
+                  'strength',
+                  'dexterity',
+                  'intelligence',
+                  'movementSpeed',
+                ]),
+                z.union([
+                  z.number().finite(),
+                  z.object({ min: z.number().finite(), max: z.number().finite() }).refine((r) => r.min <= r.max, 'min must not exceed max'),
+                ]),
+              )
+              .describe(
+                'Stat → change. Stats: fireResistance, coldResistance, lightningResistance, chaosResistance, spirit, strength, dexterity, intelligence, movementSpeed.',
+              ),
+          }),
+        )
+        .optional()
+        .describe('Proposed changes to check against the current totals. Omit for the map alone.'),
+    },
+    annotations: READ_ONLY,
+    handler: (args) => {
+      const a = requireCharacter().analysis
+      const map = holdingUp({ model: a.model, defense: a.defense, attribution: a.attribution, items: a.items, pobStats: a.pobStats })
+      const changes = (args as { changes?: LedgerChange[] }).changes
+      if (!changes?.length) return { map }
+      return { map, ledger: applyLedger(ledgerTotalsFromHoldingUp(map), changes) }
+    },
   },
 
   {

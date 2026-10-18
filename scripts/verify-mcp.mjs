@@ -113,6 +113,21 @@ if (defenses.lowestMaximumHit !== 3808 || defenses.lowestMaximumHitType !== 'cha
 if (!defenses.note?.includes('overstates')) failures.push('defences did not warn that EHP overstates survivability')
 console.log(`defenses: lowest max hit ${defenses.lowestMaximumHit} (${defenses.lowestMaximumHitType})`)
 
+// --- constraint map ---------------------------------------------------------
+const constraints = await callTool('poe2_constraint_map', {
+  changes: [{ id: 'probe', label: 'Lose 500 fire resistance', deltas: { fireResistance: -500 } }],
+})
+if (constraints.map?.resistances?.length !== 4) {
+  failures.push(`constraint map wrong: ${JSON.stringify(constraints).slice(0, 200)}`)
+} else if (!constraints.ledger?.violations?.some((v) => v.stat === 'fireResistance')) {
+  failures.push(`ledger did not flag a 500-point fire resistance loss: ${JSON.stringify(constraints.ledger).slice(0, 200)}`)
+} else {
+  console.log(`constraint map: ${constraints.ledger.violations.length} violation(s) for a 500-point fire loss`)
+}
+
+const badKey = await callTool('poe2_constraint_map', { changes: [{ id: 'x', label: 'x', deltas: { fireRes: -1 } }] })
+if (!badKey.error) failures.push('an unknown stat in a constraint-map change should be rejected')
+
 // --- damage -----------------------------------------------------------------
 const damage = await callTool('poe2_get_skill_damage')
 if (damage.primary?.name !== 'Ice Shot' || damage.primary?.dps !== 109859) {

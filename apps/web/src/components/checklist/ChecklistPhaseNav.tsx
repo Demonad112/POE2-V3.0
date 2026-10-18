@@ -28,9 +28,9 @@ export function ChecklistPhaseNav() {
             title={ROADMAP_PHASE_LABELS[phase]}
             className={`flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors ${
               complete
-                ? "border-good/30 bg-good/10 text-[var(--good)]"
+                ? "border-good/30 bg-good/10 text-ink"
                 : current
-                  ? "border-[var(--accent)]/50 bg-accent-soft text-[var(--accent)]"
+                  ? "border-[var(--accent)]/50 bg-accent-soft text-ink"
                   : "border-line text-ink-mute hover:text-ink-dim"
             }`}
           >
@@ -38,7 +38,7 @@ export function ChecklistPhaseNav() {
             <span className="hidden whitespace-nowrap md:inline">
               {(ROADMAP_PHASE_LABELS[phase] ?? phase).split(" — ")[0]}
             </span>
-            <span className="font-mono text-[10px] opacity-80">
+            <span className="font-mono text-[10px]">
               {count}/{steps.length}
             </span>
           </a>

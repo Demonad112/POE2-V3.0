@@ -4,11 +4,13 @@ export default defineConfig({
   test: {
     include: ['test/**/*.test.ts'],
     environment: 'node',
-    // Report-only: `npm run test:coverage` prints the numbers, no thresholds gate CI.
+    // `npm run test:coverage` fails below these floors (measured 91.3% statements,
+    // 79.6% branches); CI runs it. Raise them as coverage grows, never lower.
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
       reporter: ['text-summary', 'text'],
+      thresholds: { statements: 90, branches: 75 },
     },
   },
 })

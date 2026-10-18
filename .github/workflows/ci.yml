@@ -31,6 +31,9 @@ jobs:
         run: npm run lint
       - name: Test core and web
         run: npm test
+      - name: Core coverage floor
+        # 90% statements / 75% branches, set in packages/core/vitest.config.ts.
+        run: npm run test:coverage --workspace @poe2/core
       - name: Test ninja-proxy
         # Not an npm workspace (it deploys separately), so the root test run
         # never reached it. Its tests pin the live ladder decoder and the
