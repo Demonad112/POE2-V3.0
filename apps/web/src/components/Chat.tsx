@@ -38,10 +38,9 @@ import {
   type PobAnalysis,
   type ProviderId,
 } from '@poe2/core'
+import { readChatSettings, writeChatSettings } from '../lib/chatSettings'
 import { Panel, Tag } from './ui'
 
-const KEY_STORAGE = 'poe2-chat-key'
-const PROVIDER_STORAGE = 'poe2-chat-provider'
 const PROXY = (process.env.NEXT_PUBLIC_CHAT_PROXY_BASE || '').replace(/\/+$/, '')
 
 const SUGGESTIONS = [
@@ -62,17 +61,10 @@ export function Chat({ analysis, pob }: { analysis?: Analysis; pob?: PobAnalysis
 
   useEffect(() => {
     try {
-      // A key saved by an earlier version lived in localStorage: carry it over once, then drop it.
-      const legacyKey = localStorage.getItem(KEY_STORAGE)
-      if (legacyKey) {
-        if (!sessionStorage.getItem(KEY_STORAGE)) sessionStorage.setItem(KEY_STORAGE, legacyKey)
-        localStorage.removeItem(KEY_STORAGE)
-      }
-      const storedKey = sessionStorage.getItem(KEY_STORAGE)
-      const storedProvider = localStorage.getItem(PROVIDER_STORAGE) as ProviderId | null
+      const stored = readChatSettings(localStorage, sessionStorage)
       // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from browser storage, an external system, on mount
-      if (storedKey) setApiKey(storedKey)
-      if (storedProvider && storedProvider in PROVIDERS) setProvider(storedProvider)
+      if (stored.apiKey) setApiKey(stored.apiKey)
+      if (stored.provider && Object.hasOwn(PROVIDERS, stored.provider)) setProvider(stored.provider as ProviderId)
     } catch {
       // Private browsing or storage disabled. The chat still works for the
       // session; the key just is not remembered.
@@ -90,9 +82,7 @@ export function Chat({ analysis, pob }: { analysis?: Analysis; pob?: PobAnalysis
     setApiKey(nextKey)
     setProvider(nextProvider)
     try {
-      if (nextKey) sessionStorage.setItem(KEY_STORAGE, nextKey)
-      else sessionStorage.removeItem(KEY_STORAGE)
-      localStorage.setItem(PROVIDER_STORAGE, nextProvider)
+      writeChatSettings(localStorage, sessionStorage, { apiKey: nextKey, provider: nextProvider })
     } catch {
       /* storage unavailable — session-only */
     }
