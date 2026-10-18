@@ -148,7 +148,8 @@ export const TOOLS: ToolDef[] = [
     inputSchema: {},
     annotations: READ_ONLY,
     handler: () => {
-      const d = requireCharacter().analysis.defense
+      const { analysis } = requireCharacter()
+      const d = analysis.defense
       return {
         lowestMaximumHit: d.lowestMaximumHit,
         lowestMaximumHitType: d.lowestMaximumHitType,
@@ -172,6 +173,8 @@ export const TOOLS: ToolDef[] = [
           deflectChance: d.deflectChance,
           deflectEffect: d.deflectEffect,
         },
+        // Read from gear and passive-tree text; "unknown" when nothing proves immunity or no tree was resolved.
+        ailments: analysis.ailments ?? null,
         missingFromPayload: d.missing,
       }
     },

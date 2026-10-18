@@ -12,7 +12,9 @@ Already done, do not redo: plan Step 1 items 1-10, Step 2 data work (#47-#49), B
 | 3.2 | C-3 close-out: record the PoB version the data was built from in `PROVENANCE.md`; pass `expectedPobVersion` from `rankNodesByMeasuredGain` in `apps/mcp/src/tools.ts` | `PROVENANCE.md`, `apps/mcp` | **Owner supplies the version** | Value comes from the owner, never invented; MCP test covers the mismatch warning |
 | 3.3 | Expose `ailments` in MCP analysis output | `apps/mcp/src/tools.ts`, regenerate `TOOLS.md` only if a tool changes | nothing | Field present, `unknown` when no tree; no tool added |
 
-Order: 3.1, then 3.3, then 3.2 when the version arrives. 3.1 and 3.3 can ship together.
+Status 2026-10-18: **3.1 done** (`packages/core/test/pob-yardstick.test.ts`): life, ES and the four resists match PoB exactly [verified]; EHP 13569 vs 13569.2; DPS 110157 vs 109859 (0.27%, the gap is the analyzer adding 298 of damage over time to hit DPS [inferred from the arithmetic]); main skill Ice Shot agrees. **3.3 done** (`ailments` in `poe2_get_defenses`; tool description unchanged, so `TOOLS.md` needs no regeneration). 3.2 waits for the owner's PoB version.
+
+Found while checking 3.1: `analyzeDefense` sets `ward` with `?? 0` (`packages/core/src/defense/index.ts:204`), so a payload without ward reads as 0, not unknown. PoB has no Ward stat to check against. Proposed as 3.4: make it `number | null` through web and MCP (touches the `DefenseSummary` type; same pattern as audit B-1 to B-3). Needs a go-ahead since it changes a public type.
 
 ## Batch 4: CI and accessibility hygiene (owner decisions first)
 
