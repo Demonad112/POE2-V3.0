@@ -64,7 +64,7 @@ export function Chat({ analysis, pob }: { analysis?: Analysis; pob?: PobAnalysis
       const stored = readChatSettings(localStorage, sessionStorage)
       // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from browser storage, an external system, on mount
       if (stored.apiKey) setApiKey(stored.apiKey)
-      if (stored.provider && stored.provider in PROVIDERS) setProvider(stored.provider as ProviderId)
+      if (stored.provider && Object.hasOwn(PROVIDERS, stored.provider)) setProvider(stored.provider as ProviderId)
     } catch {
       // Private browsing or storage disabled. The chat still works for the
       // session; the key just is not remembered.
