@@ -34,7 +34,7 @@ Background context for the next session. Verify anything you rely on; this file 
 
 ## Next tasks
 
-1. Audit items still open: C-1 and E-1 (need a PoB worker), F-2, I-3 coverage tooling, I-4, the two a11y exclusions; see `docs/analyzer-audit.md`. Re-run e2e for the gear workbench.
+1. Audit items still open (2026-10-18, after PR #68): C-1 and E-1 (need a PoB worker), C-4 (needs a config RPC on the bridge), A-2 ETag handling (not implemented), H-4 bundle profiling, and `scoreUpgrade` exposure over MCP (needs before/after profiles). Done: F-2, I-3 (coverage floor 90/75 in CI), I-4 (`poe2_constraint_map`, 31 tools), both a11y exclusions (axe `KNOWN` set is empty), A-3 to A-6 (verified in code). See `docs/analyzer-audit.md`.
 2. Roadmap item 12 / audit B-4 is done: `primary` is the export's main skill when it is a hit skill, else highest DPS (`DpsSummary.primarySource`). The defences checklist (item 10) is done in web: `lib/defenceChecklist.ts`, shown above the character notes; it restates existing figures and reports unknown where the payload cannot settle a check.
 3. The runtime RePoE loader (Batch 3b(b)) is dropped on purpose; data refresh uses `packages/data/scripts/` and `docs/DATA-REFRESH.md`.
 4. Ailment immunity (item 5) is wired into `Analysis.ailments`, the web defences checklist and character notes; freeze exposure stays unknown. Main-skill matching (item 6) is by name and says so. Checked 2026-10-18.
