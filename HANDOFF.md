@@ -36,6 +36,9 @@ Background context for the next session. Verify anything you rely on; this file 
 
 1. Audit items still open: C-1 and E-1 (need a PoB worker), F-2, I-3 coverage tooling, I-4, the two a11y exclusions; see `docs/analyzer-audit.md`. Re-run e2e for the gear workbench.
 2. Roadmap item 12 / audit B-4 is done: `primary` is the export's main skill when it is a hit skill, else highest DPS (`DpsSummary.primarySource`). The defences checklist (item 10) is done in web: `lib/defenceChecklist.ts`, shown above the character notes; it restates existing figures and reports unknown where the payload cannot settle a check.
-3. Refresh script for `packages/data/generated` instead of a runtime RePoE loader (Batch 3b(b), skipped on purpose).
+3. The runtime RePoE loader (Batch 3b(b)) is dropped on purpose; data refresh uses `packages/data/scripts/` and `docs/DATA-REFRESH.md`.
+4. Ailment immunity (item 5) is wired into `Analysis.ailments`, the web defences checklist and character notes; freeze exposure stays unknown. Main-skill matching (item 6) is by name and says so. Checked 2026-10-18.
+
+Detailed plan with batches 3 to 5: `docs/NEXT-STEPS.md`.
 
 Later, gated on a decision about a PoB worker (`docs/pob-worker-design.md`): roadmap items 13 to 19.
