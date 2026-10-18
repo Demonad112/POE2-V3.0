@@ -39,6 +39,6 @@ The analyzer already excludes the inactive set (`item.active`).
 
 ## Not verified
 
-- Whether the Limit counts per character or per item type.
-- Effects of the 17 new cores.
-- Hotfix 0.5.5c (2026-09-18) changes; not read.
+- Whether the Limit counts per character or per item type. Checked 2026-10-18: secondary coverage (PlayNews) says a second equipped Jiquani core stops counting but does not give the scope; the poe2wiki "Soul cores" page says per character but may predate 0.5.5. Neither is official, so it stays unverified.
+- Effects of the 17 new cores. Checked 2026-10-18: PlayNews reports they shipped with no published effect, so there is nothing to read until GGG publishes them.
+- Hotfix 0.5.5c (2026-09-18). Checked 2026-10-18 against secondary news only (no official post found): quest and boss blockers (Legacy of the Precursors, Act 4 island, three bosses) and crash fixes. Nothing reported touching stats, cores or the passive tree. Official notes not read.
