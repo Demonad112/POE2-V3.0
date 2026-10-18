@@ -60,7 +60,8 @@ export interface DefenseSummary {
   life: number | null
   /** Null when the payload did not report it. */
   energyShield: number | null
-  ward: number
+  /** Null when the payload did not report it (0.5 mechanic; absent is not the same as zero). */
+  ward: number | null
   /** Pool against chaos: chaos drains ES at 2x, so ES counts half. Null when life or ES is unknown. */
   chaosRawPool: number | null
 
@@ -201,7 +202,7 @@ export function analyzeDefense(model: Pick<CharModel, 'defensiveStats'>): Defens
 
     life,
     energyShield,
-    ward: num(s, 'ward') ?? 0,
+    ward: num(s, 'ward'),
     chaosRawPool: life === null || energyShield === null ? null : chaosRawPool(life, energyShield),
 
     armour: num(s, 'armour') ?? 0,

@@ -211,7 +211,7 @@ export function assessBuild(input: BuildAssessmentInput): BuildAssessment {
         : `${defense.evasion.toLocaleString()} evasion is a real mitigation layer`,
     )
   }
-  if (defense.ward > 0) {
+  if (defense.ward !== null && defense.ward > 0) {
     strengths.push(`${defense.ward.toLocaleString()} ward adds a recovering buffer over life and energy shield`)
   }
   if (armour < ARMOUR_NEGLIGIBLE && defense.blockChance < BLOCK_NEGLIGIBLE) {

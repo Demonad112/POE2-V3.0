@@ -14,7 +14,7 @@ Already done, do not redo: plan Step 1 items 1-10, Step 2 data work (#47-#49), B
 
 Status 2026-10-18: **3.1 done** (`packages/core/test/pob-yardstick.test.ts`): life, ES and the four resists match PoB exactly [verified]; EHP 13569 vs 13569.2; DPS 110157 vs 109859 (0.27%, the gap is the analyzer adding 298 of damage over time to hit DPS [inferred from the arithmetic]); main skill Ice Shot agrees. **3.3 done** (`ailments` in `poe2_get_defenses`; tool description unchanged, so `TOOLS.md` needs no regeneration). 3.2 waits for the owner's PoB version.
 
-Found while checking 3.1: `analyzeDefense` sets `ward` with `?? 0` (`packages/core/src/defense/index.ts:204`), so a payload without ward reads as 0, not unknown. PoB has no Ward stat to check against. Proposed as 3.4: make it `number | null` through web and MCP (touches the `DefenseSummary` type; same pattern as audit B-1 to B-3). Needs a go-ahead since it changes a public type.
+Found while checking 3.1: `analyzeDefense` sets `ward` with `?? 0` (`packages/core/src/defense/index.ts:204`), so a payload without ward reads as 0, not unknown. PoB has no Ward stat to check against. **3.4 done**: `DefenseSummary.ward` and `CharacterSnapshot.ward` are `number | null` (same pattern as audit B-1 to B-3). `effectivePool` adds nothing for an unknown ward and leaves `ward` out of `parts`. One golden changed on purpose: `sparse-defence` no longer says "life + energy shield + ward" for a payload with no ward. Older stored snapshots with `ward: 0` are read as written. Armour, evasion, block and deflect still default to 0 the same way; candidates for a later pass.
 
 ## Batch 4: CI and accessibility hygiene (owner decisions first)
 
