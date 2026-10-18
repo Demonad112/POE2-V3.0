@@ -227,3 +227,59 @@ describe('NinjaClient politeness', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('ETag revalidation of the character model (direct mode)', () => {
+  const withEtag = (body: unknown, etag: string): ResponseLike => ({
+    ...jsonResponse(body),
+    headers: { get: (n) => (n === 'etag' ? etag : null) },
+  })
+  const notModified: ResponseLike = {
+    ok: false,
+    status: 304,
+    text: async () => '',
+    json: async () => {
+      throw new Error('a 304 has no body')
+    },
+  }
+
+  it('sends If-None-Match for a model it has seen and returns the cached copy on 304', async () => {
+    const model = { type: 'found', charModel: { name: 'Athrynas' } }
+    let modelCalls = 0
+    const fetchImpl = vi.fn<FetchLike>(async (url) => {
+      if (url.includes('/events/')) return neverEndingSse(43)
+      return ++modelCalls === 1 ? withEtag(model, '"m43"') : notModified
+    })
+    const client = new NinjaClient({ fetch: fetchImpl })
+
+    const first = await client.fetchCharacter('Demonad112-2589', 'runesofaldur', 'Athrynas')
+    const second = await client.fetchCharacter('Demonad112-2589', 'runesofaldur', 'Athrynas')
+
+    expect(second).toEqual(model)
+    expect(second).not.toBe(first)
+    const modelCallsArgs = fetchImpl.mock.calls.filter(([u]) => u.includes('/model/'))
+    expect(modelCallsArgs[0]![1]?.headers?.['if-none-match']).toBeUndefined()
+    expect(modelCallsArgs[1]![1]?.headers?.['if-none-match']).toBe('"m43"')
+  })
+
+  it('does not reuse a cached model for a new version', async () => {
+    let version = 43
+    const fetchImpl = vi.fn<FetchLike>(async (url) =>
+      url.includes('/events/') ? neverEndingSse(version) : withEtag({ charModel: { v: version } }, `"m${version}"`),
+    )
+    const client = new NinjaClient({ fetch: fetchImpl })
+    await client.fetchCharacter('a#1', 'l', 'c')
+    version = 44
+    const next = await client.fetchCharacter('a#1', 'l', 'c')
+    expect(next).toEqual({ charModel: { v: 44 } })
+    const sent = fetchImpl.mock.calls.filter(([u]) => u.includes('/model/'))[1]![1]?.headers
+    expect(sent?.['if-none-match']).toBeUndefined()
+  })
+
+  it('sends no conditional header through the proxy', async () => {
+    const fetchImpl = vi.fn<FetchLike>(async () => withEtag({ charModel: {} }, '"p"'))
+    const client = new NinjaClient({ fetch: fetchImpl, proxyBaseUrl: 'https://p.test' })
+    await client.fetchCharacter('a#1', 'l', 'c')
+    await client.fetchCharacter('a#1', 'l', 'c')
+    expect(fetchImpl.mock.calls[1]![1]?.headers?.['if-none-match']).toBeUndefined()
+  })
+})

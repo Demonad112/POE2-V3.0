@@ -35,6 +35,8 @@ export type FetchLike = (
   init?: { signal?: AbortSignal; headers?: Record<string, string> },
 ) => Promise<ResponseLike>
 
+const MAX_CACHED_MODELS = 8
+
 export type NinjaErrorReason = 'not-found' | 'network' | 'cors' | 'bad-response' | 'timeout'
 
 export class NinjaError extends Error {
@@ -133,6 +135,13 @@ export class NinjaClient {
   private readonly userAgent: string | null
   private readonly retries: number
   private readonly retryDelayMs: number
+  /**
+   * Last model and ETag per versioned model URL, direct mode only: a browser
+   * sending `If-None-Match` itself would need a CORS preflight the proxy does
+   * not answer, and the browser's own HTTP cache already revalidates the
+   * proxy's `ETag`. Whether poe.ninja sends an ETag here is unverified.
+   */
+  private readonly models = new Map<string, { etag: string; model: CharModelResponse }>()
 
   constructor(opts: NinjaClientOptions) {
     this.fetch = opts.fetch
@@ -144,9 +153,9 @@ export class NinjaClient {
     this.retryDelayMs = Math.max(0, opts.retryDelayMs ?? DEFAULT_RETRY_DELAY)
   }
 
-  private async get(url: string): Promise<ResponseLike> {
+  private async get(url: string, etag?: string): Promise<ResponseLike> {
     for (let attempt = 0; ; attempt++) {
-      const res = await this.getOnce(url)
+      const res = await this.getOnce(url, etag)
       if ((res.status !== 429 && res.status !== 503) || attempt >= this.retries) return res
       const header = Number(res.headers?.get('retry-after'))
       const wait = Number.isFinite(header) && header > 0 ? header * 1000 : this.retryDelayMs * 2 ** attempt
@@ -156,11 +165,14 @@ export class NinjaClient {
     }
   }
 
-  private async getOnce(url: string): Promise<ResponseLike> {
+  private async getOnce(url: string, etag?: string): Promise<ResponseLike> {
     const signal = typeof AbortSignal?.timeout === 'function' ? AbortSignal.timeout(this.timeoutMs) : undefined
     const init: { signal?: AbortSignal; headers?: Record<string, string> } = {}
     if (signal) init.signal = signal
-    if (this.userAgent) init.headers = { 'user-agent': this.userAgent }
+    const headers: Record<string, string> = {}
+    if (this.userAgent) headers['user-agent'] = this.userAgent
+    if (etag) headers['if-none-match'] = etag
+    if (Object.keys(headers).length > 0) init.headers = headers
     try {
       return await this.fetch(url, init)
     } catch (err) {
@@ -252,10 +264,19 @@ export class NinjaClient {
     const version = await this.readVersion(
       `${this.baseUrl}/poe2/api/events/character/${e(acct)}/${e(league)}/${e(character)}`,
     )
-    const res = await this.get(
-      `${this.baseUrl}/poe2/api/profile/characters/${e(acct)}/${e(league)}/${e(character)}/model/${version}`,
-    )
+    // The URL names the version, so a 304 for it can only mean "same model".
+    const modelUrl = `${this.baseUrl}/poe2/api/profile/characters/${e(acct)}/${e(league)}/${e(character)}/model/${version}`
+    const cached = this.models.get(modelUrl)
+    const res = await this.get(modelUrl, cached?.etag)
+    if (res.status === 304 && cached) return structuredClone(cached.model)
     if (!res.ok) throw new NinjaError('bad-response', `poe.ninja returned ${res.status} for the character model.`)
-    return expectObject(await res.json(), 'the character model') as CharModelResponse
+    const model = expectObject(await res.json(), 'the character model') as CharModelResponse
+    const etag = res.headers?.get('etag')
+    if (etag) {
+      this.models.delete(modelUrl)
+      this.models.set(modelUrl, { etag, model: structuredClone(model) })
+      if (this.models.size > MAX_CACHED_MODELS) this.models.delete(this.models.keys().next().value as string)
+    }
+    return model
   }
 }
