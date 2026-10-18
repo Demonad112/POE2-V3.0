@@ -35,7 +35,10 @@
 // columns (`skills`, `keypassives`) carry neither shape — they are per-row
 // lists — and are left undecoded since nothing here reads them.
 
-import { politeFetch } from "./_upstream.js";
+import { badQueryParam, politeFetch } from "./_upstream.js";
+
+// Upstream calls abort after this long, so a stalled poe.ninja cannot hold the function open.
+const TIMEOUT_MS = 20_000;
 
 const NINJA_BASE = "https://poe.ninja";
 
@@ -259,9 +262,16 @@ export default async function handler(req, res) {
     res.status(400).json({ error: "league query param is required" });
     return;
   }
+  const bad = badQueryParam(req.query, ["league", "class", "name"]);
+  if (bad) {
+    res.status(400).json({ error: `${bad} query param is too long or repeated` });
+    return;
+  }
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const idxRes = await politeFetch(`${NINJA_BASE}/poe2/api/data/index-state`);
+    const idxRes = await politeFetch(`${NINJA_BASE}/poe2/api/data/index-state`, { signal: controller.signal });
     if (!idxRes.ok) {
       res.status(502).json({ error: `index-state returned ${idxRes.status}` });
       return;
@@ -277,7 +287,7 @@ export default async function handler(req, res) {
     if (className) params.set("class", className);
     const searchUrl = `${NINJA_BASE}/poe2/api/builds/${snap.version}/search?${params}`;
 
-    const searchRes = await politeFetch(searchUrl);
+    const searchRes = await politeFetch(searchUrl, { signal: controller.signal });
     if (!searchRes.ok) {
       res.status(502).json({ error: `builds search returned ${searchRes.status}` });
       return;
@@ -319,6 +329,13 @@ export default async function handler(req, res) {
         "Top-of-ladder sample only. poe.ninja's builds search returns a single page and ignores pagination, so these figures describe the highest-ranked builds matching the filter, not the player population.",
     });
   } catch (err) {
-    res.status(502).json({ error: `Ladder fetch failed: ${String(err)}` });
+    // The raw error stays in the function log; the caller gets a fixed message.
+    console.error("ladder fetch failed", err);
+    const aborted = err?.name === "AbortError";
+    res
+      .status(aborted ? 504 : 502)
+      .json({ error: aborted ? "poe.ninja took too long to respond." : "Ladder fetch failed." });
+  } finally {
+    clearTimeout(timer);
   }
 }

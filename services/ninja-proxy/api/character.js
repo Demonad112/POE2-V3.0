@@ -17,7 +17,7 @@
  * ../README.md.
  */
 
-import { politeFetch } from './_upstream.js'
+import { badQueryParam, politeFetch } from './_upstream.js'
 
 const NINJA = 'https://poe.ninja'
 const TIMEOUT_MS = 20_000
@@ -78,6 +78,8 @@ export default async function handler(req, res) {
   if (!account || !league || !character) {
     return res.status(400).json({ error: 'account, league and character are all required.' })
   }
+  const bad = badQueryParam(req.query, ['account', 'league', 'character'])
+  if (bad) return res.status(400).json({ error: `${bad} is too long or repeated.` })
 
   const e = encodeURIComponent
   // poe.ninja renders accounts as Name#1234 but its API path wants Name-1234.
@@ -109,10 +111,12 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
     return res.status(200).send(await model.text())
   } catch (err) {
+    // The raw error stays in the function log; the caller gets a fixed message.
+    console.error('character fetch failed', err)
     const aborted = err?.name === 'AbortError'
     return res
       .status(aborted ? 504 : 502)
-      .json({ error: aborted ? 'poe.ninja took too long to respond.' : `Upstream request failed: ${err?.message}` })
+      .json({ error: aborted ? 'poe.ninja took too long to respond.' : 'Upstream request failed.' })
   } finally {
     clearTimeout(timer)
   }

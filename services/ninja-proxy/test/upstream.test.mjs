@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { politeFetch, retryAfterMs, UPSTREAM_USER_AGENT } from '../api/_upstream.js'
+import { badQueryParam, MAX_QUERY_LENGTH, politeFetch, retryAfterMs, UPSTREAM_USER_AGENT } from '../api/_upstream.js'
 
 const res = (status, retryAfter) => ({
   status,
@@ -61,4 +61,13 @@ test('does not retry a 404', async () => {
 test('retryAfterMs ignores HTTP-date and junk values', () => {
   assert.equal(retryAfterMs(res(429, 'Wed, 21 Oct 2026 07:28:00 GMT')), null)
   assert.equal(retryAfterMs(res(429, '3')), 3000)
+})
+
+test('badQueryParam flags repeated, non-string or over-long values and ignores absent ones', () => {
+  const long = 'x'.repeat(MAX_QUERY_LENGTH + 1)
+  assert.equal(badQueryParam({ league: 'Runes' }, ['league', 'class']), null)
+  assert.equal(badQueryParam({ league: long }, ['league']), 'league')
+  assert.equal(badQueryParam({ league: ['a', 'b'] }, ['league']), 'league')
+  assert.equal(badQueryParam({ league: 'x'.repeat(MAX_QUERY_LENGTH) }, ['league']), null)
+  assert.equal(badQueryParam({ class: 'Deadeye', league: long }, ['class', 'league']), 'league')
 })
