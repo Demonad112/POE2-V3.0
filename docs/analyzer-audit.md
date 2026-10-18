@@ -100,7 +100,7 @@ Missing (all M, all need the PoB transport or a worker): affix ablation, simulat
 
 | ID | Sev | Type | Finding | Evidence |
 |---|---|---|---|---|
-| F-1 | Med | M | No Mapping / Bossing modes or priority weights. Added in this branch (`upgrade/scoring.ts`). | |
+| F-1 | Med | M | No Mapping / Bossing modes or priority weights. Added, now on `main` (`upgrade/scoring.ts`). | |
 | F-2 | Med | I | Recommendations rank by `significance / cost weight`; several significances are hand-picked constants (e.g. 0.45), against the comment that they are never hand-tuned. **Fixed:** anoint is now 1 notable over the allocated passive count (impact `null` when the count is missing); the free `+0.15` bonus is gone and the free preference sits in `COST_WEIGHT` (free 0.5); one-shot is `1 - 1/ratio`; weapon lag is `gap / median ilvl`. All significances are in [0,1]. Remaining scale choices: resistance `underCap / max`, gear `slots / capacity` and `closesShortfall / RESIST_CAP`, offence projected-gain share (all already stat-scale ratios). `COST_WEIGHT` values are documented preferences, not significances. | `recommend/index.ts`; `recommend/types.ts:54-57`; `test/recommend-significance.test.ts` |
 | F-3 | Med | M | Gains are not combinable across slots. A log-ratio score makes multiplicative gains additive; implemented as `combineScores`, explicitly labelled as not jointly simulated. | |
 
@@ -122,7 +122,7 @@ Present: trade-off, evidence, provenance, rationale per recommendation (`recomme
 | ID | Sev | Type | Finding |
 |---|---|---|---|
 | I-1 | Low | I | README test count is stale (374 vs 441). |
-| I-2 | Med | M | One recorded fixture only; no golden outputs. Added in this branch (1 recorded + 4 derived). |
+| I-2 | Med | M | One recorded fixture only; no golden outputs. Added, now on `main` (1 recorded + 4 derived). |
 | I-3 | Low | M | No coverage tooling and no secret scanning in CI. |
 | I-4 | Low | M | Web and MCP both import core, so analysis logic is shared (README invariant holds). The MCP server has no tool for the constraint map or upgrade scoring; adding one changes the generated `TOOLS.md` and the 30-tool contract, so it is left for a separate change. |
 | I-5 | Low | M | Accessibility: 44 source files use `aria-` or `role=`; there is no automated a11y check (no axe) in the e2e suite. Not audited manually here. |

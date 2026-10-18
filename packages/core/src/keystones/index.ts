@@ -252,8 +252,12 @@ export function effectivePool(
     parts.push('energy shield')
   }
 
-  if (total !== null) total += defense.ward
-  parts.push('ward')
+  // Ward is a 0.5 mechanic many characters lack. Unreported ward adds nothing to the total and is
+  // not listed in `parts`, rather than blanking a pool that life and ES already establish.
+  if (defense.ward !== null) {
+    if (total !== null) total += defense.ward
+    parts.push('ward')
+  }
 
   return { total, excluded, parts }
 }

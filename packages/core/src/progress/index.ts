@@ -39,7 +39,7 @@ export interface CharacterSnapshot {
   level: number | null
   life: number | null
   energyShield: number | null
-  ward: number
+  ward: number | null
   armour: number
   evasion: number
   /** Keystone-corrected defensive pool, matching what the assessment used. */

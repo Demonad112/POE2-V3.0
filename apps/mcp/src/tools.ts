@@ -78,6 +78,9 @@ export interface ToolDef {
   handler: (args: Record<string, unknown>) => Promise<unknown> | unknown
 }
 
+/** PoB `manifest.xml` version the bundled data was exported from (see packages/data/PROVENANCE.md). A different running version only adds a warning. */
+const DATA_POB_VERSION = '0.23.1'
+
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const
 const READ_ONLY_NETWORK = { ...READ_ONLY, openWorldHint: true } as const
 
@@ -148,7 +151,8 @@ export const TOOLS: ToolDef[] = [
     inputSchema: {},
     annotations: READ_ONLY,
     handler: () => {
-      const d = requireCharacter().analysis.defense
+      const { analysis } = requireCharacter()
+      const d = analysis.defense
       return {
         lowestMaximumHit: d.lowestMaximumHit,
         lowestMaximumHitType: d.lowestMaximumHitType,
@@ -172,6 +176,8 @@ export const TOOLS: ToolDef[] = [
           deflectChance: d.deflectChance,
           deflectEffect: d.deflectEffect,
         },
+        // Read from gear and passive-tree text; "unknown" when nothing proves immunity or no tree was resolved.
+        ailments: analysis.ailments ?? null,
         missingFromPayload: d.missing,
       }
     },
@@ -1185,6 +1191,7 @@ export const TOOLS: ToolDef[] = [
       const report = await rankNodesByMeasuredGain(pobBridge(), candidates.slice(0, limit), {
         metric: args.metric ? String(args.metric) : undefined,
         expected,
+        expectedPobVersion: DATA_POB_VERSION,
       })
 
       return {

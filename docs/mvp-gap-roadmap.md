@@ -71,8 +71,8 @@ All additive: new optional fields or pure functions, unknown stays `null`/`unkno
 
 | Plan # | Addition | Where | Status | Limits |
 |---|---|---|---|---|
-| 5 | Ailment immunity, freeze exposure | `defense/` | Merged (#39) | Not wired into defence output; no freeze exposure; field names unverified |
-| 6 | Main skill from the export, next to the current primary | `dps` summary | Merged (#40) | Matches skills by name only |
+| 5 | Ailment immunity, freeze exposure | `defense/` | Merged (#39); wired into `Analysis.ailments`, the web defences checklist and character notes | Immunity is read from gear and passive-tree text only; "unknown" when no tree is resolved. No freeze exposure: the payload carries no ailment threshold. Not in MCP output |
+| 6 | Main skill from the export, next to the current primary | `dps` summary | Merged (#40); name-only matching is stated in `MainSkillNote.basisNote` | The export and the payload share no skill id (unverified for newer payloads); two same-name skills cannot be told apart |
 | 7 | Skills/auras in the inactive weapon set | `model/slots.ts` | Merged (#41); primary-in-inactive-set flag added in #44 | Payload field unverified |
 | 8 | Mapping / Bossing focus view | `recommend/focus.ts`, `FOCUS_CATEGORY_WEIGHTS` in `thresholds.ts` | Merged; web toggle in `Recommendations.tsx` (#45) | Weights are judgement; default order unchanged |
 | 9 | Changed since last report | `progress/changed.ts` over `latestDiff` | Merged; web panel `ChangedSincePanel.tsx` (#45) | Needs two stored snapshots, else `available: false` |

@@ -73,7 +73,7 @@
     },
     "offenceUnscoredReason": "No ladder sample was available for this league and ascendancy, and this codebase does not carry invented damage thresholds to fall back on.",
     "weaknesses": [
-      "critical: Thin defensive pool — 2,400 combined life + energy shield + ward",
+      "critical: Thin defensive pool — 2,400 combined life + energy shield",
       "warning: Little armour or block — leaning on evasion and resistances alone"
     ]
   },
