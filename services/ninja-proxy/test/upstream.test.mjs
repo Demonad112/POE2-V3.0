@@ -1,6 +1,14 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { badQueryParam, MAX_QUERY_LENGTH, politeFetch, retryAfterMs, UPSTREAM_USER_AGENT } from '../api/_upstream.js'
+import {
+  badQueryParam,
+  clearBodyCache,
+  MAX_QUERY_LENGTH,
+  politeFetch,
+  retryAfterMs,
+  revalidatingFetch,
+  UPSTREAM_USER_AGENT,
+} from '../api/_upstream.js'
 
 const res = (status, retryAfter) => ({
   status,
@@ -70,4 +78,49 @@ test('badQueryParam flags repeated, non-string or over-long values and ignores a
   assert.equal(badQueryParam({ league: ['a', 'b'] }, ['league']), 'league')
   assert.equal(badQueryParam({ league: 'x'.repeat(MAX_QUERY_LENGTH) }, ['league']), null)
   assert.equal(badQueryParam({ class: 'Deadeye', league: long }, ['class', 'league']), 'league')
+})
+
+const body = (status, text, etag) => ({
+  status,
+  ok: status >= 200 && status < 300,
+  headers: { get: (n) => (n === 'etag' ? etag ?? null : null) },
+  text: async () => text,
+})
+
+test('revalidatingFetch sends If-None-Match after an ETag and serves the cached body on 304', async () => {
+  clearBodyCache()
+  const { calls, fetchImpl } = scripted(body(200, '{"a":1}', '"v1"'), body(304))
+  const first = await revalidatingFetch('https://m/1', {}, { fetchImpl })
+  assert.equal(first.body, '{"a":1}')
+  assert.equal(first.etag, '"v1"')
+  assert.equal(first.revalidated, false)
+  assert.equal(calls[0].init.headers?.['if-none-match'], undefined)
+
+  const second = await revalidatingFetch('https://m/1', {}, { fetchImpl })
+  assert.equal(calls[1].init.headers['if-none-match'], '"v1"')
+  assert.equal(second.status, 200)
+  assert.equal(second.body, '{"a":1}')
+  assert.equal(second.revalidated, true)
+})
+
+test('revalidatingFetch replaces the cached body when upstream sends a new one', async () => {
+  clearBodyCache()
+  const { fetchImpl } = scripted(body(200, 'old', '"v1"'), body(200, 'new', '"v2"'), body(304))
+  await revalidatingFetch('https://m/2', {}, { fetchImpl })
+  const changed = await revalidatingFetch('https://m/2', {}, { fetchImpl })
+  assert.equal(changed.body, 'new')
+  const again = await revalidatingFetch('https://m/2', {}, { fetchImpl })
+  assert.equal(again.body, 'new')
+  assert.equal(again.etag, '"v2"')
+})
+
+test('revalidatingFetch caches nothing without an ETag and passes errors through', async () => {
+  clearBodyCache()
+  const { calls, fetchImpl } = scripted(body(200, 'x'), body(404))
+  const ok = await revalidatingFetch('https://m/3', {}, { fetchImpl })
+  assert.equal(ok.etag, null)
+  const miss = await revalidatingFetch('https://m/3', {}, { fetchImpl })
+  assert.equal(calls[1].init.headers?.['if-none-match'], undefined)
+  assert.equal(miss.status, 404)
+  assert.equal(miss.ok, false)
 })

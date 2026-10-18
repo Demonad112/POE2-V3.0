@@ -17,7 +17,7 @@
  * ../README.md.
  */
 
-import { badQueryParam, politeFetch } from './_upstream.js'
+import { badQueryParam, politeFetch, revalidatingFetch } from './_upstream.js'
 
 const NINJA = 'https://poe.ninja'
 const TIMEOUT_MS = 20_000
@@ -103,13 +103,18 @@ export default async function handler(req, res) {
     }
 
     const modelUrl = `${NINJA}/poe2/api/profile/characters/${e(acct)}/${e(league)}/${e(character)}/model/${versionResult.version}`
-    const model = await politeFetch(modelUrl, { signal: controller.signal })
+    const model = await revalidatingFetch(modelUrl, { signal: controller.signal })
     if (model.status === 404) return res.status(404).json({ error: 'Character model not found.' })
     if (!model.ok) return res.status(502).json({ error: `poe.ninja returned ${model.status} for the model.` })
 
     res.setHeader('Content-Type', 'application/json; charset=utf-8')
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
-    return res.status(200).send(await model.text())
+    // Passed on so the CDN and the browser can revalidate with If-None-Match.
+    if (model.etag) {
+      res.setHeader('ETag', model.etag)
+      if (req.headers?.['if-none-match'] === model.etag) return res.status(304).end()
+    }
+    return res.status(200).send(model.body)
   } catch (err) {
     // The raw error stays in the function log; the caller gets a fixed message.
     console.error('character fetch failed', err)

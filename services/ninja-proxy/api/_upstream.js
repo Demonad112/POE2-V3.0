@@ -57,3 +57,42 @@ export async function politeFetch(url, init = {}, { fetchImpl = fetch, sleepImpl
     await sleepImpl(wait)
   }
 }
+
+const MAX_CACHED = 16
+
+/**
+ * Last good body and ETag per URL, for the life of this function instance.
+ * Only used for URLs that name an immutable version (the model URL carries the
+ * version number), so a 304 can never serve a stale body under a new version.
+ * Serverless instances come and go: this is a best-effort saving, not a store.
+ */
+const bodies = new Map()
+
+/** Drops everything cached; tests only. */
+export function clearBodyCache() {
+  bodies.clear()
+}
+
+/**
+ * `politeFetch` plus `If-None-Match` revalidation. Returns `{ status, ok, body,
+ * etag, revalidated }` for a 2xx or a 304 that the cache can answer, and the raw
+ * response otherwise. Whether poe.ninja sends an ETag on this endpoint has not
+ * been verified: without one nothing is cached and this behaves as `politeFetch`.
+ */
+export async function revalidatingFetch(url, init = {}, { fetchImpl, sleepImpl } = {}) {
+  const hit = bodies.get(url)
+  const headers = hit ? { ...init.headers, 'if-none-match': hit.etag } : init.headers
+  const res = await politeFetch(url, { ...init, headers }, { fetchImpl, sleepImpl })
+  if (res.status === 304 && hit) {
+    return { status: 200, ok: true, body: hit.body, etag: hit.etag, revalidated: true }
+  }
+  if (!res.ok) return res
+  const body = await res.text()
+  const etag = res.headers?.get('etag') ?? null
+  if (etag) {
+    bodies.delete(url)
+    bodies.set(url, { etag, body })
+    if (bodies.size > MAX_CACHED) bodies.delete(bodies.keys().next().value)
+  }
+  return { status: res.status, ok: true, body, etag, revalidated: false }
+}
