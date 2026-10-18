@@ -17,6 +17,23 @@ const MAX_WAIT_MS = 2_000
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+/** Longest accepted value for any query parameter. Account, character and league names are all far shorter. */
+export const MAX_QUERY_LENGTH = 64
+
+/**
+ * The first named query parameter that is repeated, not a string, or longer than
+ * MAX_QUERY_LENGTH; null when all present ones are fine. Absent parameters are
+ * the handler's own concern and are not checked here.
+ */
+export function badQueryParam(query, names) {
+  for (const name of names) {
+    const value = query?.[name]
+    if (value === undefined) continue
+    if (typeof value !== 'string' || value.length > MAX_QUERY_LENGTH) return name
+  }
+  return null
+}
+
 /** Seconds from a `Retry-After` header, or null when absent or not a number of seconds. */
 export function retryAfterMs(res) {
   const n = Number(res.headers?.get('retry-after'))

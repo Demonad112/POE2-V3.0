@@ -95,8 +95,36 @@ export function unwrapCharModel(input: CharModelResponse | CharModel | unknown):
     throw new Error('Expected a poe.ninja character model object.')
   }
   const maybe = input as CharModelResponse
-  if (maybe.charModel && typeof maybe.charModel === 'object') return maybe.charModel
-  return input as CharModel
+  const model = maybe.charModel && typeof maybe.charModel === 'object' ? maybe.charModel : (input as CharModel)
+  assertCharModelShape(model)
+  return model
+}
+
+// Fields the analyzer iterates or reads by key. A field that is present with the
+// wrong kind is a drifted payload: fail loudly rather than analyse odd values.
+// Absent and null fields are fine; the analyzer already treats them as unknown.
+const CHAR_MODEL_LISTS = ['skills', 'items', 'jewels', 'flasks', 'keystones'] as const
+const CHAR_MODEL_OBJECTS = ['defensiveStats', 'breakdowns'] as const
+const CHAR_MODEL_NUMBERS = ['level', 'baseClass'] as const
+
+function assertCharModelShape(model: CharModel): void {
+  const bag = model as unknown as Record<string, unknown>
+  for (const key of CHAR_MODEL_LISTS) {
+    if (bag[key] != null && !Array.isArray(bag[key])) {
+      throw new Error(`Character model field "${key}" is not a list; the poe.ninja payload may have changed.`)
+    }
+  }
+  for (const key of CHAR_MODEL_OBJECTS) {
+    const value = bag[key]
+    if (value != null && (typeof value !== 'object' || Array.isArray(value))) {
+      throw new Error(`Character model field "${key}" is not an object; the poe.ninja payload may have changed.`)
+    }
+  }
+  for (const key of CHAR_MODEL_NUMBERS) {
+    if (bag[key] != null && typeof bag[key] !== 'number') {
+      throw new Error(`Character model field "${key}" is not a number; the poe.ninja payload may have changed.`)
+    }
+  }
 }
 
 /**

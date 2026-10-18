@@ -83,6 +83,14 @@ const MAX_RETRY_WAIT = 5_000
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
+/** A JSON body that is not an object is a drifted payload, not a model to read values from. */
+function expectObject(json: unknown, what: string): Record<string, unknown> {
+  if (!json || typeof json !== 'object' || Array.isArray(json)) {
+    throw new NinjaError('bad-response', `poe.ninja returned an unexpected shape for ${what}.`)
+  }
+  return json as Record<string, unknown>
+}
+
 /** Extract the payload of the first `data:` line, or null if the stream ends. */
 function firstDataLine(buffer: string): string | null {
   const line = buffer.split('\n').find((l) => l.startsWith('data:'))
@@ -161,10 +169,10 @@ export class NinjaClient {
         throw new NinjaError('timeout', `Request to ${url} timed out after ${this.timeoutMs}ms.`)
       }
       // A fetch that never yields a Response gives no status to inspect. The
-      // cause differs by mode, so don't assert one: blaming CORS when the
-      // import service is simply down sends the user to fix the wrong thing.
+      // cause differs by mode and fetch cannot tell CORS from a dead host, so
+      // the reason is 'network' in both. The message names both possibilities.
       throw new NinjaError(
-        'cors',
+        'network',
         this.proxyBaseUrl
           ? 'Could not reach the import service. It may be down or unreachable from your network — pasting the character data works without it.'
           : `Could not reach ${url}. In a browser this is poe.ninja's CORS policy, which requires a proxy; on a server it is a network failure.`,
@@ -206,8 +214,10 @@ export class NinjaClient {
     const version = await this.readVersion(`${this.baseUrl}/poe2/api/events/characters/${acct}`)
     const res = await this.get(`${this.baseUrl}/poe2/api/profile/characters/${acct}/${version}`)
     if (!res.ok) throw new NinjaError('bad-response', `poe.ninja returned ${res.status} for the character list.`)
-    const json = await res.json()
-    return Array.isArray(json) ? json : []
+    const json: unknown = await res.json()
+    // An empty list here would look like "no characters" when the payload has drifted.
+    if (!Array.isArray(json)) throw new NinjaError('bad-response', 'poe.ninja returned an unexpected character list.')
+    return json
   }
 
   /**
@@ -235,7 +245,7 @@ export class NinjaClient {
         throw new NinjaError('not-found', detail)
       }
       if (!res.ok) throw new NinjaError('bad-response', `The import service returned ${res.status}.`)
-      return (await res.json()) as CharModelResponse
+      return expectObject(await res.json(), 'the character model') as CharModelResponse
     }
 
     const e = (s: string) => encodeURIComponent(s)
@@ -246,6 +256,6 @@ export class NinjaClient {
       `${this.baseUrl}/poe2/api/profile/characters/${e(acct)}/${e(league)}/${e(character)}/model/${version}`,
     )
     if (!res.ok) throw new NinjaError('bad-response', `poe.ninja returned ${res.status} for the character model.`)
-    return (await res.json()) as CharModelResponse
+    return expectObject(await res.json(), 'the character model') as CharModelResponse
   }
 }
