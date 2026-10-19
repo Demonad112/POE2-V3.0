@@ -178,7 +178,12 @@ export class NinjaClient {
     } catch (err) {
       const name = (err as { name?: string })?.name
       if (name === 'TimeoutError' || name === 'AbortError') {
-        throw new NinjaError('timeout', `Request to ${url} timed out after ${this.timeoutMs}ms.`)
+        throw new NinjaError(
+          'timeout',
+          this.proxyBaseUrl
+            ? `The import service did not answer within ${this.timeoutMs / 1000} seconds. Try again, or paste the character data instead.`
+            : `Request to ${url} timed out after ${this.timeoutMs}ms.`,
+        )
       }
       // A fetch that never yields a Response gives no status to inspect. The
       // cause differs by mode and fetch cannot tell CORS from a dead host, so
@@ -256,7 +261,17 @@ export class NinjaClient {
         }
         throw new NinjaError('not-found', detail)
       }
-      if (!res.ok) throw new NinjaError('bad-response', `The import service returned ${res.status}.`)
+      if (!res.ok) {
+        // The proxy explains its own 502/504 ("poe.ninja took too long"); say so.
+        let detail = `The import service returned ${res.status}.`
+        try {
+          const body = (await res.json()) as { error?: unknown }
+          if (typeof body?.error === 'string') detail = `${detail} ${body.error}`
+        } catch {
+          /* non-JSON body; keep the default */
+        }
+        throw new NinjaError('bad-response', detail)
+      }
       return expectObject(await res.json(), 'the character model') as CharModelResponse
     }
 

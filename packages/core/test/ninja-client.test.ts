@@ -125,6 +125,14 @@ describe('proxy mode', () => {
 })
 
 describe('URL parsing', () => {
+
+  it('parses the example URL shown in the import bar', () => {
+    expect(parseProfileUrl('https://poe.ninja/poe2/profile/Demonad112-2589/forbiddenrites/character/Yykiuy')).toMatchObject({
+      account: 'Demonad112-2589',
+      leagueSlug: 'forbiddenrites',
+      character: 'Yykiuy',
+    })
+  })
   it('handles every poe.ninja profile URL shape', () => {
     expect(parseProfileUrl('https://poe.ninja/poe2/profile/Demonad112-2589/runesofaldur/character/Athrynas')).toEqual({
       account: 'Demonad112-2589',
@@ -281,5 +289,29 @@ describe('ETag revalidation of the character model (direct mode)', () => {
     await client.fetchCharacter('a#1', 'l', 'c')
     await client.fetchCharacter('a#1', 'l', 'c')
     expect(fetchImpl.mock.calls[1]![1]?.headers?.['if-none-match']).toBeUndefined()
+  })
+
+  it('names the import service, not the URL, when the request times out', async () => {
+    const fetchImpl: FetchLike = async () => {
+      throw Object.assign(new Error('aborted'), { name: 'TimeoutError' })
+    }
+    const client = new NinjaClient({ fetch: fetchImpl, proxyBaseUrl: 'https://proxy.example', timeoutMs: 20_000 })
+    const err = await client.fetchCharacter('A-1', 'standard', 'B').catch((e: unknown) => e)
+    expect(err).toMatchObject({ reason: 'timeout' })
+    expect((err as Error).message).toMatch(/import service did not answer within 20 seconds/)
+    expect((err as Error).message).not.toContain('proxy.example')
+  })
+
+  it("passes on the proxy's own explanation of a 504", async () => {
+    const fetchImpl: FetchLike = async () => ({
+      ok: false,
+      status: 504,
+      text: async () => '',
+      json: async () => ({ error: 'poe.ninja took too long to respond.' }),
+    })
+    const client = new NinjaClient({ fetch: fetchImpl, proxyBaseUrl: 'https://proxy.example' })
+    await expect(client.fetchCharacter('A-1', 'standard', 'B')).rejects.toThrow(
+      'The import service returned 504. poe.ninja took too long to respond.',
+    )
   })
 })
