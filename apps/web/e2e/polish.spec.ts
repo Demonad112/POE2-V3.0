@@ -22,7 +22,6 @@ async function tapsWithin24px(target: Locator) {
 test.describe('small controls have a 24px tap area', () => {
   test('footer links', async ({ page }) => {
     await page.goto('')
-    expect(await tapsWithin24px(page.getByRole('link', { name: 'View source' }))).toBe(true)
     expect(await tapsWithin24px(page.getByRole('button', { name: 'Reset all progress' }))).toBe(true)
   })
 

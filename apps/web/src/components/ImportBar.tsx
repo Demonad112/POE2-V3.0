@@ -6,7 +6,7 @@ import { PROXY_BASE } from '@/lib/proxy'
 import { useLocalStore } from '@/lib/localStore'
 import { recentCharacters } from '@/lib/recentCharacters'
 
-const EXAMPLE = 'https://poe.ninja/poe2/profile/Demonad112-2589/runesofaldur/character/Athrynas'
+const EXAMPLE = 'https://poe.ninja/poe2/profile/Demonad112-2589/forbiddenrites/character/Yykiuy'
 
 export type ImportResult =
   /** `url` is set when it came from a poe.ninja profile URL, so it can be re-imported. */

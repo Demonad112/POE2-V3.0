@@ -20,7 +20,12 @@
 import { badQueryParam, politeFetch, revalidatingFetch } from './_upstream.js'
 
 const NINJA = 'https://poe.ninja'
-const TIMEOUT_MS = 20_000
+// Kept under the browser client's own 20 s timeout so the caller gets this
+// function's specific answer instead of a generic client-side timeout.
+const TIMEOUT_MS = 18_000
+// poe.ninja keeps the version stream open and sends nothing for a character it
+// has not indexed. Without this the read waits for the overall timeout.
+export const FIRST_FRAME_MS = 12_000
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -34,18 +39,24 @@ function cors(res) {
  * The stream never closes on its own, so we read incrementally and abort the
  * moment we have what we need. Buffering the whole body would hang.
  */
-async function readVersion(url, signal) {
-  const upstream = await politeFetch(url, { signal, headers: { accept: 'text/event-stream' } })
+export async function readVersion(url, signal, { fetchImpl, firstFrameMs = FIRST_FRAME_MS } = {}) {
+  const upstream = await politeFetch(url, { signal, headers: { accept: 'text/event-stream' } }, { fetchImpl })
   if (upstream.status === 404) return { error: 'not-found' }
   if (!upstream.ok || !upstream.body) return { error: `upstream ${upstream.status}` }
 
   const reader = upstream.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
+  let timer
+  const silent = new Promise((resolve) => {
+    timer = setTimeout(() => resolve({ silent: true }), firstFrameMs)
+  })
 
   try {
     for (;;) {
-      const { done, value } = await reader.read()
+      const next = await Promise.race([reader.read(), silent])
+      if (next.silent) return { error: 'not-found' }
+      const { done, value } = next
       if (done) break
       buffer += decoder.decode(value, { stream: true })
 
@@ -63,6 +74,7 @@ async function readVersion(url, signal) {
       }
     }
   } finally {
+    clearTimeout(timer)
     reader.cancel().catch(() => {})
   }
 
