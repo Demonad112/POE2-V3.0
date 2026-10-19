@@ -23,14 +23,6 @@ export function Footer() {
           Gear Games. MIT licensed.
         </p>
         <div className="flex items-center gap-4">
-          <a
-            href="https://github.com/Demonad112/Poe2-endgame"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hit-area hover:text-ink-dim"
-          >
-            View source
-          </a>
           <button
             onClick={handleReset}
             className="hit-area hover:text-danger"
